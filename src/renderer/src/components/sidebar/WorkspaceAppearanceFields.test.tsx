@@ -42,6 +42,12 @@ beforeEach(() =>
 afterEach(cleanup)
 
 describe('workspace appearance draft', () => {
+  it('offers deep blue as a saved workspace color', () => {
+    render(<Editor />)
+    fireEvent.click(screen.getByRole('button', { name: 'Deep blue' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save appearance' }))
+    expect(useWorkspaceOrganization.getState().colors['local|repo::/feature']).toBe('#1d4ed8')
+  })
   it('keeps color changes pending until Save, and can remove a saved color', () => {
     const view = render(<Editor />)
     fireEvent.click(screen.getByRole('button', { name: 'Green' }))

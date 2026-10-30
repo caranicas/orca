@@ -1,19 +1,9 @@
 import { Button } from '@/components/ui/button'
 import { ColorPicker } from '@/components/ui/color-picker'
 import { Label } from '@/components/ui/label'
-import { REPO_COLORS, DEFAULT_REPO_BADGE_COLOR } from '../../../../shared/repo-badge-color'
+import { DEFAULT_REPO_BADGE_COLOR } from '../../../../shared/repo-badge-color'
+import { WORKSPACE_COLORS, WORKSPACE_COLOR_NAMES } from '../../../../shared/workspace-colors'
 import { translate } from '@/i18n/i18n'
-
-export const WORKSPACE_COLOR_NAMES = [
-  'Gray',
-  'Red',
-  'Orange',
-  'Yellow',
-  'Green',
-  'Teal',
-  'Purple',
-  'Pink'
-]
 
 export function WorkspaceColorField({
   value,
@@ -28,7 +18,7 @@ export function WorkspaceColorField({
     <div className="space-y-2">
       <Label>{translate('custom.workspace.color', 'Workspace color')}</Label>
       <div className="flex flex-wrap items-center gap-2">
-        {REPO_COLORS.map((color, index) => (
+        {WORKSPACE_COLORS.map((color, index) => (
           <Button
             key={color}
             type="button"

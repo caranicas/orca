@@ -9,8 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import type { Worktree } from '../../../../shared/worktree/types'
 import { getWorktreeHostIdentity } from '../../../../shared/worktree/host-qualified-identity'
-import { REPO_COLORS } from '../../../../shared/repo-badge-color'
-import { WORKSPACE_COLOR_NAMES } from './WorkspaceColorField'
+import { WORKSPACE_COLORS, WORKSPACE_COLOR_NAMES } from '../../../../shared/workspace-colors'
 import { translate } from '@/i18n/i18n'
 
 export function ManagePinnedGroupsMenuItem() {
@@ -64,7 +63,7 @@ export function WorkspaceOrganizationMenu({
           {translate('custom.workspace.color', 'Workspace color')}
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent>
-          {REPO_COLORS.map((value, index) => (
+          {WORKSPACE_COLORS.map((value, index) => (
             <DropdownMenuItem key={value} onSelect={() => color(identities, value)}>
               <span
                 aria-hidden="true"
