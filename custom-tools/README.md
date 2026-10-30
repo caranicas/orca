@@ -17,8 +17,8 @@ From the primary checkout:
 /bin/zsh custom-tools/update-orca-custom.zsh
 ```
 
-The Desktop `start-orca-custom.command` is a shortcut to this folder's launcher.
-Use that shortcut to reopen the app. The generated Electron `.app` inside `out/`
+Double-click this folder's `start-orca-custom.command` to reopen the app from
+Finder. The generated Electron `.app` inside `out/`
 needs launch arguments; opening it directly shows Electron's welcome screen.
 
 Quit custom Orca normally with **Cmd-Q** and wait for its development command to
