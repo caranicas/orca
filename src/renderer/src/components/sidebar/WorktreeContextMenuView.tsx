@@ -17,8 +17,6 @@ import {
   BellOff,
   CircleX,
   Pencil,
-  Pin,
-  PinOff,
   Trash2,
   Unlink,
   Workflow,
@@ -45,9 +43,12 @@ import {
   shouldUseNativeContextMenu
 } from './worktree-context-menu-policy'
 import { CLOSE_ALL_CONTEXT_MENUS_EVENT } from '@/lib/close-all-context-menus'
+import { WorkspaceOrganizationMenu } from './WorkspaceOrganizationMenu'
+import { WorkspacePinMenuItem } from './WorkspacePinMenuItem'
 
 export default function WorktreeContextMenuView({ model }: { model: WorktreeContextMenuModel }) {
   const {
+    activeContextWorktrees,
     batchDeleteWorktrees,
     children,
     contentClassName,
@@ -170,6 +171,11 @@ export default function WorktreeContextMenuView({ model }: { model: WorktreeCont
             onAssignWorkspaceStatus={handleAssignWorkspaceStatus}
             workspaceStatuses={workspaceStatuses}
           />
+          <WorkspaceOrganizationMenu
+            worktrees={activeContextWorktrees}
+            disabled={deletingContext}
+            allowGrouping={!folderWorkspaceId}
+          />
           <DropdownMenuSeparator />
           {!isMultiContext && (
             <>
@@ -190,12 +196,11 @@ export default function WorktreeContextMenuView({ model }: { model: WorktreeCont
                 )}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={handleTogglePin} disabled={isDeleting}>
-                {worktree.isPinned ? <PinOff className="size-3.5" /> : <Pin className="size-3.5" />}
-                {worktree.isPinned
-                  ? translate('auto.components.sidebar.WorktreeContextMenu.697d0f6e1b', 'Unpin')
-                  : translate('auto.components.sidebar.WorktreeContextMenu.3baa7d6507', 'Pin')}
-              </DropdownMenuItem>
+              <WorkspacePinMenuItem
+                worktree={worktree}
+                disabled={isDeleting}
+                onToggle={handleTogglePin}
+              />
               <DropdownMenuItem onSelect={handleToggleRead} disabled={isDeleting}>
                 {worktree.isUnread ? (
                   <BellOff className="size-3.5" />

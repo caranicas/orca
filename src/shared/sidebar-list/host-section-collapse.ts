@@ -1,10 +1,10 @@
 import type { ExecutionHostId } from '../execution-host'
 import type { HostSectionRow } from './host-section-rows'
-import { PINNED_GROUP_KEY } from './group-keys'
+import { isPinnedSectionKey } from './custom-pinned-groups'
 
 export function isHostLaneSectionKey(key: string): boolean {
   return (
-    key === PINNED_GROUP_KEY ||
+    isPinnedSectionKey(key) ||
     key === 'all' ||
     key.startsWith('pr:') ||
     key.startsWith('workspace-status:')

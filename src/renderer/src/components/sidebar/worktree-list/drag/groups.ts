@@ -1,4 +1,5 @@
-import { ALL_GROUP_KEY, PINNED_GROUP_KEY } from '../../../../../../shared/sidebar-list/group-keys'
+import { isPinnedSectionKey } from '../../../../../../shared/sidebar-list/custom-pinned-groups'
+import { ALL_GROUP_KEY } from '../../../../../../shared/sidebar-list/group-keys'
 import { getNaturalWorktreeKeys } from '../../natural-worktree-keys'
 import { getWorktreeHostIdentity } from '../../../../../../shared/worktree/host-qualified-identity'
 import type { HostSectionRow } from '../../../../../../shared/sidebar-list/host-section-rows'
@@ -26,7 +27,7 @@ export function getWorktreeDragGroups(rows: HostSectionRow[]): WorktreeDragGroup
       continue
     }
     const worktreeKey = getWorktreeHostIdentity(row.worktree)
-    if (row.sectionKey === PINNED_GROUP_KEY && naturalWorktreeKeys.has(worktreeKey)) {
+    if (isPinnedSectionKey(row.sectionKey) && naturalWorktreeKeys.has(worktreeKey)) {
       continue
     }
     if (!current) {
@@ -56,7 +57,7 @@ export function getWorktreeDragIndexes(rows: readonly HostSectionRow[]): {
       continue
     }
     if (
-      row.sectionKey === PINNED_GROUP_KEY &&
+      isPinnedSectionKey(row.sectionKey) &&
       naturalWorktreeKeys.has(getWorktreeHostIdentity(row.worktree))
     ) {
       continue

@@ -8,6 +8,8 @@ import { useIsSleepingWorktree } from './use-worktree-sleep-state'
 import { WorktreeCardParentContent } from './worktree-card-parent-content'
 import { buildWorktreeCardPresentation } from './worktree-card-presentation'
 import type { WorktreeCardController } from './use-worktree-card-controller'
+import { useWorkspaceOrganization } from '@/store/workspace-organization'
+import { getWorktreeHostIdentity } from '../../../../shared/worktree/host-qualified-identity'
 
 export function WorktreeCardSurface({ card }: { card: WorktreeCardController }): React.JSX.Element {
   const presentation = buildWorktreeCardPresentation(card)
@@ -45,6 +47,9 @@ export function WorktreeCardSurface({ card }: { card: WorktreeCardController }):
   } = card
   const { titleOnlyCard, cardStyle } = presentation
   const isSleeping = useIsSleepingWorktree(worktree.id)
+  const workspaceColor = useWorkspaceOrganization(
+    (state) => state.colors[getWorktreeHostIdentity(worktree)]
+  )
 
   const parentCardContent = <WorktreeCardParentContent card={card} presentation={presentation} />
 
@@ -90,6 +95,14 @@ export function WorktreeCardSurface({ card }: { card: WorktreeCardController }):
       aria-busy={isDeleting}
       style={cardStyle}
     >
+      {workspaceColor && (
+        <span
+          aria-hidden="true"
+          data-workspace-color={workspaceColor}
+          className="pointer-events-none absolute inset-y-1 left-0 z-10 w-1 rounded-full"
+          style={{ backgroundColor: workspaceColor }}
+        />
+      )}
       {isDeleting && (
         <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/50 backdrop-blur-[1px]">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-1 text-[11px] font-medium text-foreground shadow-sm border border-border/50">

@@ -35,6 +35,7 @@ import {
 } from '../../../../shared/workspace-view/workspace-view-options'
 import { translate } from '@/i18n/i18n'
 import { SidebarGroupByToggle } from './SidebarGroupByToggle'
+import { ManagePinnedGroupsMenuItem } from './WorkspaceOrganizationMenu'
 
 export function useWorkspaceOptionsFilterBadge(): {
   hasAnyFilter: boolean
@@ -305,6 +306,8 @@ export function WorkspaceOptionsMenuItems({
           })}
         </Fragment>
       ))}
+      <DropdownMenuSeparator />
+      <ManagePinnedGroupsMenuItem />
     </>
   )
 }

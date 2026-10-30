@@ -20,7 +20,8 @@ import {
   type GroupHeaderRow,
   type WorktreeGroupBy
 } from '../../../../../../shared/sidebar-list/row-types'
-import { PINNED_GROUP_KEY } from '../../../../../../shared/sidebar-list/group-keys'
+import { isPinnedSectionKey } from '../../../../../../shared/sidebar-list/custom-pinned-groups'
+import { PinnedGroupHeaderMenu } from '../../PinnedGroupHeaderMenu'
 import { getWorkspaceStatusFromGroupKey } from '../../workspace-status'
 import { getVirtualRowTransform } from '../viewport/virtual-rows'
 import { getSidebarHeaderVisual } from './header-visuals'
@@ -150,7 +151,7 @@ export function renderWorktreeSectionHeaderRow(args: {
     ctx.groupBy === 'workspace-status'
       ? getWorkspaceStatusFromGroupKey(row.key, ctx.workspaceStatuses)
       : null
-  const isPinnedHeader = row.key === PINNED_GROUP_KEY
+  const isPinnedHeader = isPinnedSectionKey(row.key)
   const headerVisual = getSidebarHeaderVisual(row.icon, ctx.workspaceStatuses)
   const label = row.label ?? headerVisual.label ?? ''
   const hostContext =
@@ -233,7 +234,7 @@ export function renderWorktreeSectionHeaderRow(args: {
           data-project-group-header-drag-handle={isDraggableProjectGroupHeader ? '' : undefined}
           data-workspace-status-drop-target={headerWorkspaceStatus ? '' : undefined}
           data-workspace-status={headerWorkspaceStatus ?? undefined}
-          data-workspace-pin-drop-target={isPinnedHeader ? '' : undefined}
+          data-workspace-pin-drop-target={row.key === 'pinned' ? '' : undefined}
           className={cn(
             // Keep grab on the title; action buttons use pointer cursors.
             'group relative flex h-7 w-full items-center gap-1.5 pr-2 text-left transition-all',
@@ -258,14 +259,14 @@ export function renderWorktreeSectionHeaderRow(args: {
                 : WORKTREE_SECTION_HEADER_PADDING_LEFT
           }}
           onDragOver={
-            isPinnedHeader
+            row.key === 'pinned'
               ? ctx.onWorkspacePinDragOver
               : headerWorkspaceStatus
                 ? (event) => ctx.onWorkspaceStatusDragOver(event, headerWorkspaceStatus)
                 : undefined
           }
           onDragLeave={
-            isPinnedHeader
+            row.key === 'pinned'
               ? ctx.onWorkspacePinDragLeave
               : headerWorkspaceStatus
                 ? ctx.onWorkspaceStatusDragLeave
@@ -344,6 +345,7 @@ export function renderWorktreeSectionHeaderRow(args: {
           </div>
 
           <ProjectHeaderActions>
+            {isPinnedHeader && <PinnedGroupHeaderMenu />}
             {showHeaderCollapseAffordance ? (
               <div
                 className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent/70 hover:text-foreground"

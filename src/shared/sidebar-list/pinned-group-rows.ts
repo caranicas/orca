@@ -18,7 +18,8 @@ export function emitPinnedGroup(
   result: Row[],
   occurrencePlan: WorktreeOccurrencePlan<Worktree>,
   noticeHostContextLabelByRepoId?: ReadonlyMap<string, NoticeHostContext>,
-  hostContextLabelByWorktreeIdentity?: ReadonlyMap<string, string>
+  hostContextLabelByWorktreeIdentity?: ReadonlyMap<string, string>,
+  section = { key: PINNED_GROUP_KEY, label: '' }
 ): void {
   if (pinnedSectionWorktrees.length === 0) {
     return
@@ -41,14 +42,15 @@ export function emitPinnedGroup(
 
   result.push({
     type: 'header',
-    key: PINNED_GROUP_KEY,
+    key: section.key,
+    ...(section.label ? { label: section.label } : {}),
     count: pinnedSectionWorktrees.length,
     icon: { kind: 'pinned' },
     hostWorktreeCounts,
     hostWorktreeIds,
     worktreeIds: pinnedSectionWorktrees.map((worktree) => worktree.id)
   })
-  if (collapsedGroups.has(PINNED_GROUP_KEY)) {
+  if (collapsedGroups.has(section.key)) {
     for (const repoId of pinnedRepoOrder) {
       const candidate = importedWorktreesByRepo.get(repoId)
       if (allowImportedFallback && candidate && !renderedNaturalAnchorRepoIds.has(repoId)) {
@@ -68,7 +70,7 @@ export function emitPinnedGroup(
   appendWorktreeRows(result, repoOf, occurrencePlan, {
     collapsedGroups,
     groupDepth: 0,
-    sectionKey: PINNED_GROUP_KEY,
+    sectionKey: section.key,
     hostContextLabelByWorktreeIdentity
   })
   if (!allowImportedFallback) {
