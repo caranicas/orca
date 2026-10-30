@@ -93,7 +93,14 @@ export function WorktreeCardSurface({ card }: { card: WorktreeCardController }):
       onDragStart={!affiliateListMode && nativeDragEnabled ? handleDragStart : undefined}
       onDragEnd={!affiliateListMode && nativeDragEnabled ? handleDragEnd : undefined}
       aria-busy={isDeleting}
-      style={cardStyle}
+      style={{
+        ...cardStyle,
+        ...(workspaceColor
+          ? {
+              backgroundImage: `linear-gradient(color-mix(in srgb, ${workspaceColor} 10%, transparent), color-mix(in srgb, ${workspaceColor} 10%, transparent))`
+            }
+          : {})
+      }}
     >
       {workspaceColor && (
         <span

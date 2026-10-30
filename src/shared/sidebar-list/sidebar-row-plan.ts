@@ -26,6 +26,8 @@ import {
 } from './project-group-sections'
 import { getSidebarLineageChildren } from './pinned-section-worktrees'
 import { emitPinnedGroup } from './pinned-group-rows'
+import { buildPinnedGroupHeader } from './pinned-group-header'
+import { buildPinnedStatusSections } from './pinned-status-sections'
 import {
   appendWorktreeRows,
   buildFolderWorkspaceRow,
@@ -117,14 +119,10 @@ export function planSidebarRows(inputs: SidebarRowPlanInputs) {
               projectOrderBy,
               folderWorkspaces: renderableFolderWorkspaces
             })
-      const pinnedGroups: OrderedGroupEntry[] = partitionPinnedWorkspaces(
-        pinned,
-        inputs.pinnedWorkspaceGrouping,
-        childrenByParentIdentity
-      ).map((section) => [
-        section.key,
-        { label: section.name, items: section.items, repoIds: new Set() }
-      ])
+      const pinnedGroups = buildPinnedStatusSections(
+        partitionPinnedWorkspaces(pinned, inputs.pinnedWorkspaceGrouping, childrenByParentIdentity),
+        workspaceStatuses
+      )
       groups.unshift(...pinnedGroups)
       return groups.map(([key, group]): SidebarOccurrenceSection => {
         const revealPath =
@@ -139,7 +137,10 @@ export function planSidebarRows(inputs: SidebarRowPlanInputs) {
             groupBy === 'repo' && !isPinnedSectionKey(key)
               ? orderMainWorktreeFirst(group.items)
               : group.items,
-          revealPath: { key, parent: revealPath }
+          revealPath: {
+            key,
+            parent: group.pinnedParent ? { key: group.pinnedParent.key } : revealPath
+          }
         }
       })
     }
@@ -183,7 +184,16 @@ export function planSidebarRows(inputs: SidebarRowPlanInputs) {
       projectGrouping
     })
     const remainingImported = new Map(importedWorktreesByRepo)
+    const emittedPinnedParents = new Set<string>()
     for (const section of pinnedSections) {
+      const parent = section.group.pinnedParent
+      if (parent && !emittedPinnedParents.has(parent.key)) {
+        result.push(buildPinnedGroupHeader(parent.items, repoOf, defaultHostId, parent))
+        emittedPinnedParents.add(parent.key)
+      }
+      if (parent && collapsedGroups.has(parent.key)) {
+        continue
+      }
       emitPinnedGroup(
         section.group.items,
         repoOf,
@@ -196,7 +206,14 @@ export function planSidebarRows(inputs: SidebarRowPlanInputs) {
         occurrencePlan,
         noticeHostContextLabelByRepoId,
         mixedWorktreeHostContextLabels,
-        { key: section.key, label: section.group.label }
+        {
+          key: section.key,
+          label: section.group.label,
+          ...(parent ? { parentGroupKey: parent.key, groupDepth: 1 } : {}),
+          ...(section.group.pinnedStatus
+            ? { icon: { kind: 'workspace-status', status: section.group.pinnedStatus } }
+            : {})
+        }
       )
       for (const worktree of section.group.items) {
         remainingImported.delete(worktree.repoId)

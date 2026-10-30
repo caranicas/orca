@@ -20,7 +20,6 @@ import {
   type GroupHeaderRow,
   type WorktreeGroupBy
 } from '../../../../../../shared/sidebar-list/row-types'
-import { isPinnedSectionKey } from '../../../../../../shared/sidebar-list/custom-pinned-groups'
 import { PinnedGroupHeaderMenu } from '../../PinnedGroupHeaderMenu'
 import { getWorkspaceStatusFromGroupKey } from '../../workspace-status'
 import { getVirtualRowTransform } from '../viewport/virtual-rows'
@@ -29,7 +28,8 @@ import { resolveProjectGroupHeaderColor } from '../../project-header-color'
 import { ProjectHeaderActions } from '../../ProjectHeaderActions'
 import {
   getProjectGroupHeaderPaddingLeft,
-  WORKTREE_SECTION_HEADER_PADDING_LEFT
+  WORKTREE_SECTION_HEADER_PADDING_LEFT,
+  SIDEBAR_TREE_INDENT
 } from './indentation'
 import { FolderPathStatusIndicator } from './FolderPathStatusIndicator'
 import { RepoScanUnavailableIndicator } from './RepoScanUnavailableIndicator'
@@ -151,7 +151,7 @@ export function renderWorktreeSectionHeaderRow(args: {
     ctx.groupBy === 'workspace-status'
       ? getWorkspaceStatusFromGroupKey(row.key, ctx.workspaceStatuses)
       : null
-  const isPinnedHeader = isPinnedSectionKey(row.key)
+  const isPinnedHeader = row.icon.kind === 'pinned'
   const headerVisual = getSidebarHeaderVisual(row.icon, ctx.workspaceStatuses)
   const label = row.label ?? headerVisual.label ?? ''
   const hostContext =
@@ -180,7 +180,11 @@ export function renderWorktreeSectionHeaderRow(args: {
   // Why: repo/project/status/pinned share compact section chrome; flat "All" stays a simple label.
   const showHeaderCollapseAffordance =
     row.count > 0 &&
-    (isRepoHeader || isProjectGroupHeader || headerWorkspaceStatus !== null || isPinnedHeader)
+    (isRepoHeader ||
+      isProjectGroupHeader ||
+      row.icon.kind === 'workspace-status' ||
+      headerWorkspaceStatus !== null ||
+      isPinnedHeader)
   return (
     <div
       key={vItem.key}
@@ -256,7 +260,7 @@ export function renderWorktreeSectionHeaderRow(args: {
             paddingLeft:
               isRepoHeader || isProjectGroupHeader
                 ? getProjectGroupHeaderPaddingLeft(row.projectGroupDepth ?? 0)
-                : WORKTREE_SECTION_HEADER_PADDING_LEFT
+                : WORKTREE_SECTION_HEADER_PADDING_LEFT + (row.groupDepth ?? 0) * SIDEBAR_TREE_INDENT
           }}
           onDragOver={
             row.key === 'pinned'

@@ -27,9 +27,11 @@ export function scopeHostSectionCollapse(args: {
   collapsedGroups: ReadonlySet<string>
 }): HostSectionRow[] {
   let sectionCollapsed = false
+  const hiddenParents = new Set<string>()
   return args.rows.flatMap((row): HostSectionRow[] => {
     if (row.type === 'host-header') {
       sectionCollapsed = false
+      hiddenParents.clear()
     }
     if (row.type === 'header') {
       sectionCollapsed = false
@@ -42,8 +44,13 @@ export function scopeHostSectionCollapse(args: {
           ? row.hostWorktreeCounts.keys().next().value
           : undefined)
       const collapseKey = hostId ? getHostSectionCollapseKey(row.key, hostId) : row.key
-      sectionCollapsed = args.collapsedGroups.has(collapseKey)
-      return [{ ...row, collapseKey }]
+      const hiddenByParent =
+        row.parentGroupKey !== undefined && hiddenParents.has(row.parentGroupKey)
+      sectionCollapsed = hiddenByParent || args.collapsedGroups.has(collapseKey)
+      if (sectionCollapsed) {
+        hiddenParents.add(row.key)
+      }
+      return hiddenByParent ? [] : [{ ...row, collapseKey }]
     }
     return sectionCollapsed ? [] : [row]
   })

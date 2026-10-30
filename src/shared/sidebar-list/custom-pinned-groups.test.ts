@@ -1,3 +1,4 @@
+import { pinnedStatusSectionKey } from './pinned-status-sections'
 import { describe, expect, it } from 'vitest'
 import type { Worktree } from '../worktree/types'
 import { getWorktreeHostIdentity } from '../worktree/host-qualified-identity'
@@ -67,6 +68,57 @@ const groups = [
 ]
 
 describe('custom pinned workspace sections', () => {
+  it('renders status subheadings in the configured order and preserves the order within a status', () => {
+    const rows = [
+      workspace('done', { workspaceStatus: 'completed' }),
+      workspace('review-1', { workspaceStatus: 'in-review' }),
+      workspace('todo', { workspaceStatus: 'todo' }),
+      workspace('review-2', { workspaceStatus: 'in-review' })
+    ]
+    const memberships = Object.fromEntries(
+      rows.map((row) => [getWorktreeHostIdentity(row), 'migration'])
+    )
+    const statuses = cloneDefaultWorkspaceStatuses().toReversed()
+    const built = plan(rows, { groups, memberships }, { workspaceStatuses: statuses })
+    const result = built.render(new Set())
+    expect(
+      result.filter((row) => row.type === 'header').map((row) => [row.label, row.count])
+    ).toEqual([
+      ['Migrations', 4],
+      ['Done', 1],
+      ['In review', 2],
+      ['Todo', 1]
+    ])
+    expect(result.filter((row) => row.type === 'item').map((row) => row.worktree.id)).toEqual([
+      'done',
+      'review-1',
+      'review-2',
+      'todo'
+    ])
+    const reviewKey = pinnedStatusSectionKey(customPinnedGroupKey('migration'), 'in-review')
+    expect(
+      built
+        .render(new Set([reviewKey]))
+        .filter((row) => row.type === 'item')
+        .map((row) => row.worktree.id)
+    ).toEqual(['done', 'todo'])
+  })
+
+  it('moves a workspace into its new status subsection after its status changes', () => {
+    const row = workspace('changing', { workspaceStatus: 'todo' })
+    const grouping = { groups, memberships: { [getWorktreeHostIdentity(row)]: 'migration' } }
+    const before = plan([row], grouping).render(new Set())
+    const after = plan([{ ...row, workspaceStatus: 'completed' }], grouping).render(new Set())
+    expect(before.filter((entry) => entry.type === 'header').map((entry) => entry.label)).toEqual([
+      'Migrations',
+      'Todo'
+    ])
+    expect(after.filter((entry) => entry.type === 'header').map((entry) => entry.label)).toEqual([
+      'Migrations',
+      'Done'
+    ])
+  })
+
   it('keeps nested child workspaces with their assigned parent group', () => {
     const parent = workspace('parent', { instanceId: 'parent-instance' })
     const child = workspace('child', { instanceId: 'child-instance' })
@@ -93,8 +145,8 @@ describe('custom pinned workspace sections', () => {
         .filter((row) => row.type === 'item')
         .map((row) => [row.worktree.id, row.sectionKey, row.depth])
     ).toEqual([
-      ['parent', customPinnedGroupKey('migration'), 0],
-      ['child', customPinnedGroupKey('migration'), 1]
+      ['parent', pinnedStatusSectionKey(customPinnedGroupKey('migration'), 'in-progress'), 0],
+      ['child', pinnedStatusSectionKey(customPinnedGroupKey('migration'), 'in-progress'), 1]
     ])
   })
 
@@ -107,7 +159,7 @@ describe('custom pinned workspace sections', () => {
     ).render(new Set())
     expect(
       result.filter((entry) => entry.type === 'item').map((entry) => entry.sectionKey)
-    ).toEqual([customPinnedGroupKey('migration'), 'all'])
+    ).toEqual([pinnedStatusSectionKey(customPinnedGroupKey('migration'), 'in-progress'), 'all'])
   })
 
   it('keeps the current status-ranked order within groups while respecting group order', () => {
@@ -127,7 +179,9 @@ describe('custom pinned workspace sections', () => {
     const result = plan(rows, { groups, memberships }).render(new Set())
     expect(result.filter((row) => row.type === 'header').map((row) => row.label)).toEqual([
       'Migrations',
-      'Accessibility'
+      'In progress',
+      'Accessibility',
+      'In progress'
     ])
     expect(result.filter((row) => row.type === 'item').map((row) => row.worktree.id)).toEqual([
       'needs-attention',
@@ -155,7 +209,8 @@ describe('custom pinned workspace sections', () => {
         .map((row) => row.worktree.id)
     ).toEqual(['b'])
     expect(
-      built.occurrencePlan.preferredByIdentity.get(getWorktreeHostIdentity(a))?.sectionPath.key
+      built.occurrencePlan.preferredByIdentity.get(getWorktreeHostIdentity(a))?.sectionPath.parent
+        ?.key
     ).toBe(key)
   })
 
@@ -171,7 +226,7 @@ describe('custom pinned workspace sections', () => {
         .filter((row) => row.type === 'item')
         .map((row) => [row.worktree.hostId, row.sectionKey])
     ).toEqual([
-      ['local', customPinnedGroupKey('migration')],
+      ['local', pinnedStatusSectionKey(customPinnedGroupKey('migration'), 'in-progress')],
       ['ssh:server', 'all']
     ])
   })

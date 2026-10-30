@@ -84,7 +84,7 @@ function getWorktreeItemRowGeometry(
           lineageDepth
         })
       : getWorktreeCardContentIndent({
-          isGrouped: ctx.groupBy !== 'none',
+          isGrouped: ctx.groupBy !== 'none' || itemRow.groupDepth > 0,
           groupDepth: itemRow.groupDepth,
           lineageDepth
         })
@@ -95,7 +95,7 @@ function getWorktreeItemRowGeometry(
         lineageDepth: itemRow.depth
       })
     : getWorktreeCardSurfaceInset({
-        isGrouped: ctx.groupBy !== 'none',
+        isGrouped: ctx.groupBy !== 'none' || itemRow.groupDepth > 0,
         groupDepth: itemRow.groupDepth
       })
   return {

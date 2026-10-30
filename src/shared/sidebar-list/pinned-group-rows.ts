@@ -1,7 +1,7 @@
 import type { WorktreeOccurrencePlan } from '../worktree-occurrence-plan'
 import type { Worktree } from '../worktree/types'
-import { getWorktreeExecutionHostId } from '../execution-host'
 import type { ExecutionHostId } from '../execution-host'
+import { buildPinnedGroupHeader, type PinnedSectionHeader } from './pinned-group-header'
 import { PINNED_GROUP_KEY } from './group-keys'
 import { appendWorktreeRows, buildImportedWorktreesCardRow } from './row-builders'
 import type { NoticeHostContext } from './host-labels'
@@ -19,37 +19,21 @@ export function emitPinnedGroup(
   occurrencePlan: WorktreeOccurrencePlan<Worktree>,
   noticeHostContextLabelByRepoId?: ReadonlyMap<string, NoticeHostContext>,
   hostContextLabelByWorktreeIdentity?: ReadonlyMap<string, string>,
-  section = { key: PINNED_GROUP_KEY, label: '' }
+  section: PinnedSectionHeader = { key: PINNED_GROUP_KEY, label: '' }
 ): void {
   if (pinnedSectionWorktrees.length === 0) {
     return
   }
-  const hostWorktreeCounts = new Map<ExecutionHostId, number>()
-  const hostWorktreeIds = new Map<ExecutionHostId, string[]>()
   const pinnedRepoOrder: string[] = []
   const seenPinnedRepoIds = new Set<string>()
   for (const worktree of pinnedSectionWorktrees) {
-    const hostId = getWorktreeExecutionHostId(worktree, repoOf(worktree), defaultHostId)
-    hostWorktreeCounts.set(hostId, (hostWorktreeCounts.get(hostId) ?? 0) + 1)
-    const hostIds = hostWorktreeIds.get(hostId) ?? []
-    hostIds.push(worktree.id)
-    hostWorktreeIds.set(hostId, hostIds)
     if (!seenPinnedRepoIds.has(worktree.repoId)) {
       pinnedRepoOrder.push(worktree.repoId)
       seenPinnedRepoIds.add(worktree.repoId)
     }
   }
 
-  result.push({
-    type: 'header',
-    key: section.key,
-    ...(section.label ? { label: section.label } : {}),
-    count: pinnedSectionWorktrees.length,
-    icon: { kind: 'pinned' },
-    hostWorktreeCounts,
-    hostWorktreeIds,
-    worktreeIds: pinnedSectionWorktrees.map((worktree) => worktree.id)
-  })
+  result.push(buildPinnedGroupHeader(pinnedSectionWorktrees, repoOf, defaultHostId, section))
   if (collapsedGroups.has(section.key)) {
     for (const repoId of pinnedRepoOrder) {
       const candidate = importedWorktreesByRepo.get(repoId)
@@ -69,7 +53,7 @@ export function emitPinnedGroup(
   const firstItemIndex = result.length
   appendWorktreeRows(result, repoOf, occurrencePlan, {
     collapsedGroups,
-    groupDepth: 0,
+    groupDepth: section.groupDepth ?? 0,
     sectionKey: section.key,
     hostContextLabelByWorktreeIdentity
   })

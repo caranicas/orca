@@ -1,6 +1,10 @@
+// @vitest-environment happy-dom
+import { cleanup, render } from '@testing-library/react'
+import { useWorkspaceOrganization } from '@/store/workspace-organization'
+import { getWorktreeHostIdentity } from '../../../../shared/worktree/host-qualified-identity'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { ReactNode } from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { Repo } from '../../../../shared/repo-types'
 import type { WorktreeCardProperty } from '../../../../shared/ui-chrome-types'
@@ -112,9 +116,29 @@ function makeWorktree(overrides: Partial<Worktree> = {}): Worktree {
   }
 }
 
+afterEach(cleanup)
+
 describe('WorktreeCard pinned repo icon', () => {
+  it('tints the full card while preserving its color edge, status indicator, and active state', async () => {
+    const { default: WorktreeCard } = await import('./WorktreeCard')
+    const worktree = makeWorktree()
+    worktreeCardProperties = ['status']
+    useWorkspaceOrganization.getState().setColor([getWorktreeHostIdentity(worktree)], '#f97316')
+    const view = render(
+      <WorktreeCard worktree={worktree} repo={makeRepo()} isActive={false} inPinnedSection />
+    )
+    const surface = view.container.querySelector<HTMLElement>('[data-worktree-card-surface]')!
+    expect(surface.style.backgroundImage).toContain('color-mix(in srgb, #f97316 10%, transparent)')
+    expect(surface.querySelector('[data-workspace-color="#f97316"]')).not.toBeNull()
+    expect(surface.querySelector('[data-worktree-card-status-slot]')).not.toBeNull()
+    view.rerender(<WorktreeCard worktree={worktree} repo={makeRepo()} isActive inPinnedSection />)
+    expect(surface.getAttribute('data-worktree-card-active')).toBe('primary')
+    expect(surface.style.backgroundImage).toContain('#f97316')
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
+    useWorkspaceOrganization.setState({ grouping: { groups: [], memberships: {} }, colors: {} })
     worktreeCardProperties = []
     settings = null
   })
