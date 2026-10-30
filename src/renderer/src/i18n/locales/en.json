@@ -23200,6 +23200,14 @@
       "noColor": "No color",
       "colorHint": "A sidebar accent. Agent status keeps its own indicator.",
       "saveFailed": "Could not save workspace appearance. Try again."
+    },
+    "general": {
+      "error": "Could not open General",
+      "label": "General",
+      "localOnly": "Open General from the desktop app.",
+      "folderConflict": "The General workspace location is already used by another project.",
+      "workspaceUnavailable": "General could not be loaded. Try opening it again.",
+      "openFailed": "General could not be opened."
     }
   }
 }
