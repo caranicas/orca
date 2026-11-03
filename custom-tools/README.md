@@ -1,8 +1,79 @@
 # Custom Orca tools
 
-This folder is versioned with the `custom-orca` branch in your fork. It contains
-the local macOS launcher, dependency setup, upstream updater and profile migration
+This folder is versioned on `main` in your fork, which includes the original
+`custom-orca` changes. It contains
+local macOS and Windows launchers, dependency setup, a macOS upstream updater and profile migration
 utilities. `Orca-sync` is a linked worktree of the same Git repository.
+
+## Windows
+
+The custom sidebar features also run on Windows. The `.zsh` and `.command` files
+are for macOS; use these commands in PowerShell from this checkout instead:
+
+```powershell
+# Requires Node 24, the pnpm version in package.json, Python 3, and
+# Visual Studio 2022 Build Tools with Desktop development with C++ and a Windows SDK.
+# Rust (MSVC toolchain) is required for the native CLI launcher and agent hooks.
+./custom-tools/setup-orca-fork.ps1
+./custom-tools/start-orca-custom.ps1
+```
+
+Double-click `custom-tools/start-orca-custom.cmd` to reopen the app, or create a
+desktop shortcut to that file. Keep its console open while using Orca; quit the
+app normally before closing the console or changing branches. This runs the same
+source-based development app as the Mac launcher, with no installer or signing
+certificate required. Setup builds the CLI and Windows native helpers and installs
+the separate mobile web dependencies. It checks types unless `-SkipTypecheck`
+is supplied.
+
+The Windows scripts target the checkout containing them, including a linked
+worktree. They reuse Node and pnpm from `PATH` or an existing
+`%LOCALAPPDATA%/OrcaBuildTools` installation, and save their locations in the
+sibling `.orca-local/windows-environment.json`. The custom profile is
+`.orca-local/orca-dev-windows`; existing installed and development profiles stay
+in place. Do not launch two Windows custom checkouts against that profile at once.
+Mac profiles and the Mac `active-profile` selection are not migrated to Windows.
+Sign in and add this PC's projects in the new profile.
+
+### Bring existing Windows work into the custom build
+
+Save any unsaved editor buffers, then quit both Orca windows normally and wait
+for their launchers to finish. Use normal Quit, not **Quit Completely**, so
+background agents can survive. Keep the old source checkout and tool installation
+in place while its background terminals are running. Do not run both builds
+against the same profile simultaneously.
+
+The existing Windows source installation uses `%APPDATA%/orca-dev`. Back up both
+profiles with the existing snapshot tool before switching:
+
+```powershell
+python ./custom-tools/migration/orca-profile-backup.py `
+  --original "$env:APPDATA/orca-dev" `
+  --custom ../.orca-local/orca-dev-windows `
+  --output "../.orca-local/migration-backups/windows-$(Get-Date -Format yyyyMMdd-HHmmss)"
+./custom-tools/start-orca-custom.ps1 -ProfilePath "$env:APPDATA/orca-dev"
+```
+
+The launcher saves that profile selection in `.orca-local/windows-profile.txt`;
+the **Orca Custom** desktop shortcut uses it on subsequent launches. This reuses
+the existing profile in place, including project paths, saved tabs, settings and
+history. Project files and uncommitted Git changes stay in their current folders;
+they are not moved to this checkout. Running terminals can reconnect when their
+daemon survives; stopped agents need their usual resume command. This does not
+move work from another computer.
+
+To return to the separate custom profile, quit normally and run:
+
+```powershell
+./custom-tools/start-orca-custom.ps1 -ProfilePath ../.orca-local/orca-dev-windows
+```
+
+After saving your changes and quitting this custom app, update the Windows branch
+with a normal Git merge and rerun setup. The macOS updater is not used on Windows.
+PowerShell must permit local scripts (for example, an existing `RemoteSigned`
+policy); these helpers do not change or bypass execution policy.
+
+## macOS
 
 From the primary checkout:
 
@@ -55,20 +126,21 @@ Original Desktop helpers and notes are archived under
 The updater creates a backup branch before merging `upstream/main`, stops on
 conflicts, refreshes dependencies and runs validation. It never force pushes or
 publishes to GitHub. It refreshes `Orca-sync` only when that worktree is clean,
-detached, and can fast-forward to `custom-orca`; otherwise it leaves it alone.
+detached, and can fast-forward to the current `main` or `custom-orca` branch;
+otherwise it leaves it alone.
 These updates include unreleased upstream work.
 
 Commits share history across worktrees, but checkout files update only when that
 worktree advances. To refresh a clean detached sync worktree after local commits:
 
 ```sh
-git -C ../Orca-sync merge --ff-only custom-orca
+git -C ../Orca-sync merge --ff-only main
 ```
 
 To back up committed custom work to your GitHub fork, explicitly push the branch:
 
 ```sh
-git push origin custom-orca
+git push origin main
 ```
 
 ## Custom features

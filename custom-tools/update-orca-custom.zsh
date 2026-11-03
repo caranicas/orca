@@ -5,10 +5,12 @@ setopt ERR_EXIT NO_UNSET PIPE_FAIL
 orca_update_fork() {
   source "${${(%):-%x}:A:h}/orca-local-env.zsh"
   source "$orca_helper_dir/require-orca-closed.zsh"
-  [[ $(git branch --show-current) == custom-orca ]] || {
-    print -u2 -- 'Switch the primary checkout to custom-orca before updating.'
-    return 1
-  }
+  local orca_update_branch
+  orca_update_branch=$(git branch --show-current)
+  case "$orca_update_branch" in
+    main|custom-orca) ;;
+    *) print -u2 -- 'Switch the primary checkout to main or custom-orca before updating.'; return 1 ;;
+  esac
   [[ -z $(git status --porcelain --untracked-files=all) ]] || {
     print -u2 -- 'Commit or save your changes before updating.'
     return 1
@@ -34,8 +36,8 @@ orca_update_fork() {
     if [[ "${sync_common:A}" == "$orca_common_dir" ]] &&
       ! git -C "$orca_sync_repo" symbolic-ref --quiet HEAD >/dev/null &&
       [[ -z $(git -C "$orca_sync_repo" status --porcelain --untracked-files=all) ]] &&
-      git -C "$orca_sync_repo" merge-base --is-ancestor HEAD custom-orca; then
-      git -C "$orca_sync_repo" merge --ff-only custom-orca
+      git -C "$orca_sync_repo" merge-base --is-ancestor HEAD "$orca_update_branch"; then
+      git -C "$orca_sync_repo" merge --ff-only "$orca_update_branch"
     else
       print -- 'Orca-sync was left unchanged: it must be clean, detached and able to fast-forward.'
     fi

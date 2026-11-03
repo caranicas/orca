@@ -22,7 +22,10 @@ if git remote get-url upstream >/dev/null 2>&1; then
 else
   git remote add upstream https://github.com/stablyai/orca.git
 fi
-[[ $(git branch --show-current) == custom-orca ]] || fail 'Switch the primary checkout to custom-orca first.'
+case $(git branch --show-current) in
+  main|custom-orca) ;;
+  *) fail 'Switch the primary checkout to main or custom-orca first.' ;;
+esac
 git config remote.pushDefault origin
 
 mkdir -p "$orca_tools/bin"
