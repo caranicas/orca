@@ -3,6 +3,7 @@ import { shallow } from 'zustand/shallow'
 import { persistedUIValuesEqual } from '../../../../../../shared/persisted-ui-equality'
 import { useShallow } from 'zustand/react/shallow'
 import { useAppStore } from '@/store'
+import { useWorkspaceOrganization } from '@/store/workspace-organization'
 import type { AppState } from '@/store/types'
 import type { Repo } from '../../../../../../shared/repo-types'
 import {
@@ -83,6 +84,7 @@ function createSidebarHostOptionsSelector() {
 }
 
 export function useSidebarSectionRows(args: SectionRowsArgs) {
+  const pinnedWorkspaceGrouping = useWorkspaceOrganization((state) => state.grouping)
   const { repos, worktrees, repoMap, defaultHostId } = args
   const worktreesByRepo = useAppStore((s) => selectWorktreesByRepo(s))
   const workspaceHostOrder = useAppStore((s) => s.workspaceHostOrder)
@@ -142,6 +144,7 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
   const rowPlan = useMemo(
     () =>
       planSidebarRows({
+        pinnedWorkspaceGrouping,
         groupBy: args.groupBy,
         worktrees,
         repoMap,
@@ -166,6 +169,7 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
         filterRepoIds: args.filterRepoIds
       }),
     [
+      pinnedWorkspaceGrouping,
       args.groupBy,
       worktrees,
       repoMap,

@@ -20,7 +20,7 @@ import {
   type GroupHeaderRow,
   type WorktreeGroupBy
 } from '../../../../../../shared/sidebar-list/row-types'
-import { PINNED_GROUP_KEY } from '../../../../../../shared/sidebar-list/group-keys'
+import { PinnedGroupHeaderMenu } from '../../PinnedGroupHeaderMenu'
 import { getWorkspaceStatusFromGroupKey } from '../../workspace-status'
 import { getVirtualRowTransform } from '../viewport/virtual-rows'
 import { getSidebarHeaderVisual } from './header-visuals'
@@ -28,7 +28,8 @@ import { resolveProjectGroupHeaderColor } from '../../project-header-color'
 import { ProjectHeaderActions } from '../../ProjectHeaderActions'
 import {
   getProjectGroupHeaderPaddingLeft,
-  WORKTREE_SECTION_HEADER_PADDING_LEFT
+  WORKTREE_SECTION_HEADER_PADDING_LEFT,
+  SIDEBAR_TREE_INDENT
 } from './indentation'
 import { FolderPathStatusIndicator } from './FolderPathStatusIndicator'
 import { RepoScanUnavailableIndicator } from './RepoScanUnavailableIndicator'
@@ -150,7 +151,7 @@ export function renderWorktreeSectionHeaderRow(args: {
     ctx.groupBy === 'workspace-status'
       ? getWorkspaceStatusFromGroupKey(row.key, ctx.workspaceStatuses)
       : null
-  const isPinnedHeader = row.key === PINNED_GROUP_KEY
+  const isPinnedHeader = row.icon.kind === 'pinned'
   const headerVisual = getSidebarHeaderVisual(row.icon, ctx.workspaceStatuses)
   const label = row.label ?? headerVisual.label ?? ''
   const hostContext =
@@ -179,7 +180,11 @@ export function renderWorktreeSectionHeaderRow(args: {
   // Why: repo/project/status/pinned share compact section chrome; flat "All" stays a simple label.
   const showHeaderCollapseAffordance =
     row.count > 0 &&
-    (isRepoHeader || isProjectGroupHeader || headerWorkspaceStatus !== null || isPinnedHeader)
+    (isRepoHeader ||
+      isProjectGroupHeader ||
+      row.icon.kind === 'workspace-status' ||
+      headerWorkspaceStatus !== null ||
+      isPinnedHeader)
   return (
     <div
       key={vItem.key}
@@ -233,7 +238,7 @@ export function renderWorktreeSectionHeaderRow(args: {
           data-project-group-header-drag-handle={isDraggableProjectGroupHeader ? '' : undefined}
           data-workspace-status-drop-target={headerWorkspaceStatus ? '' : undefined}
           data-workspace-status={headerWorkspaceStatus ?? undefined}
-          data-workspace-pin-drop-target={isPinnedHeader ? '' : undefined}
+          data-workspace-pin-drop-target={row.key === 'pinned' ? '' : undefined}
           className={cn(
             // Keep grab on the title; action buttons use pointer cursors.
             'group relative flex h-7 w-full items-center gap-1.5 pr-2 text-left transition-all',
@@ -255,17 +260,17 @@ export function renderWorktreeSectionHeaderRow(args: {
             paddingLeft:
               isRepoHeader || isProjectGroupHeader
                 ? getProjectGroupHeaderPaddingLeft(row.projectGroupDepth ?? 0)
-                : WORKTREE_SECTION_HEADER_PADDING_LEFT
+                : WORKTREE_SECTION_HEADER_PADDING_LEFT + (row.groupDepth ?? 0) * SIDEBAR_TREE_INDENT
           }}
           onDragOver={
-            isPinnedHeader
+            row.key === 'pinned'
               ? ctx.onWorkspacePinDragOver
               : headerWorkspaceStatus
                 ? (event) => ctx.onWorkspaceStatusDragOver(event, headerWorkspaceStatus)
                 : undefined
           }
           onDragLeave={
-            isPinnedHeader
+            row.key === 'pinned'
               ? ctx.onWorkspacePinDragLeave
               : headerWorkspaceStatus
                 ? ctx.onWorkspaceStatusDragLeave
@@ -344,6 +349,7 @@ export function renderWorktreeSectionHeaderRow(args: {
           </div>
 
           <ProjectHeaderActions>
+            {isPinnedHeader && <PinnedGroupHeaderMenu />}
             {showHeaderCollapseAffordance ? (
               <div
                 className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent/70 hover:text-foreground"

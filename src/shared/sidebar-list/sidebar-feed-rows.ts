@@ -2,20 +2,16 @@ import {
   ALL_EXECUTION_HOSTS_SCOPE,
   getWorktreeExecutionHostId,
   normalizeExecutionHostOrder,
-  parseExecutionHostId,
-  type ExecutionHostId,
-  type ExecutionHostScope
+  parseExecutionHostId
 } from '../execution-host'
 import type { ProjectGroup } from '../project-group-types'
 import { getLogicalRepoOrderRankById } from '../project-section-order'
 import type { ProjectSectionModel } from '../project-section-grouping'
 import type { Repo } from '../repo-types'
-import type { ProjectOrderBy } from '../ui-chrome-types'
 import {
   filterFolderWorkspacesFromOtherDevices,
   isWorkspaceOwnedBySomeoneElse
 } from '../workspace-creator-visibility'
-import type { WorkspaceRowFilters } from '../workspace-view/workspace-row-filters'
 import { getWorktreeHostIdentity } from '../worktree/host-qualified-identity'
 import { collectActiveRowKeys } from './active-workspace'
 import {
@@ -24,7 +20,7 @@ import {
   rankSidebarFeedWorktrees,
   type SidebarFeedIndex
 } from './sidebar-feed-index'
-import type { WorkspaceStatusDefinition, Worktree } from '../worktree/types'
+import type { Worktree } from '../worktree/types'
 import type { WorktreeLineage } from '../worktree/lineage-types'
 import type { FolderWorkspace } from '../folder-workspace-types'
 import { getEmptyProjectPlaceholderRepoIds } from './empty-project-placeholder-repos'
@@ -44,36 +40,17 @@ import {
 import type {
   ImportedWorktreesCardCandidate,
   NewExternalWorktreesInboxCandidate,
-  PinnedWorktreeDisplayPolicy,
-  Row,
-  WorktreeGroupBy
+  Row
 } from './row-types'
 import type { SidebarFeedDomains } from './sidebar-feed-domains'
 import { planSidebarRows } from './sidebar-row-plan'
-import type { SortBy } from './smart-sort'
 import { selectVisibleSidebarWorktrees } from './visible-worktrees'
 import { isIdleWorkspaceActivity } from './workspace-activity-facts'
 import { prGroupOfReviewFact } from './workspace-review-facts'
 
 /** The host's view settings a reader shows the list with; the host's own phone reads them off ui.get. */
-export type SidebarFeedView = {
-  groupBy: WorktreeGroupBy
-  sortBy: SortBy
-  projectOrderBy: ProjectOrderBy
-  collapsedGroups: ReadonlySet<string>
-  filters: WorkspaceRowFilters
-  workspaceHostScope: ExecutionHostScope
-  visibleWorkspaceHostIds: readonly ExecutionHostId[] | null
-  workspaceStatuses: readonly WorkspaceStatusDefinition[]
-  pinnedDisplayPolicy: PinnedWorktreeDisplayPolicy
-  /** The host the desktop has focused (its settings' active runtime), where unowned rows land. */
-  defaultHostId: ExecutionHostId
-  hostLabelOverrides: ReadonlyMap<ExecutionHostId, string>
-  /** The listed host's name for itself when the user has not renamed it. */
-  localHostLabel: string
-  /** The desktop window's own saved host order, which it writes; a phone reads the host's. */
-  workspaceHostOrder?: readonly ExecutionHostId[]
-}
+import type { SidebarFeedView } from './sidebar-feed-view'
+export type { SidebarFeedView } from './sidebar-feed-view'
 
 /** The catalog the feed does not carry: every host's repos (repo.list), groups and projects. */
 export type SidebarFeedCatalog = {
@@ -226,6 +203,7 @@ export function planSidebarFeedRows(
   // The catalog's order, not the feed's repoOrder: only it places a paired server's projects.
   const repoOrder = getLogicalRepoOrderRankById(repos.map((repo) => repo.id))
   const plan = planSidebarRows({
+    pinnedWorkspaceGrouping: view.pinnedWorkspaceGrouping,
     groupBy,
     worktrees: visibleWorktrees,
     repoMap,
