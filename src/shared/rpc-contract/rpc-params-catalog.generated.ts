@@ -185,10 +185,12 @@ import {
 import {
   ConnectorAnswer,
   ConnectorCancel,
+  ConnectorLink,
   ConnectorPendingPrompt,
   ConnectorReply,
   ConnectorSend,
   ConnectorStart,
+  ConnectorUnlink,
   ConnectorWatch
 } from './connector-params'
 import {
@@ -939,10 +941,12 @@ export const RPC_PARAMS_BY_METHOD = {
   'computer.typeText': TypeText,
   'connector.answer': ConnectorAnswer,
   'connector.cancel': ConnectorCancel,
+  'connector.link': ConnectorLink,
   'connector.pendingPrompt': ConnectorPendingPrompt,
   'connector.reply': ConnectorReply,
   'connector.send': ConnectorSend,
   'connector.start': ConnectorStart,
+  'connector.unlink': ConnectorUnlink,
   'connector.watch': ConnectorWatch,
   'desktopBrowserBridge.attach': DesktopBrowserBridgeAttachParams,
   'desktopBrowserBridge.result': DesktopBrowserBridgeResultParams,

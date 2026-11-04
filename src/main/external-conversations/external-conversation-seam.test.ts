@@ -8,6 +8,7 @@ import {
   launchResult,
   LOCAL_REPO,
   PANE,
+  sessionRow,
   WORKTREE
 } from './external-conversation.test-fixture'
 import { deferred, harness } from './external-conversation-seam.test-fixture'
@@ -619,5 +620,58 @@ describe('ExternalConversationSeam start-headed lanes', () => {
     expect((await start).initial).toEqual({ outcome: 'accepted' })
     expect(await follower).toEqual(GONE)
     expect(terminal.writes).toEqual([])
+  })
+})
+
+describe('ExternalConversationSeam link', () => {
+  function linkable(agentType = 'claude') {
+    const terminal = fakeTerminal()
+    const h = harness({}, undefined, undefined, terminal.terminal)
+    const { launcher, launch } = fakeLauncher(async () => launchResult('handed-to-terminal'))
+    h.hookRows.set(PANE, { ...sessionRow(PANE), agentType, worktreeId: WORKTREE })
+    return { ...h, terminal, launch, host: { launcher, terminal: terminal.terminal } }
+  }
+
+  it('adopts a running agent pane without launching, then delivers to it', async () => {
+    const { seam, host, terminal, launch, row } = linkable()
+    expect(await seam.link(host, KEY, PANE)).toEqual({ outcome: 'accepted' })
+    expect(launch).not.toHaveBeenCalled()
+    expect(row(WORKTREE)?.externalConversations).toEqual([
+      expect.objectContaining({ externalId: 'thread-1', paneKey: PANE, agent: 'claude' })
+    ])
+    expect(await seam.send(host, KEY, 'd1', 'hello')).toEqual({ outcome: 'accepted' })
+    expect(terminal.writes).toEqual(['hello'])
+  })
+
+  it('refuses a pane that is not a connector agent', async () => {
+    const { seam, host, row } = linkable('gemini')
+    expect(await seam.link(host, KEY, PANE)).toEqual({
+      outcome: 'refused',
+      reason: 'unsupported_agent'
+    })
+    expect(row(WORKTREE)).toBeUndefined()
+  })
+
+  it('repeats the same link, but refuses a second conversation on the pane', async () => {
+    const { seam, host } = linkable()
+    await seam.link(host, KEY, PANE)
+    expect(await seam.link(host, KEY, PANE)).toEqual({ outcome: 'accepted' })
+    expect(await seam.link(host, { source: 'dev', externalId: 'thread-2' }, PANE)).toEqual({
+      outcome: 'refused',
+      reason: 'pane_already_linked'
+    })
+  })
+
+  it('unlinks without touching the agent, freeing the pane for another conversation', async () => {
+    const { seam, host, terminal, row } = linkable()
+    await seam.link(host, KEY, PANE)
+    expect(await seam.unlink(KEY)).toEqual({ outcome: 'accepted' })
+    expect(row(WORKTREE)?.externalConversations).toEqual([])
+    await expect(seam.send(host, KEY, 'd1', 'hello')).rejects.toThrow(
+      'external_conversation_not_found'
+    )
+    expect(terminal.writes).toEqual([])
+    const next = { source: 'dev' as const, externalId: 'thread-2' }
+    expect(await seam.link(host, next, PANE)).toEqual({ outcome: 'accepted' })
   })
 })

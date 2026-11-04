@@ -1,3 +1,5 @@
+/* eslint-disable max-lines -- Why: link/unlink share the per-conversation chain and lane state
+   with start/send, so they stay on the seam rather than splitting its private state. */
 import type { AgentPaneChange } from '../agent-hooks/agent-transition-detector'
 import type { PendingPrompt } from '../../shared/agent-pending-prompt'
 import type { AgentStatusHooksSettings } from '../../shared/agent-status-hooks-setting'
@@ -16,6 +18,8 @@ import { ConversationPrompts } from './external-conversation-prompts'
 import type { DeliveryReceipts } from './external-conversation-delivery-receipts'
 import {
   findLink,
+  findPaneLink,
+  removeLink,
   requireLink,
   writeLink,
   type ExternalConversationLinkStore,
@@ -218,6 +222,53 @@ export class ExternalConversationSeam {
         })
     )
     return { conversation: key, initial }
+  }
+
+  /** Adopt a running agent pane, so a conversation can drive a session started elsewhere. */
+  link(host: ExternalConversationHost, key: ConversationKey, paneKey: string): Promise<Delivery> {
+    if (this.abort.signal.aborted) {
+      return Promise.resolve(refused('connectors_disabled'))
+    }
+    return this.chain.enqueue(conversationId(key), async () => {
+      const existing = findLink(this.deps.store, key)
+      if (existing) {
+        return existing.link.paneKey === paneKey
+          ? { outcome: 'accepted' }
+          : refused('conversation_linked_elsewhere')
+      }
+      if (findPaneLink(this.deps.store, paneKey)) {
+        return refused('pane_already_linked')
+      }
+      const row = this.deps.readHookRow(paneKey)
+      const agent = row?.agentType
+      if (!agent || !admitConnectorAgent(this.deps.readSettings(), agent)) {
+        return refused('unsupported_agent')
+      }
+      if (!row.worktreeId || !bindPane(host.terminal, paneKey)) {
+        return refused('agent_not_reachable')
+      }
+      const workspace = await host.launcher.paneWorkspace(row.worktreeId)
+      const link = { ...key, paneKey, agent, createdAt: Date.now() }
+      writeLink(this.deps.store, workspace, link)
+      this.linked.set(conversationId(key), { key, worktreeId: workspace.worktreeId })
+      this.events?.linked({ workspace, link })
+      this.sessions.capture(key, paneKey)
+      return { outcome: 'accepted' }
+    })
+  }
+
+  /** Settles queued work, then forgets the link; the agent pane keeps running. */
+  async unlink(key: ConversationKey): Promise<Delivery> {
+    const id = conversationId(key)
+    await this.chain.cancel(id, 'conversation_cancelled')
+    const linked = findLink(this.deps.store, key)
+    if (linked) {
+      removeLink(this.deps.store, linked)
+    }
+    this.linked.delete(id)
+    this.startedHere.delete(id)
+    this.events?.forgetUnlinked()
+    return { outcome: 'accepted' }
   }
 
   send(

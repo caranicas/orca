@@ -5,10 +5,12 @@ import { cloudConversation } from '../../../../shared/connector-cloud-contract'
 import {
   ConnectorAnswer,
   ConnectorCancel,
+  ConnectorLink,
   ConnectorPendingPrompt,
   ConnectorReply,
   ConnectorSend,
   ConnectorStart,
+  ConnectorUnlink,
   ConnectorWatch
 } from '../../../../shared/rpc-contract/connector-params'
 import type {
@@ -60,6 +62,24 @@ export const CONNECTOR_METHODS = [
         deliveryId,
         text
       )
+  }),
+  defineMethod({
+    name: 'connector.link',
+    permission: 'workspace',
+    params: ConnectorLink,
+    handler: async ({ source, externalId, paneKey }, context) =>
+      requireSeam(context.runtime).link(
+        runtimeConversationHost(context.runtime),
+        { source, externalId },
+        paneKey
+      )
+  }),
+  defineMethod({
+    name: 'connector.unlink',
+    permission: 'workspace',
+    params: ConnectorUnlink,
+    handler: async ({ source, externalId }, context) =>
+      requireSeam(context.runtime).unlink({ source, externalId })
   }),
   defineMethod({
     name: 'connector.pendingPrompt',

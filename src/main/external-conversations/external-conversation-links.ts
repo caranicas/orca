@@ -89,6 +89,13 @@ export function writeLink(
   }
 }
 
+export function removeLink(store: ExternalConversationLinkStore, linked: LinkedConversation): void {
+  const others = readLinks(store, linked.workspace).filter(
+    (existing) => !sameConversation(existing, linked.link)
+  )
+  writeWorkspaceRecord(store, linked.workspace, { externalConversations: others })
+}
+
 /** Read canonical rows on every host; the locator map can hide same-path workspaces on other hosts. */
 export function* allLinks(store: ExternalConversationLinkStore): Generator<LinkedConversation> {
   const hosts = new Set<ExecutionHostId>([
@@ -116,6 +123,18 @@ export function findLink(
 ): LinkedConversation | null {
   for (const linked of allLinks(store)) {
     if (sameConversation(linked.link, key)) {
+      return linked
+    }
+  }
+  return null
+}
+
+export function findPaneLink(
+  store: ExternalConversationLinkStore,
+  paneKey: string
+): LinkedConversation | null {
+  for (const linked of allLinks(store)) {
+    if (linked.link.paneKey === paneKey) {
       return linked
     }
   }
