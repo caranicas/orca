@@ -1,3 +1,5 @@
+/* eslint-disable max-lines -- Why: snapshot and live events share turn bookkeeping; splitting
+   them would let a snapshot disagree with the events that follow it. */
 import type { AgentPaneChange } from '../agent-hooks/agent-transition-detector'
 import { agentMainAgentVerdict } from '../../shared/agent-main-agent-verdict'
 import type { PendingPrompt } from '../../shared/agent-pending-prompt'
@@ -44,6 +46,8 @@ export type ConversationSnapshot = {
   conversations: (ConversationPane & {
     agent: ConnectorAgent
     working: boolean
+    /** The idle pane's latest reply, so a watcher that missed its turn-ended can still post it. */
+    lastAssistantMessage?: string
     prompt: PendingPrompt | null
     /** The pane's latest turn, as its turn events name it; null before any. */
     turnId: number | null
@@ -215,10 +219,12 @@ export class ConversationEvents {
       conversations: [...allLinks(this.deps.store)].map(({ workspace, link }) => {
         const row = this.deps.readHookRow(link.paneKey)
         const working = row ? hookRowAgentPhase(row) === 'working' : false
+        const message = working ? undefined : row?.lastAssistantMessage
         return {
           ...pane(link, workspace.worktreeId),
           agent: link.agent,
           working,
+          ...(message ? { lastAssistantMessage: message } : {}),
           prompt: this.deps.pendingPrompt(link),
           // Unstamped and unseen: the working phase's start, as before stamps.
           turnId: this.turnIdOf(link.paneKey, row) ?? (row && working ? row.stateStartedAt : null),

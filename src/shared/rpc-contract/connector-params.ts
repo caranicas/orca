@@ -32,6 +32,15 @@ const ConnectorConversation = {
 
 export const ConnectorPendingPrompt = z.object(ConnectorConversation)
 
+/** Adopts a running Claude/Codex pane instead of launching one. */
+export const ConnectorLink = z.object({
+  ...ConnectorConversation,
+  paneKey: z.string().min(1, 'Missing pane key')
+})
+
+/** Forgets the link and settles queued work; the agent keeps running. */
+export const ConnectorUnlink = z.object(ConnectorConversation)
+
 /** Why `connector.reply` refused; connector_unavailable comes after the host's own retries. */
 export const CONNECTOR_REPLY_ERROR_CODES = [
   'not_a_cloud_conversation',

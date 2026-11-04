@@ -1,0 +1,25 @@
+{
+  "name": "@orca/discord-bridge",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Local Discord bot that drives Orca agent sessions through the connector RPCs",
+  "type": "commonjs",
+  "scripts": {
+    "start": "tsx --conditions=orca-source src/main.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "discord.js": "14.28.0",
+    "zod": "~4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "5.0.5"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

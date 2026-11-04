@@ -16,7 +16,10 @@ export const CONNECTOR_REFUSALS = [
   'prompt_unsupported',
   'option_not_offered',
   // Queued or held work a cancel settled before it was written.
-  'conversation_cancelled'
+  'conversation_cancelled',
+  // A link's: the conversation drives another pane, or the pane already belongs to another conversation.
+  'conversation_linked_elsewhere',
+  'pane_already_linked'
 ] as const
 export type ConnectorRefusal = (typeof CONNECTOR_REFUSALS)[number]
 
