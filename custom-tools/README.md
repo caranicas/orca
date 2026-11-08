@@ -22,8 +22,10 @@ Double-click `custom-tools/start-orca-custom.cmd` to reopen the app, or create a
 desktop shortcut to that file. Keep its console open while using Orca; quit the
 app normally before closing the console or changing branches. This runs the same
 source-based development app as the Mac launcher, with no installer or signing
-certificate required. Setup builds the CLI and Windows native helpers and installs
-the separate mobile web dependencies. It checks types unless `-SkipTypecheck`
+certificate required. Setup builds the desktop, CLI, Windows native helpers,
+browser client, and mobile workspace bundle. The phone app downloads its workspace
+from this desktop, so rerun setup after upstream updates to keep them compatible.
+It checks types unless `-SkipTypecheck`
 is supplied.
 
 The Windows scripts target the checkout containing them, including a linked

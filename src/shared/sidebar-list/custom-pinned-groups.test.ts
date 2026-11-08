@@ -38,6 +38,7 @@ function plan(
 ) {
   return planSidebarRows({
     groupBy: 'none',
+    sortBy: 'manual',
     worktrees,
     repoMap: new Map([
       ['repo', { id: 'repo', path: '/repo', displayName: 'Repo', badgeColor: '', addedAt: 0 }]

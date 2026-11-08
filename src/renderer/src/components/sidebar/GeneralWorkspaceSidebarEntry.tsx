@@ -4,10 +4,25 @@ import { toast } from 'sonner'
 import { useAppStore } from '@/store'
 import { cn } from '@/lib/utils'
 import { translate } from '@/i18n/i18n'
+import { useTranslate } from '@/i18n/use-translate'
 import { isPairedWebClientWindow } from '@/lib/desktop-window-chrome'
 import { isGeneralWorkspaceRepo } from '../../../../shared/general-workspace'
 
+async function openGeneralWorkspaceFromSidebar(onSettled: () => void): Promise<void> {
+  try {
+    const { openGeneralWorkspace } = await import('@/lib/open-general-workspace')
+    await openGeneralWorkspace()
+  } catch (error) {
+    toast.error(translate('custom.general.error', 'Could not open General'), {
+      description: error instanceof Error ? error.message : String(error)
+    })
+  } finally {
+    onSettled()
+  }
+}
+
 export function GeneralWorkspaceSidebarEntry() {
+  const t = useTranslate()
   const active = useAppStore(
     (state) =>
       state.activeView === 'terminal' &&
@@ -19,23 +34,16 @@ export function GeneralWorkspaceSidebarEntry() {
   if (isPairedWebClientWindow()) {
     return null
   }
-  const open = async () => {
+  const open = () => {
     if (openingRef.current) {
       return
     }
     openingRef.current = true
     setOpening(true)
-    try {
-      const { openGeneralWorkspace } = await import('@/lib/open-general-workspace')
-      await openGeneralWorkspace()
-    } catch (error) {
-      toast.error(translate('custom.general.error', 'Could not open General'), {
-        description: error instanceof Error ? error.message : String(error)
-      })
-    } finally {
+    void openGeneralWorkspaceFromSidebar(() => {
       openingRef.current = false
       setOpening(false)
-    }
+    })
   }
   return (
     <button
@@ -56,7 +64,7 @@ export function GeneralWorkspaceSidebarEntry() {
       ) : (
         <MessagesSquare className="size-4 shrink-0" aria-hidden="true" />
       )}
-      <span className="flex-1">{translate('custom.general.label', 'General')}</span>
+      <span className="flex-1">{t('custom.general.label', 'General')}</span>
     </button>
   )
 }

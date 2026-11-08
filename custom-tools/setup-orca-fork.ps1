@@ -26,8 +26,8 @@ try {
     if (-not $SkipTypecheck) {
         Invoke-OrcaPnpm tc
     }
-    Invoke-OrcaPnpm build:cli
     Invoke-OrcaPnpm build:native
+    Invoke-OrcaPnpm build:desktop:assets
     @{
         nodeDirectory = Split-Path -Parent $OrcaNode.Source
         pnpmDirectory = Split-Path -Parent $OrcaPnpm.Source

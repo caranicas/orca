@@ -14,14 +14,16 @@ const mocks = vi.hoisted(() => ({
   fetch: vi.fn()
 }))
 vi.mock('@/store', () => ({ useAppStore: { getState: mocks.getState } }))
-vi.mock('@/lib/worktree-activation', () => ({ activateAndRevealWorktree: mocks.activate }))
-vi.mock('@/components/sidebar/add-repo-store-upsert', () => ({
+vi.mock('@/lib/workspace/activation/worktree-activation', () => ({
+  activateAndRevealWorktree: mocks.activate
+}))
+vi.mock('@/components/sidebar/project-admission/completion/add-repo-store-upsert', () => ({
   upsertAddedRepoWithProjectHostSetup: mocks.upsert
 }))
 vi.mock('@/components/floating-terminal/floating-terminal-panel-view-state', () => ({
   persistFloatingTerminalPanelOpen: mocks.persistFloating
 }))
-vi.mock('@/store/workspace-record-selectors', () => ({
+vi.mock('@/store/workspaces/catalog/workspace-record-fields', () => ({
   selectWorktreesByRepo: (state: { worktreesByRepo: unknown }) => state.worktreesByRepo
 }))
 

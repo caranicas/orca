@@ -1,18 +1,18 @@
 import { useAppStore } from '@/store'
 import { joinPath } from './path'
 import { isPairedWebClientWindow } from './desktop-window-chrome'
-import { activateAndRevealWorktree } from './worktree-activation'
+import { activateAndRevealWorktree } from './workspace/activation/worktree-activation'
 import { translate } from '@/i18n/i18n'
-import { upsertAddedRepoWithProjectHostSetup } from '@/components/sidebar/add-repo-store-upsert'
-import { worktreeRefreshOptions } from '@/components/sidebar/add-repo-runtime-owner'
-import { selectWorktreesByRepo } from '@/store/workspace-record-selectors'
+import { upsertAddedRepoWithProjectHostSetup } from '@/components/sidebar/project-admission/completion/add-repo-store-upsert'
+import { worktreeRefreshOptions } from '@/components/sidebar/project-admission/host-selection/add-repo-runtime-owner'
+import { selectWorktreesByRepo } from '@/store/workspaces/catalog/workspace-record-fields'
 import { LOCAL_EXECUTION_HOST_ID } from '../../../shared/execution-host'
 import {
   GENERAL_WORKSPACE_NAME,
   GENERAL_WORKSPACE_PARENT,
   isGeneralWorkspaceRepo
 } from '../../../shared/general-workspace'
-import { repoCreateErrorText } from '@/components/sidebar/repo-create-error-copy'
+import { repoCreateErrorText } from '@/components/sidebar/project-admission/create/repo-create-error-copy'
 import { persistFloatingTerminalPanelOpen } from '@/components/floating-terminal/floating-terminal-panel-view-state'
 
 let openingGeneral: Promise<void> | null = null

@@ -11,7 +11,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { WorkspaceColorField } from './WorkspaceColorField'
-import { translate } from '@/i18n/i18n'
+import { useTranslate } from '@/i18n/use-translate'
 
 export function useWorkspaceAppearanceDraft(worktree: Worktree | undefined) {
   const [initial] = useState(() => {
@@ -54,6 +54,7 @@ export function WorkspaceAppearanceFields({
   disabled: boolean
   isFolderWorkspace: boolean
 }) {
+  const t = useTranslate()
   const groups = useWorkspaceOrganization((state) => state.grouping.groups)
   const selectedGroup = groups.some((group) => group.id === draft.group) ? draft.group : null
   return (
@@ -61,9 +62,7 @@ export function WorkspaceAppearanceFields({
       <WorkspaceColorField value={draft.color} onChange={draft.setColor} disabled={disabled} />
       {!isFolderWorkspace && groups.length > 0 && (
         <div className="space-y-2">
-          <Label htmlFor="workspace-pinned-group">
-            {translate('custom.pins.group', 'Pinned group')}
-          </Label>
+          <Label htmlFor="workspace-pinned-group">{t('custom.pins.group', 'Pinned group')}</Label>
           <Select
             value={selectedGroup ?? 'none'}
             onValueChange={(value) => draft.setGroup(value === 'none' ? null : value)}
@@ -73,9 +72,7 @@ export function WorkspaceAppearanceFields({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">
-                {translate('custom.pins.noGroup', 'No pinned group')}
-              </SelectItem>
+              <SelectItem value="none">{t('custom.pins.noGroup', 'No pinned group')}</SelectItem>
               {groups.map((group) => (
                 <SelectItem key={group.id} value={group.id}>
                   {group.name}
