@@ -11,9 +11,10 @@ import {
   stopRepoHeaderKeyboardToggle,
   stopRepoHeaderMenuEvent
 } from './worktree-list/rows/header-event-guards'
-import { translate } from '@/i18n/i18n'
+import { useTranslate } from '@/i18n/use-translate'
 
 export function PinnedGroupHeaderMenu() {
+  const t = useTranslate()
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
@@ -22,7 +23,7 @@ export function PinnedGroupHeaderMenu() {
           variant="ghost"
           size="icon-xs"
           data-repo-header-action=""
-          aria-label={translate('custom.pins.actions', 'Pinned group actions')}
+          aria-label={t('custom.pins.actions', 'Pinned group actions')}
           onPointerDown={handleRepoHeaderActionPointerDown}
           onClick={stopRepoHeaderMenuEvent}
           onKeyDown={stopRepoHeaderKeyboardToggle}

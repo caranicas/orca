@@ -3,7 +3,7 @@ import { ColorPicker } from '@/components/ui/color-picker'
 import { Label } from '@/components/ui/label'
 import { DEFAULT_REPO_BADGE_COLOR } from '../../../../shared/repo-badge-color'
 import { WORKSPACE_COLORS, WORKSPACE_COLOR_NAMES } from '../../../../shared/workspace-colors'
-import { translate } from '@/i18n/i18n'
+import { useTranslate } from '@/i18n/use-translate'
 
 export function WorkspaceColorField({
   value,
@@ -14,9 +14,10 @@ export function WorkspaceColorField({
   onChange: (color: string | null) => void
   disabled?: boolean
 }) {
+  const t = useTranslate()
   return (
     <div className="space-y-2">
-      <Label>{translate('custom.workspace.color', 'Workspace color')}</Label>
+      <Label>{t('custom.workspace.color', 'Workspace color')}</Label>
       <div className="flex flex-wrap items-center gap-2">
         {WORKSPACE_COLORS.map((color, index) => (
           <Button
@@ -38,10 +39,10 @@ export function WorkspaceColorField({
         ))}
         <fieldset disabled={disabled}>
           <ColorPicker
-            label={translate('custom.workspace.customColor', 'Custom workspace color')}
+            label={t('custom.workspace.customColor', 'Custom workspace color')}
             value={value ?? DEFAULT_REPO_BADGE_COLOR}
             onChange={onChange}
-            triggerLabel={translate('custom.workspace.custom', 'Custom')}
+            triggerLabel={t('custom.workspace.custom', 'Custom')}
           />
         </fieldset>
         <Button
@@ -51,14 +52,11 @@ export function WorkspaceColorField({
           disabled={disabled || value === null}
           onClick={() => onChange(null)}
         >
-          {translate('custom.workspace.noColor', 'No color')}
+          {t('custom.workspace.noColor', 'No color')}
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        {translate(
-          'custom.workspace.colorHint',
-          'A sidebar accent. Agent status keeps its own indicator.'
-        )}
+        {t('custom.workspace.colorHint', 'A sidebar accent. Agent status keeps its own indicator.')}
       </p>
     </div>
   )

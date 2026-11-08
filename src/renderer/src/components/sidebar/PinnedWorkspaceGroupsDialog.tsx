@@ -12,9 +12,10 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
-import { translate } from '@/i18n/i18n'
+import { useTranslate } from '@/i18n/use-translate'
 
 function GroupEditor() {
+  const t = useTranslate()
   const [groups, setGroups] = useState(() => [
     ...useWorkspaceOrganization.getState().grouping.groups
   ])
@@ -32,14 +33,14 @@ function GroupEditor() {
     })
   const save = () => {
     if (groups.some((group) => !group.name.trim())) {
-      setError(translate('custom.pins.nameRequired', 'Give every group a name.'))
+      setError(t('custom.pins.nameRequired', 'Give every group a name.'))
       return
     }
     try {
       saveGroups(groups)
       setOpen(false)
     } catch {
-      setError(translate('custom.pins.saveFailed', 'Could not save groups. Try again.'))
+      setError(t('custom.pins.saveFailed', 'Could not save groups. Try again.'))
     }
   }
   return (
@@ -51,9 +52,9 @@ function GroupEditor() {
       }}
     >
       <DialogHeader>
-        <DialogTitle>{translate('custom.pins.manage', 'Pinned groups')}</DialogTitle>
+        <DialogTitle>{t('custom.pins.manage', 'Pinned groups')}</DialogTitle>
         <DialogDescription>
-          {translate(
+          {t(
             'custom.pins.description',
             'Organize pinned workspaces across projects. Each group follows the sidebar sort order.'
           )}
@@ -63,7 +64,7 @@ function GroupEditor() {
         {groups.map((group, index) => (
           <div className="flex items-center gap-2" key={group.id}>
             <Input
-              aria-label={translate('custom.pins.groupName', 'Group name {{number}}', {
+              aria-label={t('custom.pins.groupName', 'Group name {{number}}', {
                 number: index + 1
               })}
               value={group.name}
@@ -80,7 +81,7 @@ function GroupEditor() {
               type="button"
               variant="ghost"
               size="icon-sm"
-              aria-label={translate('custom.pins.moveUp', 'Move {{name}} up', { name: group.name })}
+              aria-label={t('custom.pins.moveUp', 'Move {{name}} up', { name: group.name })}
               disabled={index === 0}
               onClick={() => move(index, -1)}
             >
@@ -90,7 +91,7 @@ function GroupEditor() {
               type="button"
               variant="ghost"
               size="icon-sm"
-              aria-label={translate('custom.pins.moveDown', 'Move {{name}} down', {
+              aria-label={t('custom.pins.moveDown', 'Move {{name}} down', {
                 name: group.name
               })}
               disabled={index === groups.length - 1}
@@ -102,7 +103,7 @@ function GroupEditor() {
               type="button"
               variant="ghost"
               size="icon-sm"
-              aria-label={translate('custom.pins.remove', 'Remove group {{name}}', {
+              aria-label={t('custom.pins.remove', 'Remove group {{name}}', {
                 name: group.name
               })}
               onClick={() =>
@@ -122,10 +123,10 @@ function GroupEditor() {
           }
         >
           <Plus />
-          {translate('custom.pins.add', 'Add group')}
+          {t('custom.pins.add', 'Add group')}
         </Button>
         <p className="text-xs text-muted-foreground">
-          {translate(
+          {t(
             'custom.pins.removalHint',
             'Removing a group keeps its workspaces. Groups and colors are saved in this app profile.'
           )}
@@ -138,9 +139,9 @@ function GroupEditor() {
       </div>
       <DialogFooter>
         <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
-          {translate('custom.pins.cancel', 'Cancel')}
+          {t('custom.pins.cancel', 'Cancel')}
         </Button>
-        <Button type="submit">{translate('custom.pins.save', 'Save')}</Button>
+        <Button type="submit">{t('custom.pins.save', 'Save')}</Button>
       </DialogFooter>
     </form>
   )
