@@ -24382,5 +24382,42 @@
     "stopped": "{{host}} stopped controlling browser tabs until Orca restarts.",
     "disallowed": "{{host}} can no longer control browser tabs. Turn it back on in Settings > SSH.",
     "failed": "Couldn’t stop {{host}}. Turn off its browser control in Settings > SSH."
+  },
+  "custom": {
+    "pins": {
+      "actions": "Pinned group actions",
+      "nameRequired": "Give every group a name.",
+      "saveFailed": "Could not save groups. Try again.",
+      "manage": "Pinned groups",
+      "description": "Organize pinned workspaces across projects. Each group follows the sidebar sort order.",
+      "groupName": "Group name {{number}}",
+      "moveUp": "Move {{name}} up",
+      "moveDown": "Move {{name}} down",
+      "remove": "Remove group {{name}}",
+      "add": "Add group",
+      "removalHint": "Removing a group keeps its workspaces. Groups and colors are saved in this app profile.",
+      "cancel": "Cancel",
+      "save": "Save",
+      "group": "Pinned group",
+      "noGroup": "No pinned group",
+      "move": "Move to pinned group",
+      "removeMembership": "Remove from pinned group"
+    },
+    "workspace": {
+      "color": "Workspace color",
+      "customColor": "Custom workspace color",
+      "custom": "Custom",
+      "noColor": "No color",
+      "colorHint": "A sidebar accent. Agent status keeps its own indicator.",
+      "saveFailed": "Could not save workspace appearance. Try again."
+    },
+    "general": {
+      "error": "Could not open General",
+      "label": "General",
+      "localOnly": "Open General from the desktop app.",
+      "folderConflict": "The General workspace location is already used by another project.",
+      "workspaceUnavailable": "General could not be loaded. Try opening it again.",
+      "openFailed": "General could not be opened."
+    }
   }
 }

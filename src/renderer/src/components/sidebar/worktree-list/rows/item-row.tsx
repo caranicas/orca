@@ -1,3 +1,4 @@
+import { isPinnedSectionKey } from '../../../../../../shared/sidebar-list/custom-pinned-groups'
 import type { DraggedWorktreeCopies } from '../drag/dragged-worktree-copies'
 import React from 'react'
 import { cn } from '@/lib/utils'
@@ -8,7 +9,6 @@ import { getWorktreeHostIdentity } from '../../../../../../shared/worktree/host-
 import { isActiveSidebarWorkspace } from '../../../../../../shared/sidebar-list/active-workspace'
 import WorktreeCard from '../../workspace-card/surface/WorktreeCard'
 import type { ActiveSurfaceVariant } from '../../workspace-card/controller/worktree-card-model'
-import { PINNED_GROUP_KEY } from '../../../../../../shared/sidebar-list/group-keys'
 import type { WorktreeGroupBy } from '../../../../../../shared/sidebar-list/row-types'
 import {
   getLineageChildrenInlineStyle,
@@ -71,7 +71,7 @@ function getWorktreeItemRowGeometry(
     return { surfaceInset: LINEAGE_NESTED_ROW_SURFACE_INSET, cardContentIndent: 0 }
   }
 
-  const isGrouped = ctx.groupBy !== 'none'
+  const isGrouped = ctx.groupBy !== 'none' || itemRow.groupDepth > 0
   const paddingLeft = getWorktreeCardContentIndent({
     isGrouped,
     groupDepth: itemRow.groupDepth,
@@ -182,7 +182,7 @@ export function renderWorktreeItemRow(
         // Why: pinned worktrees mix repos; cross-repo children opt into the existing project-name badge.
         hostContextLabel={itemRow.hostContextLabel}
         showProjectName={itemRow.showProjectName}
-        inPinnedSection={itemRow.sectionKey === PINNED_GROUP_KEY}
+        inPinnedSection={isPinnedSectionKey(itemRow.sectionKey)}
         renameRowKey={itemRow.rowKey}
         lineageChildCount={itemRow.lineageChildCount}
         lineageChildWorktreeIds={itemRow.lineageChildWorktreeIds}

@@ -1,12 +1,12 @@
-import type { FolderWorkspace } from '../folder-workspaces/folder-workspace-types'
-import type { ProjectGroup } from '../project-group-types'
-import type { Repo } from '../repo-types'
-import type { ProjectOrderBy } from '../ui-chrome-types'
-import type { WorktreeLineage } from '../worktree/lineage-types'
-import type { SidebarLineageParentIdentities } from './worktree-lineage-projection'
-import type { WorkspaceStatusDefinition, Worktree } from '../worktree/types'
-import type { ExecutionHostId } from '../execution-host'
-import { ALL_GROUP_KEY, PINNED_GROUP_KEY } from './group-keys'
+import type { Worktree } from '../worktree/types'
+import { ALL_GROUP_KEY } from './group-keys'
+import {
+  hasCustomPinnedGroup,
+  isPinnedSectionKey,
+  partitionPinnedWorkspaces
+} from './custom-pinned-groups'
+import { buildPinnedGroupHeader } from './pinned-group-header'
+import { buildPinnedStatusSections } from './pinned-status-sections'
 import { appendOrderedGroups, type SectionAppendContext } from './group-sections'
 
 import {
@@ -15,11 +15,7 @@ import {
   getMixedWorktreeHostContextLabels,
   getNoticeHostContextLabels
 } from './host-labels'
-import {
-  buildProjectGroupingIndex,
-  getProjectGroupingForRepo,
-  type ProjectSectionModel
-} from '../project-section-grouping'
+import { buildProjectGroupingIndex, getProjectGroupingForRepo } from '../project-section-grouping'
 import {
   buildWorktreeOccurrencePlan,
   type WorktreeOccurrenceSection
@@ -40,54 +36,17 @@ import {
   getSidebarFolderOccurrences,
   isFolderLaneSectionKey
 } from './folder-workspace-occurrences'
-import type {
-  ImportedWorktreesCardCandidate,
-  NewExternalWorktreesInboxCandidate,
-  PendingCreationRef,
-  PinnedWorktreeDisplayPolicy,
-  RepoOfWorktree,
-  Row,
-  SidebarPRGroupReader,
-  WorktreeGroupBy
-} from './row-types'
+import type { PendingCreationRef, Row } from './row-types'
 import { orderMainWorktreeFirst } from './section-order'
 import { appendImportedWorktreeLines } from './imported-worktree-lines'
 import { withRepoSectionDisplayLabels } from '../project-section-order'
 import { buildOrderedGroups } from './worktree-grouping'
-import type { WorkspaceSortBy } from '../workspace-view/workspace-row-sort'
 
 type SidebarOccurrenceSection = WorktreeOccurrenceSection<Worktree> & { group: WorktreeGroupEntry }
 
 /** Everything the row builder reads. Pure data: no store, clock or client-specific state. */
-export type SidebarRowPlanInputs = {
-  groupBy: WorktreeGroupBy
-  sortBy: WorkspaceSortBy
-  /** Visible worktrees in the frozen sort order. */
-  worktrees: Worktree[]
-  repoMap: Map<string, Repo>
-  /** Defaults to repoMap's registration for the row's repo id. */
-  repoOfWorktree?: RepoOfWorktree
-  prGroupOf: SidebarPRGroupReader
-  repoOrder?: Map<string, number>
-  workspaceStatuses: readonly WorkspaceStatusDefinition[]
-  projectOrderBy: ProjectOrderBy
-  lineageById: Record<string, WorktreeLineage>
-  /** Parents resolved once over every visible store's complete rows; nesting reuses them. */
-  lineageParentIdentities?: SidebarLineageParentIdentities
-  worktreeMap: Map<string, Worktree>
-  nestLineage: boolean
-  projectGroups: readonly ProjectGroup[]
-  placeholderRepoIds: ReadonlySet<string>
-  importedWorktreesByRepo: ReadonlyMap<string, ImportedWorktreesCardCandidate>
-  newExternalWorktreesInboxByRepo: ReadonlyMap<string, NewExternalWorktreesInboxCandidate>
-  pendingCreations: readonly PendingCreationRef[]
-  projectGrouping?: ProjectSectionModel
-  folderWorkspaces: readonly FolderWorkspace[]
-  hostLabelById?: ReadonlyMap<string, string>
-  defaultHostId: ExecutionHostId
-  pinnedDisplayPolicy: PinnedWorktreeDisplayPolicy
-  filterRepoIds: readonly string[]
-}
+import type { SidebarRowPlanInputs } from './sidebar-row-plan-inputs'
+export type { SidebarRowPlanInputs } from './sidebar-row-plan-inputs'
 
 /** Plans the sidebar's sections once; `render` emits rows for a collapse state. */
 export function planSidebarRows(inputs: SidebarRowPlanInputs) {
@@ -145,12 +104,15 @@ export function planSidebarRows(inputs: SidebarRowPlanInputs) {
     rows: [...worktrees, ...folders.rows],
     identityOf: getWorktreeHostIdentity,
     childrenByParentIdentity: lineageChildren,
-    isPinned: (worktree) => worktree.isPinned === true && !folders.isFolder(worktree),
+    isPinned: (worktree) =>
+      !folders.isFolder(worktree) &&
+      (worktree.isPinned === true ||
+        hasCustomPinnedGroup(worktree, inputs.pinnedWorkspaceGrouping)),
     duplicatePinned: pinnedDisplayPolicy === 'duplicate-in-groups',
     owningSectionOf: (worktree) =>
       getProjectGroupingForRepo(worktree.repoId, repoMap, projectIndex),
     projectIdOf: (worktree) => worktree.repoId,
-    sectionsOf: ({ pinned, natural, displayRootByIdentity }) => {
+    sectionsOf: ({ pinned, natural, displayRootByIdentity }): SidebarOccurrenceSection[] => {
       const folderBound =
         groupBy === 'repo'
           ? folders.boundRowsByGroupId(natural, displayRootByIdentity, lineageChildren)
@@ -176,38 +138,45 @@ export function planSidebarRows(inputs: SidebarRowPlanInputs) {
               projectOrderBy,
               folderWorkspaces: renderableFolderWorkspaces
             })
-      if (pinned.length > 0) {
-        groups.unshift([PINNED_GROUP_KEY, { label: '', items: pinned, repoIds: new Set() }])
-      }
+      groups.unshift(
+        ...buildPinnedStatusSections(
+          partitionPinnedWorkspaces(pinned, inputs.pinnedWorkspaceGrouping, lineageChildren),
+          workspaceStatuses
+        )
+      )
       const sections = groups.map(([key, group]): SidebarOccurrenceSection => {
         const revealPath =
-          groupBy === 'repo' && key !== PINNED_GROUP_KEY && group.repo?.projectGroupId
+          groupBy === 'repo' && !isPinnedSectionKey(key) && group.repo?.projectGroupId
             ? projectGroupPaths.get(group.repo.projectGroupId)
             : undefined
         const items = (
-          groupBy === 'repo' && key !== PINNED_GROUP_KEY
+          groupBy === 'repo' && !isPinnedSectionKey(key)
             ? orderMainWorktreeFirst(group.items, sortBy)
             : group.items
-        ).filter((row) => key === PINNED_GROUP_KEY || !folderBound?.bound.has(row))
+        ).filter((row) => isPinnedSectionKey(key) || !folderBound?.bound.has(row))
         return {
           key,
           group,
-          placement: key === PINNED_GROUP_KEY ? 'pinned' : 'natural',
+          placement: isPinnedSectionKey(key) ? 'pinned' : 'natural',
           // Folder rows follow the lane's worktrees, as their rows always have.
           items:
             key === ALL_GROUP_KEY
               ? [...items, ...folders.rows]
               : [...items, ...folders.rowsOf(group.folderWorkspaces)],
-          revealPath: { key, parent: revealPath }
+          revealPath: {
+            key,
+            parent: group.pinnedParent ? { key: group.pinnedParent.key } : revealPath
+          }
         }
       })
       return [...sections, ...getFolderLaneSections(folderBound, projectGroupPaths)]
     }
   })
-  const pinnedSectionWorktrees =
-    occurrencePlan.sections.find((section) => section.key === PINNED_GROUP_KEY)?.group.items ?? []
+  const pinnedSections = occurrencePlan.sections.filter((section) =>
+    isPinnedSectionKey(section.key)
+  )
   const orderedGroups: OrderedGroupEntry[] = occurrencePlan.sections
-    .filter((section) => section.key !== PINNED_GROUP_KEY && !isFolderLaneSectionKey(section.key))
+    .filter((section) => !isPinnedSectionKey(section.key) && !isFolderLaneSectionKey(section.key))
     .map((section) => [section.key, section.group])
   const naturalWorktrees = orderedGroups.flatMap(([, group]) => group.items)
   const render = (collapsedGroups: Set<string>): Row[] => {
@@ -233,15 +202,34 @@ export function planSidebarRows(inputs: SidebarRowPlanInputs) {
       projectIndex,
       hostLabelById
     )
-    emitPinnedGroup(
-      pinnedSectionWorktrees,
-      repoOf,
-      defaultHostId,
-      collapsedGroups,
-      result,
-      occurrencePlan,
-      mixedWorktreeHostContextLabels
-    )
+    const emittedPinnedParents = new Set<string>()
+    for (const section of pinnedSections) {
+      const parent = section.group.pinnedParent
+      if (parent && !emittedPinnedParents.has(parent.key)) {
+        result.push(buildPinnedGroupHeader(parent.items, repoOf, defaultHostId, parent))
+        emittedPinnedParents.add(parent.key)
+      }
+      if (parent && collapsedGroups.has(parent.key)) {
+        continue
+      }
+      emitPinnedGroup(
+        section.group.items,
+        repoOf,
+        defaultHostId,
+        collapsedGroups,
+        result,
+        occurrencePlan,
+        mixedWorktreeHostContextLabels,
+        {
+          key: section.key,
+          label: section.group.label,
+          ...(parent ? { parentGroupKey: parent.key, groupDepth: 1 } : {}),
+          ...(section.group.pinnedStatus
+            ? { icon: { kind: 'workspace-status', status: section.group.pinnedStatus } }
+            : {})
+        }
+      )
+    }
     const withImportedLines = (rows: Row[]): Row[] =>
       appendImportedWorktreeLines(rows, { importedWorktreesByRepo, defaultHostId, hostLabelById })
     if (groupBy === 'none') {

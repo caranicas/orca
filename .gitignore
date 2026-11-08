@@ -157,3 +157,12 @@ ci-shards/
 /.build/windows-native-benchmark/
 
 .local/static-analysis-research/
+
+# Private custom-fork runtime state and Python caches.
+/.orca-local/
+/custom-tools/.local/
+__pycache__/
+*.pyc
+
+# Keep Finder metadata ignored after the documentation allowlists above.
+.DS_Store

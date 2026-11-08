@@ -1,3 +1,4 @@
+import { isPinnedSectionKey } from '../../../../../../shared/sidebar-list/custom-pinned-groups'
 import {
   getFolderWorkspaceHostIdentity,
   folderWorkspaceToWorktree
@@ -5,7 +6,6 @@ import {
 import type { Worktree } from '../../../../../../shared/worktree/types'
 import { getWorktreeHostIdentity } from '../../../../../../shared/worktree/host-qualified-identity'
 import type { HostSectionRow } from '../../../../../../shared/sidebar-list/host-section-rows'
-import { PINNED_GROUP_KEY } from '../../../../../../shared/sidebar-list/group-keys'
 import type {
   PinnedWorktreeDisplayPolicy,
   WorktreeRow
@@ -32,7 +32,7 @@ export function getPreferredWorktreeRows(
   const seen = new Set<string>()
   for (const row of rows) {
     const identity = getWorktreeHostIdentity(row.worktree)
-    if (row.sectionKey === PINNED_GROUP_KEY || seen.has(identity)) {
+    if (isPinnedSectionKey(row.sectionKey) || seen.has(identity)) {
       continue
     }
     preferredRows.push(row)

@@ -1,4 +1,4 @@
-import { PINNED_GROUP_KEY } from '../../../../../../shared/sidebar-list/group-keys'
+import { isPinnedSectionKey } from '../../../../../../shared/sidebar-list/custom-pinned-groups'
 import { composeWorktreeHostIdentity } from '../../../../../../shared/worktree/host-qualified-identity'
 import type { ExecutionHostId } from '../../../../../../shared/execution-host'
 
@@ -12,7 +12,7 @@ type NaturalWorktreeKeyRow = { type: string } & Partial<{
 export function getNaturalWorktreeKeys(rows: readonly NaturalWorktreeKeyRow[]): Set<string> {
   const keys = new Set<string>()
   for (const row of rows) {
-    if (row.type === 'item' && row.sectionKey !== PINNED_GROUP_KEY && row.worktree) {
+    if (row.type === 'item' && !isPinnedSectionKey(row.sectionKey ?? '') && row.worktree) {
       keys.add(composeWorktreeHostIdentity(row.worktree.hostId, row.worktree.id))
     }
   }

@@ -1,7 +1,5 @@
-import {
-  PINNED_GROUP_KEY,
-  getWorktreeLineageGroupKey
-} from '../../../../../../shared/sidebar-list/group-keys'
+import { isPinnedSectionKey } from '../../../../../../shared/sidebar-list/custom-pinned-groups'
+import { getWorktreeLineageGroupKey } from '../../../../../../shared/sidebar-list/group-keys'
 import type { HostSectionRow } from '../../../../../../shared/sidebar-list/host-section-rows'
 import type { RenderRow } from './render-row'
 
@@ -13,7 +11,7 @@ export function isWorktreeItemRow(row: HostSectionRow): row is WorktreeItemRow {
 }
 
 export function isPinnedWorktreeRow(row: WorktreeItemRow): boolean {
-  return row.sectionKey === PINNED_GROUP_KEY
+  return isPinnedSectionKey(row.sectionKey)
 }
 
 // Collapse a parent and its visible lineage descendants into one virtual row so the card renders them inline.

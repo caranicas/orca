@@ -1,4 +1,5 @@
 import type { AppState } from '@/store/types'
+import { useWorkspaceOrganization } from '@/store/workspace-organization'
 import {
   getWorktreeExecutionHostId,
   type ExecutionHostId
@@ -48,6 +49,7 @@ export function getWorktreeRevealCollapsedGroupKeys(args: {
   const plan =
     args.occurrencePlan ??
     planSidebarRows({
+      pinnedWorkspaceGrouping: useWorkspaceOrganization.getState().grouping,
       groupBy: args.groupBy,
       sortBy: 'smart',
       worktrees: [...(args.visibleWorktrees ?? args.worktrees)],

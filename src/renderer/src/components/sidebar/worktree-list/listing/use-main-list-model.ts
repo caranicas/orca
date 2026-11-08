@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useAppStore } from '@/store'
+import { useWorkspaceOrganization } from '@/store/workspace-organization'
 import { useDesktopSidebarFeed } from '@/lib/desktop-sidebar-feed'
 import {
   overlaySidebarPendingLayer,
@@ -68,6 +69,7 @@ function windowFolderRecordOf(
 
 /** Use the phone’s builder over main’s domains, adding desktop state and pending writes; cards read window records. */
 export function useMainSidebarListModel(args: SidebarListModelArgs): SidebarListModel {
+  const pinnedWorkspaceGrouping = useWorkspaceOrganization((state) => state.grouping)
   const { filterState, sortBy, groupBy, repos, defaultHostId, settings } = args
   useSidebarListSession()
   const feed = useDesktopSidebarFeed()
@@ -108,6 +110,7 @@ export function useMainSidebarListModel(args: SidebarListModelArgs): SidebarList
   )
   const view: SidebarFeedView = useMemo(
     () => ({
+      pinnedWorkspaceGrouping,
       groupBy,
       sortBy,
       projectOrderBy: args.projectOrderBy,
@@ -123,6 +126,7 @@ export function useMainSidebarListModel(args: SidebarListModelArgs): SidebarList
       workspaceHostOrder
     }),
     [
+      pinnedWorkspaceGrouping,
       groupBy,
       sortBy,
       args.projectOrderBy,

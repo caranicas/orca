@@ -1,8 +1,8 @@
+import { isPinnedSectionKey } from '../../../../../../shared/sidebar-list/custom-pinned-groups'
 import { useCallback, useMemo } from 'react'
 import type React from 'react'
 import type { WorkspaceStatus } from '../../../../../../shared/worktree/types'
 import type { HostSectionRow } from '../../../../../../shared/sidebar-list/host-section-rows'
-import { PINNED_GROUP_KEY } from '../../../../../../shared/sidebar-list/group-keys'
 import type { WorktreeGroupBy } from '../../../../../../shared/sidebar-list/row-types'
 import '../../workspace-status/presentation/workspace-status'
 import {
@@ -30,7 +30,7 @@ export function useWorkspaceStatusRowDrag(args: {
   const hasWorkspaceDropTargets = useMemo(
     () =>
       groupBy === 'workspace-status' ||
-      rows.some((row) => row.type === 'header' && row.key === PINNED_GROUP_KEY),
+      rows.some((row) => row.type === 'header' && isPinnedSectionKey(row.key)),
     [groupBy, rows]
   )
 

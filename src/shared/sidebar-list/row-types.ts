@@ -29,6 +29,8 @@ export type SidebarHeaderIcon =
 export type SidebarPRGroupReader = (worktree: Worktree) => PRGroupKey
 
 export type GroupHeaderRow = {
+  parentGroupKey?: string
+  groupDepth?: number
   type: 'header'
   collapseKey?: string
   key: string

@@ -1,9 +1,7 @@
+import { isPinnedSectionKey } from '../../../../../../shared/sidebar-list/custom-pinned-groups'
 import { defaultRangeExtractor } from '@tanstack/react-virtual'
 import type { Range, VirtualItem } from '@tanstack/react-virtual'
-import {
-  PINNED_GROUP_KEY,
-  getWorktreeLineageGroupKey
-} from '../../../../../../shared/sidebar-list/group-keys'
+import { getWorktreeLineageGroupKey } from '../../../../../../shared/sidebar-list/group-keys'
 import { getRenderRowKey } from '../listing/render-row'
 import type { RenderRow } from '../listing/render-row'
 
@@ -53,7 +51,7 @@ export function shouldUseHeaderTopSpacing(args: {
 }): boolean {
   const previousRenderRow = args.rows[args.index - 1]
   const followsCollapsedPinnedHeader =
-    previousRenderRow?.type === 'header' && previousRenderRow.key === PINNED_GROUP_KEY
+    previousRenderRow?.type === 'header' && isPinnedSectionKey(previousRenderRow.key)
   return args.index !== args.firstHeaderIndex && !followsCollapsedPinnedHeader
 }
 

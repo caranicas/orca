@@ -1,3 +1,5 @@
+import { useWorkspaceOrganization } from '@/store/workspace-organization'
+import { getWorktreeHostIdentity } from '../../../../../../shared/worktree/host-qualified-identity'
 import React from 'react'
 import { LoaderCircle } from 'lucide-react'
 
@@ -45,6 +47,9 @@ export function WorktreeCardSurface({ card }: { card: WorktreeCardController }):
     contentIndent
   } = card
   const isSleeping = useIsSleepingWorktree(worktree.id)
+  const workspaceColor = useWorkspaceOrganization(
+    (state) => state.colors[getWorktreeHostIdentity(worktree)]
+  )
   const geometryFor = (statusLane: boolean) =>
     getWorktreeCardFrameGeometry({ flushSurface, contentIndent, statusLane })
   const { content: parentCardContent, frame } = renderWorkspaceCardTemplate(
@@ -100,8 +105,23 @@ export function WorktreeCardSurface({ card }: { card: WorktreeCardController }):
       onDragStart={!affiliateListMode && nativeDragEnabled ? handleDragStart : undefined}
       onDragEnd={!affiliateListMode && nativeDragEnabled ? handleDragEnd : undefined}
       aria-busy={isDeleting}
-      style={cardStyle}
+      style={{
+        ...cardStyle,
+        ...(workspaceColor
+          ? {
+              backgroundImage: `linear-gradient(color-mix(in srgb, ${workspaceColor} 10%, transparent), color-mix(in srgb, ${workspaceColor} 10%, transparent))`
+            }
+          : {})
+      }}
     >
+      {workspaceColor && (
+        <span
+          aria-hidden="true"
+          data-workspace-color={workspaceColor}
+          className="pointer-events-none absolute inset-y-1 left-0 z-10 w-1 rounded-full"
+          style={{ backgroundColor: workspaceColor }}
+        />
+      )}
       {isDeleting && (
         <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/50 backdrop-blur-[1px]">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-1 text-[11px] font-medium text-foreground shadow-sm border border-border/50">

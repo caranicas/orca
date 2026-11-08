@@ -1,6 +1,7 @@
+import { isPinnedSectionKey } from '../../../../../../shared/sidebar-list/custom-pinned-groups'
 import type { WorktreeDragGroup } from './worktree-manual-order'
 import { isFolderLaneSectionKey } from '../../../../../../shared/sidebar-list/folder-workspace-occurrences'
-import { ALL_GROUP_KEY, PINNED_GROUP_KEY } from '../../../../../../shared/sidebar-list/group-keys'
+import { ALL_GROUP_KEY } from '../../../../../../shared/sidebar-list/group-keys'
 import { getNaturalWorktreeKeys } from '../listing/natural-worktree-keys'
 import { composeWorktreeHostIdentity } from '../../../../../../shared/worktree/host-qualified-identity'
 import type { ExecutionHostId } from '../../../../../../shared/execution-host'
@@ -59,7 +60,7 @@ export function getWorktreeDragUnitGroups(
       continue
     }
     const worktreeKey = composeWorktreeHostIdentity(row.worktree.hostId, row.worktree.id)
-    if (row.sectionKey === PINNED_GROUP_KEY && naturalWorktreeKeys.has(worktreeKey)) {
+    if (isPinnedSectionKey(row.sectionKey) && naturalWorktreeKeys.has(worktreeKey)) {
       continue
     }
     let target = current

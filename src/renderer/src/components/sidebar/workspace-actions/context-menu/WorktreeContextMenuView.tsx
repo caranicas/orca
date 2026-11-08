@@ -1,3 +1,5 @@
+import { WorkspaceOrganizationMenu } from '../../WorkspaceOrganizationMenu'
+import { WorkspacePinMenuItem } from '../../WorkspacePinMenuItem'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { Bell, BellOff, Pencil, Pin, PinOff, Unlink } from 'lucide-react'
+import { Bell, BellOff, Pencil, Unlink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { WorktreeRowOpenInSubMenu } from '../open/WorktreeRowOpenInSubMenu'
 import { WorktreeDeveloperMenu } from '../open/WorktreeDeveloperMenu'
@@ -155,14 +157,18 @@ export default function WorktreeContextMenuView({ model }: { model: WorktreeCont
                 <Pencil className="size-3.5" />
                 {t('auto.components.sidebar.WorktreeContextMenu.editDetails', 'Edit Details…')}
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={handleTogglePin} disabled={isDeleting}>
-                {worktree.isPinned ? <PinOff className="size-3.5" /> : <Pin className="size-3.5" />}
-                {worktree.isPinned
-                  ? t('auto.components.sidebar.WorktreeContextMenu.697d0f6e1b', 'Unpin')
-                  : t('auto.components.sidebar.WorktreeContextMenu.3baa7d6507', 'Pin')}
-              </DropdownMenuItem>
+              <WorkspacePinMenuItem
+                worktree={worktree}
+                disabled={isDeleting}
+                onToggle={handleTogglePin}
+              />
             </>
           )}
+          <WorkspaceOrganizationMenu
+            worktrees={model.activeContextWorktrees}
+            disabled={deletingContext}
+            allowGrouping={!model.folderWorkspaceId}
+          />
           <WorktreeStatusMenuItems
             contextWorkspaceStatus={contextWorkspaceStatus}
             deletingContext={deletingContext}

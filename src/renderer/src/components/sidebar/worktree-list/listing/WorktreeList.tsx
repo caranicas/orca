@@ -1,3 +1,4 @@
+import { PinnedWorkspaceGroupsDialog } from '../../PinnedWorkspaceGroupsDialog'
 import React, { useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useAppStore } from '@/store'
@@ -285,11 +286,17 @@ const WorktreeList = React.memo(function WorktreeList({
   )
   // Clear Filters must outrank empty project headers when filtering hides every workspace.
   if (rowModel.rows.length === 0 || filtersHideAllRows) {
-    return <SidebarWorktreeListEmptyState hasFilters={hasFilters} onClearFilters={clearFilters} />
+    return (
+      <>
+        <PinnedWorkspaceGroupsDialog />
+        <SidebarWorktreeListEmptyState hasFilters={hasFilters} onClearFilters={clearFilters} />
+      </>
+    )
   }
 
   return (
     <>
+      <PinnedWorkspaceGroupsDialog />
       {projectsCollapseTarget && projectCollapseKeys.length > 0
         ? createPortal(
             <ProjectsCollapseAllButton

@@ -32,6 +32,10 @@ import { WorktreeLinkedItemsField } from './WorktreeLinkedItemsField'
 import { buildWorkspaceAttachmentEdits } from './worktree-attachment-editing'
 import { resizeCommentTextarea } from './worktree-comment-textarea-sizing'
 import {
+  WorkspaceAppearanceFields,
+  useWorkspaceAppearanceDraft
+} from '../../WorkspaceAppearanceFields'
+import {
   isImeOwnedKeyboardEvent,
   useImeEnterGestureOwnership
 } from '@/lib/ime-composition-keyboard-event'
@@ -88,6 +92,7 @@ const WorktreeMetaDialogDraft = React.memo(function WorktreeMetaDialogDraft() {
     items: getWorkspaceAttachments(worktree ?? {})
   }))
   const [displayNameInput, setDisplayNameInput] = useState(initial.displayName)
+  const appearance = useWorkspaceAppearanceDraft(worktree)
   const [commentInput, setCommentInput] = useState(initial.comment)
   const [items, setItems] = useState<WorkspaceAttachment[]>(initial.items)
   const [notesOpen, setNotesOpen] = useState(
@@ -137,6 +142,14 @@ const WorktreeMetaDialogDraft = React.memo(function WorktreeMetaDialogDraft() {
         if (mountedRef.current) {
           setSaveError(result.error)
         }
+        return
+      }
+      try {
+        appearance.save()
+      } catch {
+        setSaveError(
+          t('custom.workspace.saveFailed', 'Could not save workspace appearance. Try again.')
+        )
         return
       }
       closeModal()
@@ -220,6 +233,11 @@ const WorktreeMetaDialogDraft = React.memo(function WorktreeMetaDialogDraft() {
             onValueChange={setDisplayNameInput}
             portalContainer={dialogElement}
             value={displayNameInput}
+          />
+          <WorkspaceAppearanceFields
+            draft={appearance}
+            disabled={saving}
+            isFolderWorkspace={isFolderWorkspace}
           />
           <WorktreeLinkedItemsField
             key={`${worktreeId}:${isOpen}`}
