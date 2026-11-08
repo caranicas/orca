@@ -60,6 +60,7 @@ function fixture() {
   git('remote', 'add', 'origin', 'https://github.com/test/fork.git')
   writeFileSync(path.join(root, '.gitignore'), 'out/\n')
   writeFileSync(path.join(root, 'app.txt'), 'old application')
+  writeFileSync(path.join(root, 'notes.txt'), 'initial notes')
   git('add', '.')
   git('commit', '-qm', 'old application')
   git('push', '--quiet', 'origin', 'main')
@@ -149,5 +150,26 @@ it('does not advance source when the profile snapshot fails', async () => {
     throw new Error('SQLite snapshot remained busy')
   }
   expect((await applyForkUpdate({ ...f, snapshot })).status).toBe('failed')
+  expect(readFileSync(path.join(f.root, 'app.txt'), 'utf8')).toBe('old application')
+})
+
+it('keeps the existing application usable when Git configuration cannot be read', async () => {
+  const f = fixture()
+  await checkForkUpdate(f)
+  f.git('remote', 'remove', 'origin')
+  expect((await checkForkUpdate({ ...f, force: true })).status).toBe('check-failed')
+  expect((await applyForkUpdate(f)).status).toBe('check-failed')
+  expect(readFileSync(path.join(f.root, 'app.txt'), 'utf8')).toBe('old application')
+})
+
+it('holds installation if the user edits source while the profile is being backed up', async () => {
+  const f = fixture()
+  await checkForkUpdate(f)
+  const snapshot = async (root: string, profile: string, destination: string) => {
+    await f.snapshot(root, profile, destination)
+    writeFileSync(path.join(root, 'notes.txt'), 'my new uncommitted note')
+  }
+  expect((await applyForkUpdate({ ...f, snapshot })).status).toBe('failed')
+  expect(readFileSync(path.join(f.root, 'notes.txt'), 'utf8')).toBe('my new uncommitted note')
   expect(readFileSync(path.join(f.root, 'app.txt'), 'utf8')).toBe('old application')
 })

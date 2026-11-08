@@ -47,14 +47,19 @@ export async function checkForkUpdate({ root = checkout, settings = config, forc
   if (state.enabled === false) {
     return state
   }
-  if (!force && Date.now() - (state.lastCheckedAt ?? 0) < settings.intervalHours * 3600000) {
-    return state
-  }
-  const held = await eligibleCheckout(root, settings)
-  if (held) {
-    return writeState(root, { status: 'held', reason: held, lastAttemptAt: Date.now() })
+  if (!force) {
+    const failedCheck = state.status === 'check-failed'
+    const lastCheck = failedCheck ? state.lastAttemptAt : state.lastCheckedAt
+    const interval = failedCheck ? 3600000 : settings.intervalHours * 3600000
+    if (Date.now() - (lastCheck ?? 0) < interval) {
+      return state
+    }
   }
   try {
+    const held = await eligibleCheckout(root, settings)
+    if (held) {
+      return writeState(root, { status: 'held', reason: held, lastAttemptAt: Date.now() })
+    }
     await git(root, [
       'fetch',
       '--no-tags',
@@ -109,43 +114,53 @@ export async function applyForkUpdate({
       reason: 'An interrupted installation needs recovery from its retained backup.'
     })
   }
-  if (state.enabled === false || !state.target || state.failedTarget === state.target) {
+  if (
+    state.enabled === false ||
+    state.status === 'check-failed' ||
+    !state.target ||
+    state.failedTarget === state.target
+  ) {
     return state
   }
   if (!/^[a-f0-9]{40}$/.test(state.target)) {
     throw new Error('Invalid pending update commit')
   }
-  const previous = (await git(root, ['rev-parse', 'HEAD'])).text
-  if (previous === state.target) {
-    return writeState(root, { status: 'current', installedCommit: previous })
-  }
-  const held = await eligibleCheckout(root, settings)
-  if (held) {
-    return writeState(root, { status: 'held', reason: held })
-  }
-  if (desktopIsRunning(root)) {
-    return writeState(root, {
-      status: 'pending',
-      reason: 'Installation waits for normal desktop close.'
+  let previous
+  try {
+    const held = await eligibleCheckout(root, settings)
+    if (held) {
+      return writeState(root, { status: 'held', reason: held })
+    }
+    previous = (await git(root, ['rev-parse', 'HEAD'])).text
+    if (previous === state.target) {
+      return writeState(root, { status: 'current', installedCommit: previous })
+    }
+    if (desktopIsRunning(root)) {
+      return writeState(root, {
+        status: 'pending',
+        reason: 'Installation waits for normal desktop close.'
+      })
+    }
+    if (!profile || !path.isAbsolute(profile) || !existsSync(profile)) {
+      return writeState(root, {
+        status: 'held',
+        reason: 'Installation waits for an existing selected profile.'
+      })
+    }
+    if ((await git(root, ['status', '--porcelain=v1', '--untracked-files=all'])).text) {
+      return writeState(root, {
+        status: 'held',
+        reason: 'Save or commit local source changes before installation.'
+      })
+    }
+    const ancestor = await git(root, ['merge-base', '--is-ancestor', previous, state.target], {
+      allowFailure: true
     })
-  }
-  if (!profile || !path.isAbsolute(profile) || !existsSync(profile)) {
-    return writeState(root, {
-      status: 'held',
-      reason: 'Installation waits for an existing selected profile.'
-    })
-  }
-  if ((await git(root, ['status', '--porcelain=v1', '--untracked-files=all'])).text) {
-    return writeState(root, {
-      status: 'held',
-      reason: 'Save or commit local source changes before installation.'
-    })
-  }
-  const ancestor = await git(root, ['merge-base', '--is-ancestor', previous, state.target], {
-    allowFailure: true
-  })
-  if (ancestor.code !== 0) {
-    return writeState(root, { status: 'held', reason: 'The update is not a fast-forward.' })
+    if (ancestor.code !== 0) {
+      return writeState(root, { status: 'held', reason: 'The update is not a fast-forward.' })
+    }
+  } catch (error) {
+    return writeState(root, { status: 'held', reason: error.message })
   }
   const directory = updateDirectory(root)
   mkdirSync(directory, { recursive: true })
@@ -180,6 +195,12 @@ export async function applyForkUpdate({
     mkdirSync(backup)
     await snapshot(root, profile, path.join(backup, 'profile'))
     preserveOutput(root, output)
+    if (
+      (await git(root, ['rev-parse', 'HEAD'])).text !== previous ||
+      (await git(root, ['status', '--porcelain=v1', '--untracked-files=all'])).text
+    ) {
+      throw new Error('Source changed during backup; installation was held.')
+    }
     await git(root, ['branch', `backup/fork-update-${Date.now()}`, previous])
     preserveNativeBuilds(root, path.join(backup, 'native'))
     await git(root, ['merge', '--ff-only', '--no-edit', state.target])
