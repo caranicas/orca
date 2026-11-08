@@ -10,7 +10,7 @@ import {
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { afterEach, expect, it } from 'vitest'
+import { afterEach, expect, it, vi } from 'vitest'
 import { runProcessSync } from '@orca/process-host'
 import {
   applyForkUpdate,
@@ -20,6 +20,7 @@ import { readState } from '../../../custom-tools/updates/fork-update-state.mjs'
 
 const sandboxes: string[] = []
 afterEach(() => {
+  vi.unstubAllEnvs()
   for (const sandbox of sandboxes.splice(0)) {
     if (!sandbox.startsWith(path.resolve(tmpdir()) + path.sep)) {
       throw new Error('Unexpected test cleanup target')
@@ -36,6 +37,18 @@ function fixture() {
   const profile = path.join(sandbox, 'profile')
   mkdirSync(root)
   mkdirSync(profile)
+  const pnpmEntry = path.join(sandbox, 'pnpm.cjs')
+  writeFileSync(
+    pnpmEntry,
+    `
+    if (process.argv[2] === '--version') { console.log('12.14.0'); process.exit(0) }
+    const fs = require('node:fs')
+    fs.mkdirSync('out/mobile-web', { recursive: true })
+    fs.writeFileSync('out/mobile-web/manifest.json', '{"schemaVersion":1,"pageVersion":3}')
+    fs.writeFileSync('out/app.js', 'built by resolved pnpm')
+  `
+  )
+  vi.stubEnv('npm_execpath', pnpmEntry)
   writeFileSync(path.join(profile, 'saved-work.json'), '{"tabs":["existing-agent"]}')
   const git = (...args: string[]) => {
     const result = runProcessSync({
@@ -172,4 +185,42 @@ it('holds installation if the user edits source while the profile is being backe
   expect((await applyForkUpdate({ ...f, snapshot })).status).toBe('failed')
   expect(readFileSync(path.join(f.root, 'notes.txt'), 'utf8')).toBe('my new uncommitted note')
   expect(readFileSync(path.join(f.root, 'app.txt'), 'utf8')).toBe('old application')
+})
+
+it('builds with the resolved package-manager entry instead of assuming a pnpm executable', async () => {
+  const f = fixture()
+  await checkForkUpdate(f)
+  expect((await applyForkUpdate({ ...f, install: undefined })).status).toBe('current')
+  expect(readFileSync(path.join(f.root, 'out/app.js'), 'utf8')).toBe('built by resolved pnpm')
+  expect(readFileSync(path.join(f.root, 'out/mobile-web/manifest.json'), 'utf8')).toBe(
+    '{"schemaVersion":1,"pageVersion":3}'
+  )
+})
+
+it('keeps a second updater from replacing an in-progress installation record', async () => {
+  const f = fixture()
+  await checkForkUpdate(f)
+  let release = () => {}
+  const barrier = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  let signal = () => {}
+  const started = new Promise<void>((resolve) => {
+    signal = resolve
+  })
+  const snapshot = async (root: string, profile: string, destination: string) => {
+    await f.snapshot(root, profile, destination)
+    signal()
+    await barrier
+  }
+  const first = applyForkUpdate({ ...f, snapshot })
+  await started
+  try {
+    expect((await applyForkUpdate(f)).status).toBe('installing')
+    expect(readState(f.root).status).toBe('installing')
+    expect(readFileSync(path.join(f.root, 'app.txt'), 'utf8')).toBe('old application')
+  } finally {
+    release()
+  }
+  expect((await first).status).toBe('current')
 })
