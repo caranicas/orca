@@ -1,0 +1,7 @@
+{
+  "repository": "caranicas/orca",
+  "branch": "main",
+  "upstream": "https://github.com/stablyai/orca.git",
+  "upstreamBranch": "main",
+  "intervalHours": 72
+}

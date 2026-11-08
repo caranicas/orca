@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Orca Fork Updates'
+  short_description: 'Update the Orca fork without losing active work'
+  default_prompt: 'Use $orca-fork-update to merge upstream, validate the fork, and update my desktop while preserving sessions.'

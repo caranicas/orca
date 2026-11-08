@@ -13,4 +13,4 @@ case "$orca_profile_mode" in
 esac
 print -- '[Orca custom] Starting your custom Orca from its source checkout.'
 print -- '[Orca custom] Use this launcher to reopen Orca; the generated Electron app requires launch arguments.'
-pnpm dev
+node "$orca_repo/custom-tools/updates/fork-update-supervisor.mjs"

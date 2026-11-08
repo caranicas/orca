@@ -14,6 +14,7 @@ export const AUTOMATION_CRON_EXPRESSION_MAX_BYTES = 2 * 1024
 export type ParsedRrule = {
   kind: 'rrule'
   freq: 'HOURLY' | 'DAILY' | 'WEEKLY'
+  interval: number
   byDay: string[]
   byHour: number
   byMinute: number
@@ -49,6 +50,15 @@ function parseRrule(rrule: string): ParsedRrule {
     throw new Error('Unsupported automation recurrence.')
   }
   const byHour = Number(entries.get('BYHOUR') ?? '9')
+  const interval = Number(entries.get('INTERVAL') ?? '1')
+  if (
+    !Number.isSafeInteger(interval) ||
+    interval < 1 ||
+    interval > 366 ||
+    (freq !== 'DAILY' && interval !== 1)
+  ) {
+    throw new Error('Daily recurrence interval must be an integer from 1 to 366.')
+  }
   const byMinute = Number(entries.get('BYMINUTE') ?? '0')
   if (!Number.isInteger(byHour) || byHour < 0 || byHour > 23) {
     throw new Error('Invalid recurrence hour.')
@@ -64,7 +74,7 @@ function parseRrule(rrule: string): ParsedRrule {
   ) {
     throw new Error('Invalid recurrence day.')
   }
-  return { kind: 'rrule', freq, byDay, byHour, byMinute }
+  return { kind: 'rrule', freq, interval, byDay, byHour, byMinute }
 }
 
 export function parseCronExpression(
@@ -208,6 +218,9 @@ export function parseAutomationRrule(rrule: string): {
   dayOfWeek: number
 } {
   const rule = parseRrule(rrule)
+  if (rule.interval !== 1) {
+    throw new Error('This recurrence requires a custom schedule.')
+  }
   if (rule.freq === 'HOURLY') {
     return { preset: 'hourly', hour: rule.byHour, minute: rule.byMinute, dayOfWeek: 1 }
   }

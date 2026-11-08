@@ -103,24 +103,32 @@ def audit_profile(source):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--original", required=True)
-    parser.add_argument("--custom", required=True)
+    parser.add_argument("--original")
+    parser.add_argument("--custom")
+    parser.add_argument("--profile")
     parser.add_argument("--output", required=True)
     parser.add_argument("--core-only", action="store_true")
     arguments = parser.parse_args()
+    if arguments.profile:
+        if arguments.original or arguments.custom:
+            parser.error("Use --profile or the --original/--custom pair")
+        sources = {"profile": arguments.profile}
+    else:
+        if not arguments.original or not arguments.custom:
+            parser.error("Provide --profile or both --original and --custom")
+        sources = {"original": arguments.original, "custom": arguments.custom}
     os.umask(0o077)
     output = Path(arguments.output).resolve()
     if output.exists():
         raise ValueError("Backup location already exists")
-    for source in (arguments.original, arguments.custom):
+    for source in sources.values():
         root = Path(source).resolve()
         if root == output or root in output.parents or output in root.parents:
             raise ValueError("Backup location overlaps a source")
-    audits = {"original": audit_profile(arguments.original),
-              "custom": audit_profile(arguments.custom)}
+    audits = {label: audit_profile(source) for label, source in sources.items()}
     output.mkdir(parents=True, mode=0o700)
     results = {}
-    for label, root in (("original", arguments.original), ("custom", arguments.custom)):
+    for label, root in sources.items():
         results[label] = {**snapshot_profile(root, output / label, arguments.core_only), **audits[label]}
     (output / "manifest.json").write_text(json.dumps(results, indent=2) + "\n")
     print(json.dumps(results))
