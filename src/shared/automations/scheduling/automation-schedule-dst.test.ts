@@ -1,10 +1,20 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { latestAutomationOccurrenceAtOrBefore } from './automation-schedule-occurrences'
+import {
+  latestAutomationOccurrenceAtOrBefore,
+  nextAutomationOccurrenceAfter
+} from './automation-schedule-occurrences'
 
 afterEach(() => vi.unstubAllEnvs())
 
 // Why: on Windows, unsetting a stubbed TZ doesn't restore the OS zone, so it would leak into later tests.
 describe.skipIf(process.platform === 'win32')('automation calendar days across DST', () => {
+  it('keeps the local hour when a three-day interval crosses spring-forward', () => {
+    vi.stubEnv('TZ', 'America/New_York')
+    const start = Date.parse('2026-03-07T09:00:00-05:00')
+    expect(
+      nextAutomationOccurrenceAfter('FREQ=DAILY;INTERVAL=3;BYHOUR=9;BYMINUTE=0', start, start)
+    ).toBe(Date.parse('2026-03-10T09:00:00-04:00'))
+  })
   it.each([
     {
       timezone: 'America/New_York',

@@ -26,7 +26,10 @@ These are source-install updates through the custom launchers. Run them with the
 same Node, pnpm, Python, compiler, and Rust prerequisites as setup. On Linux,
 after installing dependencies use `sh custom-tools/start-orca-custom.sh`;
 `ORCA_DEV_USER_DATA_PATH` selects an existing profile, defaulting to the dev
-profile under the user's config directory. Existing installations receive this
+profile under the user's config directory. A fresh Linux checkout needs
+`pnpm install --frozen-lockfile`, `pnpm -C mobile install --frozen-lockfile`,
+`pnpm tc`, `pnpm build:native`, and `pnpm build:desktop:assets` before launching.
+Existing installations receive this
 behavior after updating to the version containing these launchers.
 
 ```sh

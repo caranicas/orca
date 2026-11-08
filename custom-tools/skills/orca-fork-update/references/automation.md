@@ -2,6 +2,8 @@
 
 Use Orca's existing automation scheduler rather than adding a second agent scheduler. `custom-tools/updates/install-maintenance.mjs` installs or updates one maintainer automation with a three-day RRULE. Read the current automation before changing it; retain its identity and do not create duplicates. It uses the configured provider and the user's existing provider permissions. Scheduling does not grant GitHub access or override agent approval settings.
 
+Orca's rule syntax starts with `FREQ=`, without a `RRULE:` prefix. Verify actual occurrence dates: older Orca builds accepted `INTERVAL=3` but ignored it. Keep a new interval schedule disabled until the fork version with daily interval support is running, then enable it and verify the next run is three calendar days ahead.
+
 The precheck fetches only the named upstream branch and skips paid agent runs when no new commit exists. The prompt authorizes upstream integration, conflict resolution, focused checks, PR publication, and merge after required checks pass. It must leave failures pending with evidence rather than looping, force-pushing main, disabling gates, or changing unrelated features.
 
 After merge, queue the client update. The launcher's supervisor checks every 72 hours while running and catches up on launch. It installs after normal exit or before the next launch, taking a fresh backup first. A closed or offline desktop cannot check on the wall clock; it catches up when available. The maintainer's agent schedule likewise needs its Orca scheduler running.

@@ -5,7 +5,7 @@ import { createRequire } from 'node:module'
 
 export const checkout = path.resolve(import.meta.dirname, '../..')
 const require = createRequire(path.join(checkout, 'package.json'))
-export const { runProcess, spawnProcess } = require('@orca/process-host')
+export const { runProcess } = require('@orca/process-host')
 export const config = JSON.parse(
   readFileSync(path.join(import.meta.dirname, 'fork-update-config.json'), 'utf8')
 )

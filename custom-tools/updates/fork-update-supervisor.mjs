@@ -21,7 +21,7 @@ function report(state) {
 try {
   report(await checkForkUpdate())
   report(await applyForkUpdate())
-  let checking = null
+  let checking = Promise.resolve()
   let timer
   let stopped = false
   const arm = () => {
@@ -52,9 +52,7 @@ try {
   })
   stopped = true
   clearTimeout(timer)
-  if (checking) {
-    await checking
-  }
+  await checking
   if (result.code === 0) {
     report(await applyForkUpdate())
   }
