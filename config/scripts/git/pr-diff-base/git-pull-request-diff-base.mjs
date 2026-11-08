@@ -14,6 +14,16 @@ export function resolvePullRequestDiffBase(
   requestedBase,
   eventName = process.env.GITHUB_EVENT_NAME
 ) {
+  const analysisBase = process.env.ORCA_CODE_ANALYSIS_BASE
+  if (analysisBase) {
+    if (!/^[a-f0-9]{40}$/.test(analysisBase)) {
+      throw new Error('ORCA_CODE_ANALYSIS_BASE must be a full commit SHA.')
+    }
+    return execFileSync('git', ['merge-base', 'HEAD', analysisBase], {
+      cwd: root,
+      encoding: 'utf8'
+    }).trim()
+  }
   const [, ...headParents] = execFileSync('git', ['rev-list', '--parents', '-n', '1', 'HEAD'], {
     cwd: root,
     encoding: 'utf8'

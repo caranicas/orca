@@ -190,9 +190,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          # Fetch 50 for merge HEAD^1, no merge-base graph needed. Full-tree checkout omits blob:none to avoid refetching ~30k blobs (23s versus ~11s).
-          fetch-depth: 50
+          # Forks need complete ancestry to find their last merged upstream revision.
+          fetch-depth: ${{ github.repository == 'stablyai/orca' && 50 || 0 }}
           persist-credentials: false
+
+      - name: Select code-analysis baseline
+        id: analysis_base
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          base="$PR_BASE"
+          if [ "$GITHUB_REPOSITORY" != stablyai/orca ]; then
+            git fetch --no-tags https://github.com/stablyai/orca.git main
+            base="$(git merge-base HEAD FETCH_HEAD)"
+          fi
+          echo "sha=$base" >> "$GITHUB_OUTPUT"
 
       # The dependency action below restores Node 24 before installing or building packages.
       - name: Prepare Node 18 smoke runtime
@@ -338,9 +350,10 @@ jobs:
         env:
           PREFLIGHT_PHASE_SELECTED: ${{ needs.code_paths.outputs.static_analysis == 'true' }}
           PREFLIGHT_PRIOR_SUCCESS: ${{ job.status == 'success' }}
+          ORCA_CODE_ANALYSIS_BASE: ${{ github.repository != 'stablyai/orca' && steps.analysis_base.outputs.sha || '' }}
         run: |
           if [ "$PREFLIGHT_PHASE_SELECTED" != true ] || [ "$PREFLIGHT_PRIOR_SUCCESS" != true ]; then exit 0; fi
-          node config/scripts/preflight/changed-checks/check-changed-code-quality.mjs "${{ github.event.pull_request.base.sha }}"
+          node config/scripts/preflight/changed-checks/check-changed-code-quality.mjs "${{ steps.analysis_base.outputs.sha }}"
 
       - name: Verify locked audit tools
         if: needs.code_paths.outputs.static_analysis == 'true'
@@ -350,7 +363,9 @@ jobs:
 
       - name: Enforce React Doctor on changed lines
         if: needs.code_paths.outputs.static_analysis == 'true'
-        run: node config/scripts/static-analysis/react-doctor/check-react-doctor-changed.mjs "${{ github.event.pull_request.base.sha }}"
+        env:
+          ORCA_CODE_ANALYSIS_BASE: ${{ github.repository != 'stablyai/orca' && steps.analysis_base.outputs.sha || '' }}
+        run: node config/scripts/static-analysis/react-doctor/check-react-doctor-changed.mjs "${{ steps.analysis_base.outputs.sha }}"
 
       - wait: changed-code-quality
 
@@ -1002,6 +1017,10 @@ jobs:
           native-runtime: node
 
       # R1: an upgrade from the newest release must adopt its live terminal daemon.
+      - name: Fetch upstream release baselines for forks
+        if: github.repository != 'stablyai/orca'
+        run: git fetch --no-tags https://github.com/stablyai/orca.git 'refs/tags/v*:refs/tags/v*'
+
       - name: Daemon protocol crossing against newest release
         run: pnpm run check:daemon-protocol-crossing
 
