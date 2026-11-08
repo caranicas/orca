@@ -10,7 +10,12 @@ import {
   renameSync
 } from 'node:fs'
 import path from 'node:path'
-import { readState, runProcess, updateDirectory } from './fork-update-state.mjs'
+import {
+  readState,
+  resolvePnpmCliInvocation,
+  runProcess,
+  updateDirectory
+} from './fork-update-state.mjs'
 
 export async function backupProfile(root, profile, destination) {
   if (!profile || !path.isAbsolute(profile) || !existsSync(profile)) {
@@ -101,8 +106,22 @@ export function restoreOutput(root, source) {
   }
 }
 
+export async function verifyForkPackageManager(root) {
+  const pnpm = resolvePnpmCliInvocation()
+  const result = await runProcess({
+    program: pnpm.command,
+    args: [...pnpm.prefixArgs, '--version'],
+    cwd: root,
+    timeoutMs: 15000
+  })
+  if (result.code !== 0) {
+    throw new Error(result.stderr || 'The selected pnpm command is unavailable.')
+  }
+}
+
 export async function buildFork(root) {
   const env = { ...process.env, ORCA_BACKGROUND_LAUNCH: '1' }
+  const pnpm = resolvePnpmCliInvocation()
   const directory = readState(root).backup ?? updateDirectory(root)
   mkdirSync(directory, { recursive: true })
   const log = path.join(directory, 'build.log')
@@ -116,8 +135,8 @@ export async function buildFork(root) {
       ['build:desktop:assets']
     ]) {
       const result = await runProcess({
-        program: 'pnpm',
-        args,
+        program: pnpm.command,
+        args: [...pnpm.prefixArgs, ...args],
         cwd: root,
         env,
         stdio: ['ignore', fd, fd],

@@ -17,7 +17,8 @@ import {
   preserveNativeBuilds,
   preserveOutput,
   restoreNativeBuilds,
-  restoreOutput
+  restoreOutput,
+  verifyForkPackageManager
 } from './fork-update-install.mjs'
 
 export async function eligibleCheckout(root, settings = config) {
@@ -109,10 +110,7 @@ export async function applyForkUpdate({
 } = {}) {
   const state = readState(root)
   if (state.status === 'installing' || state.status === 'recovery-required') {
-    return writeState(root, {
-      status: 'recovery-required',
-      reason: 'An interrupted installation needs recovery from its retained backup.'
-    })
+    return state
   }
   if (
     state.enabled === false ||
@@ -180,7 +178,11 @@ export async function applyForkUpdate({
           }
         }
       }
-      return writeState(root, { status: 'held', reason: 'Another update holds the install lock.' })
+      return {
+        ...readState(root),
+        status: 'installing',
+        reason: 'Another update holds the install lock.'
+      }
     }
     throw error
   }
@@ -193,6 +195,7 @@ export async function applyForkUpdate({
       '[Orca updates] Updating after normal close. Keep the launcher open until this finishes.'
     )
     mkdirSync(backup)
+    await verifyForkPackageManager(root)
     await snapshot(root, profile, path.join(backup, 'profile'))
     preserveOutput(root, output)
     if (

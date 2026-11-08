@@ -1,8 +1,19 @@
-import { checkout, config, readState, runProcess } from './fork-update-state.mjs'
+import {
+  checkout,
+  config,
+  readState,
+  resolvePnpmCliInvocation,
+  runProcess
+} from './fork-update-state.mjs'
 import { applyForkUpdate, checkForkUpdate } from './fork-source-update.mjs'
 
 let reported = ''
 function report(state) {
+  if (state.status === 'installing' || state.status === 'recovery-required') {
+    throw new Error(
+      `An update is active or needs recovery. Wait for it to finish, or inspect the retained backup: ${state.backup}`
+    )
+  }
   const signature = JSON.stringify([state.status, state.reason, state.target])
   if (signature === reported) {
     return
@@ -12,9 +23,6 @@ function report(state) {
     console.log(
       `[Orca updates] ${state.status}: ${state.reason ?? 'A validated fork update will install after normal close.'}`
     )
-  }
-  if (state.status === 'recovery-required') {
-    throw new Error(`Restore the retained update backup before launching: ${state.backup}`)
   }
 }
 
@@ -43,9 +51,10 @@ try {
     timer.unref()
   }
   arm()
+  const pnpm = resolvePnpmCliInvocation()
   const result = await runProcess({
-    program: 'pnpm',
-    args: ['dev'],
+    program: pnpm.command,
+    args: [...pnpm.prefixArgs, 'dev'],
     cwd: checkout,
     stdio: 'inherit',
     timeoutMs: null
