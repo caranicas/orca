@@ -61,7 +61,6 @@ if (!current.length) {
   }
 }
 const prompt = `Use $orca-fork-update by reading custom-tools/skills/orca-fork-update/SKILL.md in this checkout. This is the authorized recurring maintainer job for ${config.repository}. Check ${config.upstream} ${config.upstreamBranch}; when updates exist, integrate them in an isolated branch, resolve conflicts while preserving the custom features, run focused tests and required checks, publish/update one PR, watch the exact SHA and merge with full ancestry only after the required aggregate gate passes. Audit associated issues. Do not bypass hooks or gates. Leave unresolved failures pending with a clear report rather than repeatedly trying or altering unrelated features. After merge, queue desktop delivery by running the check command in the primary installation at ${checkout}. Do not close the user's running desktop or stop any terminal daemon; its launcher installs the validated fork main after normal close. If permission or credentials are unavailable, report that blocker without changing permission settings. Read references/automation.md in the skill for operational lessons.`
-const script = path.join(checkout, 'custom-tools/updates/fork-source-update.mjs')
 const flags = [
   '--name',
   name,
@@ -76,7 +75,7 @@ const flags = [
   '--prompt',
   prompt,
   '--precheck',
-  `"${process.execPath}" "${script}" upstream-check`,
+  'node custom-tools/updates/fork-source-update.mjs upstream-check',
   '--precheck-timeout',
   '120',
   process.argv.includes('--disabled') ? '--disabled' : '--enabled'
