@@ -5,6 +5,66 @@ This folder is versioned on `main` in your fork, which includes the original
 local macOS and Windows launchers, dependency setup, a macOS upstream updater and profile migration
 utilities. `Orca-sync` is a linked worktree of the same Git repository.
 
+## Automatic fork updates
+
+The Windows, Mac, and Linux custom launchers check this fork's `main` every 72
+hours while running, and catch up when opened after being offline. Available
+updates install automatically after normal close or before the next launch.
+Keep the launcher console open until an update finishes. Running terminal daemons
+are preserved; **Quit Completely** is never used.
+
+Updates require a clean primary checkout on `main` and the existing selected
+profile. Local commits, uncommitted changes, linked worktrees, and a running
+desktop hold installation. Each install snapshots the profile using SQLite's
+backup API, preserves the previous source and built output, and rebuilds native,
+desktop, browser, CLI, and mobile assets. A failed build restores the previous
+application. An interrupted update leaves a recovery record and backup instead
+of launching an incomplete build. New toolchain requirements can require manual
+installation before retrying.
+
+These are source-install updates through the custom launchers. Run them with the
+same Node, pnpm, Python, compiler, and Rust prerequisites as setup. On Linux,
+after installing dependencies use `sh custom-tools/start-orca-custom.sh`;
+`ORCA_DEV_USER_DATA_PATH` selects an existing profile, defaulting to the dev
+profile under the user's config directory. A fresh Linux checkout needs
+`pnpm install --frozen-lockfile`, `pnpm -C mobile install --frozen-lockfile`,
+`pnpm tc`, `pnpm build:native`, and `pnpm build:desktop:assets` before launching.
+Existing installations receive this
+behavior after updating to the version containing these launchers.
+
+```sh
+node custom-tools/updates/fork-source-update.mjs status
+node custom-tools/updates/fork-source-update.mjs check --force
+node custom-tools/updates/fork-source-update.mjs disable
+node custom-tools/updates/fork-source-update.mjs enable
+```
+
+Status, logs, and retained backups live in the sibling `.orca-local/updates`
+directory. A force check allows another attempt at a previously failed commit;
+automatic launch does not repeatedly rebuild the same failed candidate.
+
+The fork maintainer can install the upstream integration job once, while their
+Orca desktop and Codex provider are available:
+
+```sh
+node custom-tools/updates/install-maintenance.mjs
+```
+
+It creates or updates one **Orca fork upstream maintenance** automation in the
+current profile, scheduled every three days at 09:00 in the local timezone. A
+precheck skips agent runs when upstream has not changed. Orca's scheduler must
+be running; missed runs catch up within three days. The job uses existing agent
+permissions and GitHub credentials to resolve upstream changes in a separate
+worktree and merge a PR only after required checks pass. Unresolved conflicts,
+missing credentials, and failed checks stay pending in the automation's report.
+Other fork users only need the launcher; they do not need maintainer credentials
+or their own upstream-merging agent.
+
+The reusable agent workflow is versioned in
+[`skills/orca-fork-update/SKILL.md`](skills/orca-fork-update/SKILL.md). Copy that
+directory into `~/.codex/skills` to install it for ordinary Codex sessions, or
+read its path directly from an automation prompt.
+
 ## Windows
 
 The custom sidebar features also run on Windows. The `.zsh` and `.command` files

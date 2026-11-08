@@ -28,7 +28,8 @@ Write-Host '[Orca custom] Starting your custom Windows build. Keep this console 
 Write-Host "[Orca custom] Profile: $env:ORCA_DEV_USER_DATA_PATH"
 Push-Location $OrcaRepo
 try {
-    Invoke-OrcaPnpm dev
+    & $OrcaNode.Source (Join-Path $OrcaRepo 'custom-tools/updates/fork-update-supervisor.mjs')
+    if ($LASTEXITCODE -ne 0) { throw "Orca launcher exited with code $LASTEXITCODE." }
 } finally {
     Pop-Location
 }

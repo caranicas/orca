@@ -65,6 +65,8 @@ ln -sfn "$orca_bun_dir/bun-$orca_bun_platform/bun" "$orca_tools/bin/bun"
 pnpm install --frozen-lockfile
 pnpm -C mobile install --frozen-lockfile
 pnpm tc
+pnpm build:native
+pnpm build:desktop:assets
 
 print -r -- '[Orca setup] Dependencies installed and typecheck passed.'
 print -r -- '[Orca setup] Start the development app with:'

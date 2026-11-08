@@ -18,19 +18,29 @@ function atLocalTime(dayMs: number, hour: number, minute: number): number {
   return date.getTime()
 }
 
-function dayMatches(rule: ParsedRrule, timestamp: number): boolean {
+function calendarDay(timestamp: number): number {
+  const date = new Date(timestamp)
+  return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / (24 * 60 * 60 * 1000)
+}
+
+function dayMatches(rule: ParsedRrule, timestamp: number, dtstart: number): boolean {
   if (rule.freq === 'DAILY') {
-    return true
+    return (calendarDay(timestamp) - calendarDay(dtstart)) % rule.interval === 0
   }
   const code = DAY_CODES[new Date(timestamp).getDay()]
   return rule.byDay.includes(code)
 }
 
-function scanDayCandidates(rule: ParsedRrule, anchor: number, direction: 1 | -1): number | null {
+function scanDayCandidates(
+  rule: ParsedRrule,
+  anchor: number,
+  direction: 1 | -1,
+  dtstart: number
+): number | null {
   let day = startOfLocalDay(anchor)
   for (let i = 0; i < 370; i += 1) {
     const candidate = atLocalTime(day, rule.byHour, rule.byMinute)
-    if (dayMatches(rule, candidate)) {
+    if (dayMatches(rule, candidate, dtstart)) {
       if (direction === 1 && candidate > anchor) {
         return candidate
       }
@@ -135,7 +145,7 @@ export function nextAutomationOccurrenceAfter(
   if (rule.freq === 'HOURLY') {
     return nextMatchingMinute(dtstart, after, (candidate) => hourlyMatches(rule, candidate))
   }
-  const candidate = scanDayCandidates(rule, Math.max(dtstart - 1, after), 1)
+  const candidate = scanDayCandidates(rule, Math.max(dtstart - 1, after), 1, dtstart)
   if (candidate === null) {
     throw new Error('Unable to compute next automation run.')
   }
@@ -157,6 +167,6 @@ export function latestAutomationOccurrenceAtOrBefore(
   if (rule.freq === 'HOURLY') {
     return latestMatchingMinute(dtstart, now, (candidate) => hourlyMatches(rule, candidate))
   }
-  const candidate = scanDayCandidates(rule, now, -1)
+  const candidate = scanDayCandidates(rule, now, -1, dtstart)
   return candidate !== null && candidate >= dtstart ? candidate : null
 }
