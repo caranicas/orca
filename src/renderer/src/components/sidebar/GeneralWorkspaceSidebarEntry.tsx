@@ -2,10 +2,10 @@ import { useRef, useState } from 'react'
 import { Loader2, MessagesSquare } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAppStore } from '@/store'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/class-names'
 import { translate } from '@/i18n/i18n'
 import { useTranslate } from '@/i18n/use-translate'
-import { isPairedWebClientWindow } from '@/lib/desktop-window-chrome'
+import { isPairedWebClientWindow } from '@/app-shell/chrome/desktop-window-chrome'
 import { isGeneralWorkspaceRepo } from '../../../../shared/general-workspace'
 
 async function openGeneralWorkspaceFromSidebar(onSettled: () => void): Promise<void> {

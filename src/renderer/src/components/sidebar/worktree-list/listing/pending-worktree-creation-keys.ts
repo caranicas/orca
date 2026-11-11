@@ -36,3 +36,8 @@ export function selectPendingWorktreeCreationKeys(
   keysBySource.set(pendingWorktreeCreations, keys)
   return keys[visibility]
 }
+
+export function parsePendingWorktreeCreationKey(key: string) {
+  const separator = key.indexOf(' ')
+  return { creationId: key.slice(0, separator), repoId: key.slice(separator + 1) }
+}

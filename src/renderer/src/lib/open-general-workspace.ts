@@ -1,6 +1,6 @@
 import { useAppStore } from '@/store'
 import { joinPath } from './path'
-import { isPairedWebClientWindow } from './desktop-window-chrome'
+import { isPairedWebClientWindow } from '../app-shell/chrome/desktop-window-chrome'
 import { activateAndRevealWorktree } from './workspace/activation/worktree-activation'
 import { translate } from '@/i18n/i18n'
 import { upsertAddedRepoWithProjectHostSetup } from '@/components/sidebar/project-admission/completion/add-repo-store-upsert'
