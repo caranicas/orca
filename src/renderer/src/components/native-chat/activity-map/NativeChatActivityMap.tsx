@@ -7,6 +7,7 @@ import { cn } from '@/lib/class-names'
 import { NativeChatActivityMapDiagram } from './NativeChatActivityMapDiagram'
 import {
   projectAgentActivityMap,
+  type ActivityMapEvent,
   type ActivityMapState
 } from '../../../../../shared/agent-session/activity/agent-activity-map'
 import type { AgentJournalRenderItem } from '../../../../../shared/agent-session/journal/agent-session-journal-types'
@@ -27,15 +28,19 @@ const STATE_ICONS = {
 
 export function NativeChatActivityMap({
   items,
+  events: projectedEvents,
   agentLabel,
   working,
   live,
   hostClock,
   contextUsage,
   subagentRoster,
-  onClose
+  onClose,
+  notice,
+  emptyMessage
 }: {
-  items: readonly AgentJournalRenderItem[]
+  items?: readonly AgentJournalRenderItem[]
+  events?: readonly ActivityMapEvent[]
   agentLabel: string
   working: boolean
   live: boolean
@@ -43,6 +48,8 @@ export function NativeChatActivityMap({
   contextUsage: StructuredAgentContextUsage | null
   subagentRoster: StructuredAgentSubagentRoster
   onClose: () => void
+  notice?: string
+  emptyMessage?: string
 }) {
   const t = useTranslate()
   const stateLabels = {
@@ -54,7 +61,10 @@ export function NativeChatActivityMap({
     waiting: t('components.native-chat.activityMap.state.waiting', 'Waiting for you'),
     observed: t('components.native-chat.activityMap.state.observed', 'Observed')
   }
-  const events = useMemo(() => projectAgentActivityMap(items), [items])
+  const events = useMemo(
+    () => projectedEvents ?? projectAgentActivityMap(items ?? []),
+    [items, projectedEvents]
+  )
   const active = events.filter((event) => event.state === 'running' || event.state === 'waiting')
   const now = useNow(1000, live && active.length > 0)
   const hostNow = hostClock ? hostClock.hostNow + now - hostClock.receivedAt : null
@@ -111,18 +121,20 @@ export function NativeChatActivityMap({
                 : ''}
             </p>
           ) : null}
-          {!live ? (
+          {notice || !live ? (
             <p role="status" className="text-xs text-muted-foreground">
-              {t('components.native-chat.activityMap.offline', 'Waiting for session updates')}
+              {notice ??
+                t('components.native-chat.activityMap.offline', 'Waiting for session updates')}
             </p>
           ) : null}
           {workingAgents > 0 ? (
             <p className="text-xs text-muted-foreground">
-              {t(
-                'components.native-chat.activityMap.workingAgents',
-                'Subagents working: {{count}}',
-                { count: workingAgents }
-              )}
+              {emptyMessage ??
+                t(
+                  'components.native-chat.activityMap.workingAgents',
+                  'Subagents working: {{count}}',
+                  { count: workingAgents }
+                )}
             </p>
           ) : null}
           <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">

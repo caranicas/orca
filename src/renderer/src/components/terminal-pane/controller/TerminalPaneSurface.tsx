@@ -1,8 +1,10 @@
 import { TerminalCrewPortals } from '../../orchestration-crew/TerminalCrewPortals'
 import { createPortal } from 'react-dom'
+import { TerminalActivityMapLayout } from '../activity-map/TerminalActivityMapLayout'
+import { useTerminalActivityMap } from '../activity-map/use-terminal-activity-map'
 import { TerminalPaneFileDropOwner } from '../input/file-drop/TerminalPaneFileDropOwner'
 import { makePaneKey } from '../../../../../shared/workspace-layout/stable-pane-id'
-import TerminalSearch from '@/components/TerminalSearch'
+import { TerminalPaneSearchPortal } from '../search/TerminalPaneSearchPortal'
 import { DaemonActionDialog } from '@/components/shared/useDaemonActions'
 import { AgentSessionContinuationDialog } from '@/components/agent-session-continuation/AgentSessionContinuationDialog'
 import {
@@ -45,6 +47,7 @@ export function TerminalPaneSurface({
   controller: TerminalPaneController
 }): React.JSX.Element {
   const t = useTranslate()
+  const activityMap = useTerminalActivityMap(controller)
   const {
     activeAgentId,
     activePane,
@@ -107,9 +110,6 @@ export function TerminalPaneSurface({
     renameValue,
     renamingPaneId,
     saveQuickCommand,
-    searchOpen,
-    searchStateRef,
-    searchInputRef,
     sessionRestoredBannerPaneIds,
     sessionStateSaveFailureMessage,
     setAgentSessionContinuation,
@@ -117,7 +117,6 @@ export function TerminalPaneSurface({
     setContainerRef,
     setQuickCommandEditorOpen,
     setRenameValue,
-    setSearchOpen,
     setSessionStateSaveFailureMessage,
     showSplitButton,
     showSshReconnectOverlay,
@@ -142,7 +141,7 @@ export function TerminalPaneSurface({
   )
 
   return (
-    <>
+    <TerminalActivityMapLayout panel={activityMap.panel}>
       <div
         ref={setContainerRef}
         className="absolute inset-0 min-h-0 min-w-0"
@@ -251,17 +250,7 @@ export function TerminalPaneSurface({
           onOpenSpaceAnalyzer={openDiskSpaceAnalyzer}
         />
       )}
-      {activePane?.container &&
-        createPortal(
-          <TerminalSearch
-            isOpen={searchOpen}
-            onClose={() => setSearchOpen(false)}
-            searchAddon={activePane.searchAddon ?? null}
-            searchStateRef={searchStateRef}
-            inputRef={searchInputRef}
-          />,
-          activePane.container
-        )}
+      <TerminalPaneSearchPortal controller={controller} />
       <SessionRestoredBannerPortals panes={managedPanes} paneIds={sessionRestoredBannerPaneIds} />
       <TerminalPaneNativeChatPortal controller={controller} />
       <TerminalContextMenu
@@ -379,6 +368,8 @@ export function TerminalPaneSurface({
           contextMenu.runForPane(pane.id, contextMenu.onContinueAgentSessionInNewSession)
         }
         onSplitPane={splitTerminalPaneFromHeader}
+        activityMapLeafId={activityMap.leafId}
+        onToggleActivityMap={activityMap.toggle}
         onBeginPaneDrag={beginPaneDragFromHeader}
         onActivatePaneTitleInteraction={activatePaneTitleInteraction}
         onPaneTitleContextMenu={contextMenu.onPaneTitleContextMenu}
@@ -399,6 +390,6 @@ export function TerminalPaneSurface({
         onCancel={handleCancelClose}
         onConfirm={handleConfirmClose}
       />
-    </>
+    </TerminalActivityMapLayout>
   )
 }

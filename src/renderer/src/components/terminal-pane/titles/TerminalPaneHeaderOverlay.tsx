@@ -1,7 +1,7 @@
 import type { PaneTitleOverlayRect } from './pane-title-overlay-rects'
 import { ImeInput } from '@/lib/text-input/ime/ime-text-field'
 import type { CSSProperties, RefObject } from 'react'
-import { MessageSquarePlus, SquareSplitVertical, SquareTerminal, X } from 'lucide-react'
+import { MessageSquarePlus, Network, SquareSplitVertical, SquareTerminal, X } from 'lucide-react'
 import type { ManagedPane } from '@/lib/pane-manager/pane-manager-types'
 import type { PaneManager } from '@/lib/pane-manager/pane-manager'
 import { Button } from '@/components/ui/button'
@@ -49,6 +49,8 @@ type TerminalPaneHeaderOverlayProps = {
   canContinueAgentSessionInNewSession?: boolean
   onContinueAgentSessionInNewSession?: (pane: ManagedPane) => void
   onSplitPane: (pane: ManagedPane, direction: 'vertical' | 'horizontal') => void
+  activityMapLeafId?: string | null
+  onToggleActivityMap?: (pane: ManagedPane) => void
   onBeginPaneDrag: (paneId: number, handle: HTMLElement, event: PointerEvent) => void
   onActivatePaneTitleInteraction: (paneId: number) => void
   onPaneTitleContextMenu: (event: React.MouseEvent<HTMLElement>, paneId: number) => void
@@ -88,6 +90,8 @@ export default function TerminalPaneHeaderOverlay({
   canContinueAgentSessionInNewSession,
   onContinueAgentSessionInNewSession,
   onSplitPane,
+  activityMapLeafId,
+  onToggleActivityMap,
   onBeginPaneDrag,
   onActivatePaneTitleInteraction,
   onPaneTitleContextMenu,
@@ -265,6 +269,29 @@ export default function TerminalPaneHeaderOverlay({
                       worktreeId={worktreeId}
                       paneKey={makePaneKey(tabId, pane.leafId)}
                     />
+                  ) : null}
+                  {showAlwaysOnHeaders && showSplitButton && onToggleActivityMap ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="pane-title"
+                          size="icon-xs"
+                          aria-label={t('components.native-chat.activityMap.title', 'Activity map')}
+                          aria-pressed={activityMapLeafId === pane.leafId}
+                          data-terminal-activity-map-trigger={pane.leafId}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onToggleActivityMap?.(pane)
+                          }}
+                        >
+                          <Network className="size-3" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" sideOffset={4}>
+                        {t('components.native-chat.activityMap.title', 'Activity map')}
+                      </TooltipContent>
+                    </Tooltip>
                   ) : null}
                   {showAlwaysOnHeaders && showSplitButton ? (
                     <Tooltip>
