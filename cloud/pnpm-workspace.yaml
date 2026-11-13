@@ -3,6 +3,8 @@ packages:
   - packages/*
 
 minimumReleaseAge: 4320
+minimumReleaseAgeExclude:
+  - hono@4.13.18
 engineStrict: false
 
 # pnpm 10 skipped this unlisted build script; keep the binary-only install it produced.

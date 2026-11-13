@@ -1,20 +1,17 @@
 import {
-  getRootProjectHeaderDragKeys,
+  getRootProjectHeaderKey,
   getRootProjectHeaderOccurrenceKey
 } from '../drag/root-project-header-drop'
 import React from 'react'
 import { ChevronDown } from 'lucide-react'
 import { ProjectHeaderHostLabel, ProjectHeaderHostTooltip } from './ProjectHeaderHostLabel'
 import type { VirtualItem } from '@tanstack/react-virtual'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/class-names'
 import { RepoIconGlyph } from '@/components/repo/repo-icon'
 import { RepoForkIndicator } from '@/components/repo/repo-fork-indicator'
 
-import {
-  type FolderWorkspacePathStatus,
-  isConfirmedStaleFolderPathStatus
-} from '../../../../../../shared/folder-workspaces/folder-workspace-path-status'
-import { getProjectGroupHostId } from '@/store/project-groups/project-group-owner-routing'
+import '@/store/project-groups/project-group-owner-routing'
+import { getRepoExecutionHostId } from '../../../../../../shared/execution-host'
 import {
   getHeaderDragRepo,
   isSingleHostProjectHeader,
@@ -23,6 +20,7 @@ import {
 import { PinnedGroupHeaderMenu } from '../../PinnedGroupHeaderMenu'
 import '../../workspace-status/presentation/workspace-status'
 import { getWorkspaceStatusFromGroupKey } from '../../../../../../shared/workspace-statuses'
+import { translateWorkspaceStatusHeaderLabel } from '../../workspace-board-status-label'
 import { getVirtualRowTransform } from '../viewport/virtual-rows'
 import { getSidebarHeaderVisual } from './header-visuals'
 import { resolveProjectGroupHeaderColor } from './project-header-color'
@@ -32,7 +30,10 @@ import {
   WORKTREE_SECTION_HEADER_PADDING_LEFT,
   SIDEBAR_TREE_INDENT
 } from './indentation'
-import { FolderPathStatusIndicator } from './FolderPathStatusIndicator'
+import {
+  FolderPathStatusIndicator,
+  isFolderWorkspaceCreateDisabled
+} from './FolderPathStatusIndicator'
 import { RepoScanUnavailableIndicator } from './RepoScanUnavailableIndicator'
 import {
   ProjectGroupCreateWorkspaceButton,
@@ -50,14 +51,6 @@ import {
 import { getWorktreeOptionId } from './option-dom'
 import type { SectionHeaderRowContext } from './section-header-row-context'
 import type { Translate } from '@/i18n/use-translate'
-
-// The folder-scan project group whose parent path is gone can't create new workspaces.
-function isFolderWorkspaceCreateDisabled(status: FolderWorkspacePathStatus | null): boolean {
-  return (
-    status?.exists === false &&
-    (isConfirmedStaleFolderPathStatus(status) || status.reason === 'ambiguous-connection')
-  )
-}
 
 export function renderWorktreeSectionHeaderRow(
   args: {
@@ -80,7 +73,7 @@ export function renderWorktreeSectionHeaderRow(
   )
   const headerRepo = isRepoHeader
     ? usesRootProjectDrag
-      ? row.repo
+      ? (row.anchorRepo ?? row.repo)
       : getHeaderDragRepo(row)
     : undefined
   const projectIdForHeader = headerRepo?.id
@@ -93,7 +86,7 @@ export function renderWorktreeSectionHeaderRow(
   // Why: rename/delete must route to the host that owns this row, not to whichever host has focus.
   const projectGroupHostIdForHeader =
     row.projectGroup && 'createdFrom' in row.projectGroup
-      ? getProjectGroupHostId(row.projectGroup)
+      ? getRepoExecutionHostId(row.projectGroup)
       : undefined
   const repoHeaderIndex = headerRepo && headerDrag.repoHeaderIndexByRepoId.get(headerRepo.id)
   const repoHeaderBucketKey = headerRepo && headerDrag.repoHeaderBucketByRepoId.get(headerRepo.id)
@@ -105,19 +98,14 @@ export function renderWorktreeSectionHeaderRow(
     projectGroupDragIdForHeader !== undefined
       ? headerDrag.projectGroupHeaderBucketByGroupId.get(projectGroupDragIdForHeader)
       : undefined
-  const rootProjectHeaderKey = usesRootProjectDrag
-    ? projectIdForHeader
-      ? `repo:${projectIdForHeader}`
-      : projectGroupDragIdForHeader
-        ? `group:${projectGroupDragIdForHeader}`
-        : undefined
-    : undefined
+  const rootProjectHeaderKey = usesRootProjectDrag ? getRootProjectHeaderKey(row) : undefined
   const rootProjectHeaderCount = rootProjectHeaderKey
-    ? getRootProjectHeaderDragKeys(
-        headerDrag.rootProjectHeaderKeys,
-        rootProjectHeaderKey,
-        row.hostId
-      )?.length
+    ? (headerDrag.rootProjectHeaderCountByOccurrenceKey.get(
+        getRootProjectHeaderOccurrenceKey(rootProjectHeaderKey, row.hostId)
+      ) ??
+      headerDrag.rootProjectHeaderCountByOccurrenceKey.get(
+        getRootProjectHeaderOccurrenceKey(rootProjectHeaderKey)
+      ))
     : undefined
   const isDraggableRepoHeader = Boolean(
     headerDrag.canReorderRepoHeaders &&
@@ -148,7 +136,10 @@ export function renderWorktreeSectionHeaderRow(
       : null
   const isPinnedHeader = row.icon.kind === 'pinned'
   const headerVisual = getSidebarHeaderVisual(row.icon, ctx.workspaceStatuses, t)
-  const label = row.label ?? headerVisual.label ?? ''
+  const label = translateWorkspaceStatusHeaderLabel(
+    headerWorkspaceStatus,
+    row.label ?? headerVisual.label ?? ''
+  )
   const hostContext =
     ctx.groupBy === 'repo' ? ctx.projectHeaderHostContexts?.get(row.key) : undefined
   const repoHeaderColor = resolveProjectGroupHeaderColor({
