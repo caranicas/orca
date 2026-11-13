@@ -21468,6 +21468,14 @@
         "session": "Session"
       }
     },
+    "terminal": {
+      "activityMap": {
+        "terminal": "Terminal",
+        "unsupported": "Run a supported agent such as Codex or Claude in this terminal to see activity.",
+        "empty": "Activity from this terminal will appear here as the agent works.",
+        "resize": "Resize activity map"
+      }
+    },
     "tab": {
       "bar": {
         "SortableTabContextMenu": {

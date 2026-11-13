@@ -51,7 +51,9 @@ function shortPath(path: string): string {
   return shortLabel(path.replaceAll('\\', '/').split('/').slice(-2).join('/'))
 }
 
-function toolStation(call: AgentJournalToolCallItem): ActivityMapStation {
+type ActivityMapTool = Pick<AgentJournalToolCallItem, 'name' | 'input' | 'mcpIdentity'>
+
+function toolStation(call: ActivityMapTool): ActivityMapStation {
   const name = call.name.trim().toLowerCase()
   const path = toolFilePath(call.input)?.replaceAll('\\', '/')
   if (name === 'skill' || name === 'toolsearch' || /(?:^|\/)SKILL\.md$/i.test(path ?? '')) {
@@ -96,7 +98,7 @@ function toolStation(call: AgentJournalToolCallItem): ActivityMapStation {
   }
 }
 
-function toolLabel(call: AgentJournalToolCallItem, station: ActivityMapStation): string {
+function toolLabel(call: ActivityMapTool, station: ActivityMapStation): string {
   const path = toolFilePath(call.input)
   if (path && (station === 'files' || station === 'memory' || station === 'skills')) {
     return shortPath(path)
@@ -121,6 +123,11 @@ function toolLabel(call: AgentJournalToolCallItem, station: ActivityMapStation):
   return name
 }
 
+export function activityMapToolDetails(call: ActivityMapTool) {
+  const station = toolStation(call)
+  return { station, label: toolLabel(call, station) }
+}
+
 function projectItem(item: AgentJournalRenderItem): ActivityMapEvent | null {
   const body = item.body
   const event: ActivityMapEvent = {
@@ -132,15 +139,13 @@ function projectItem(item: AgentJournalRenderItem): ActivityMapEvent | null {
     startedAt: item.observedAt
   }
   if (body.kind === 'tool-call') {
-    const station = toolStation(body)
     return {
       ...event,
-      station,
+      ...activityMapToolDetails(body),
       state:
         body.endedAs === 'unverifiable'
           ? 'unknown'
           : (agentJournalToolCallLifecycle(body) ?? 'unknown'),
-      label: toolLabel(body, station),
       ...(body.durationMs !== undefined ? { durationMs: body.durationMs } : {})
     }
   }

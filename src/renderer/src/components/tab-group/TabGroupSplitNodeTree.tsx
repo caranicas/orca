@@ -13,12 +13,16 @@ export function ResizeHandle({
   direction,
   onResizeStart,
   onResizeEnd,
-  onRatioChange
+  onRatioChange,
+  label,
+  ratio
 }: {
   direction: 'horizontal' | 'vertical'
   onResizeStart: () => void
   onResizeEnd?: () => void
   onRatioChange: (ratio: number) => void
+  label?: string
+  ratio?: number
 }): React.JSX.Element {
   const isHorizontal = direction === 'horizontal'
   const [dragging, setDragging] = useState(false)
@@ -132,6 +136,36 @@ export function ResizeHandle({
 
   return (
     <div
+      role={label ? 'separator' : undefined}
+      aria-label={label}
+      aria-orientation={label ? (isHorizontal ? 'vertical' : 'horizontal') : undefined}
+      aria-valuemin={label ? 15 : undefined}
+      aria-valuemax={label ? 85 : undefined}
+      aria-valuenow={label && ratio !== undefined ? Math.round(ratio * 100) : undefined}
+      tabIndex={label ? 0 : undefined}
+      onKeyDown={
+        label
+          ? (event) => {
+              const step = event.shiftKey ? 0.1 : 0.02
+              const next =
+                event.key === 'Home'
+                  ? MIN_RATIO
+                  : event.key === 'End'
+                    ? MAX_RATIO
+                    : event.key === (isHorizontal ? 'ArrowLeft' : 'ArrowUp')
+                      ? (ratio ?? 0.5) - step
+                      : event.key === (isHorizontal ? 'ArrowRight' : 'ArrowDown')
+                        ? (ratio ?? 0.5) + step
+                        : null
+              if (next === null) {
+                return
+              }
+              event.preventDefault()
+              event.stopPropagation()
+              onRatioChange(Math.min(MAX_RATIO, Math.max(MIN_RATIO, next)))
+            }
+          : undefined
+      }
       className={`tab-group-split-resize-handle ${
         isHorizontal ? 'is-vertical' : 'is-horizontal'
       }${dragging ? ' is-dragging' : ''}`}
