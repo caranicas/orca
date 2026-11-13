@@ -1,5 +1,5 @@
 import { Fragment } from 'react'
-import { MessageSquarePlus, SquareSplitVertical } from 'lucide-react'
+import { MessageSquarePlus, Network, SquareSplitVertical } from 'lucide-react'
 import { ShortcutKeyCombo } from '@/components/ShortcutKeyCombo'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -19,6 +19,11 @@ const HEADER_STYLE: React.CSSProperties & Record<'--orca-pane-title-bg', string>
 }
 
 export type NativeChatHeaderHandOff = { open: () => void; disabled: boolean }
+export type NativeChatHeaderActivityMap = {
+  open: boolean
+  toggle: () => void
+  triggerId: string
+}
 
 export function NativeChatPaneHeader({
   tabId,
@@ -27,7 +32,8 @@ export function NativeChatPaneHeader({
   nativeChat,
   focused,
   colorScheme,
-  handOff
+  handOff,
+  activityMap
 }: {
   tabId: string
   worktreeId: string
@@ -36,6 +42,7 @@ export function NativeChatPaneHeader({
   focused: boolean
   colorScheme: React.CSSProperties['colorScheme']
   handOff?: NativeChatHeaderHandOff
+  activityMap?: NativeChatHeaderActivityMap
 }): React.JSX.Element {
   const t = useTranslate()
   const actions = useStructuredChatPaneActions(tabId, worktreeId, groupId)
@@ -56,6 +63,29 @@ export function NativeChatPaneHeader({
       style={HEADER_STYLE}
     >
       <div className="pane-title-actions ml-auto flex shrink-0 items-center gap-0">
+        {activityMap ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="pane-title"
+                size="icon-xs"
+                aria-label={t('components.native-chat.activityMap.title', 'Activity map')}
+                aria-pressed={activityMap.open}
+                id={activityMap.triggerId}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  activityMap.toggle()
+                }}
+              >
+                <Network className="size-3" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" sideOffset={4}>
+              {t('components.native-chat.activityMap.title', 'Activity map')}
+            </TooltipContent>
+          </Tooltip>
+        ) : null}
         {handOff && focused ? (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -141,7 +171,8 @@ export function nativeChatPaneHeader(
   >,
   worktreeId: string | null,
   colorScheme: React.CSSProperties['colorScheme'],
-  handOff?: NativeChatHandOff
+  handOff?: NativeChatHandOff,
+  activityMap?: NativeChatHeaderActivityMap
 ): React.JSX.Element | null {
   return view.isVisible && worktreeId && view.groupId && !view.contextMenuActions ? (
     <NativeChatPaneHeader
@@ -151,6 +182,7 @@ export function nativeChatPaneHeader(
       nativeChat={{ sessionId: view.sessionId, agent: view.agent }}
       focused={view.isFocusedGroup}
       colorScheme={colorScheme}
+      activityMap={activityMap}
       handOff={
         handOff?.available
           ? { open: handOff.open, disabled: handOff.preparing || handOff.dialog !== null }
