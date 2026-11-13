@@ -3911,6 +3911,32 @@ body:has([data-contextual-tour-target='tab-create-menu'][data-state='open'])
   }
 }
 
+@keyframes activity-map-pulse {
+  from {
+    offset-distance: 18%;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  to {
+    offset-distance: 86%;
+    opacity: 0;
+  }
+}
+
+@utility activity-map-pulse {
+  animation: activity-map-pulse 1.8s ease-in-out infinite alternate;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    offset-distance: 75%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .browser-agent-cursor-glyph,
   .browser-agent-cursor-layer::before {

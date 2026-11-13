@@ -229,6 +229,7 @@ export function useStructuredAgentSession(args: StructuredAgentSessionViewArgs) 
   })
   return {
     epoch: state.epoch,
+    hostClock: transportEnabled ? state.hostClock : null,
     /** Whether a live `/clear` is fading the old transcript out, and how many this view drew. */
     contextClear,
     /** The transcript has caught up with the host since this pane last started reading. */
