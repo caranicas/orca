@@ -5,7 +5,7 @@ import { getWorktreeHostIdentity } from '../worktree/host-qualified-identity'
 import { cloneDefaultWorkspaceStatuses } from '../workspace-statuses'
 import { planSidebarRows, type SidebarRowPlanInputs } from './sidebar-row-plan'
 import { customPinnedGroupKey, type PinnedWorkspaceGrouping } from './custom-pinned-groups'
-import { getHostSectionCollapseKey, scopeHostSectionCollapse } from './host-section-collapse'
+import { getHostSectionCollapseKey, scopeHostSectionCollapse } from './hosts/host-section-collapse'
 
 function workspace(id: string, overrides: Partial<Worktree> = {}): Worktree {
   return {

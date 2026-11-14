@@ -1,7 +1,7 @@
 import type { WorkspaceStatusDefinition, Worktree } from '../worktree/types'
 import { cloneDefaultWorkspaceStatuses, getWorkspaceStatus } from '../workspace-statuses'
-import { PINNED_GROUP_KEY } from './group-keys'
-import type { OrderedGroupEntry } from './worktree-group-entry'
+import { PINNED_GROUP_KEY } from './sections/group-keys'
+import type { OrderedGroupEntry } from './sections/worktree-group-entry'
 
 export function pinnedStatusSectionKey(groupKey: string, statusId: string): string {
   return `${groupKey}:status:${encodeURIComponent(statusId)}`

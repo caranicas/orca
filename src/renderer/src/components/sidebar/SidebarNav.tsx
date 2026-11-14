@@ -1,3 +1,4 @@
+import { PinnedWorkspaceGroupsDialog } from './PinnedWorkspaceGroupsDialog'
 import React from 'react'
 import { BookOpen, CalendarClock, EyeOff, Files, Search, Smartphone } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -120,6 +121,7 @@ const SidebarNav = React.memo(function SidebarNav() {
       </button>
       <SetupGuideSidebarEntry />
       <GeneralWorkspaceSidebarEntry />
+      <PinnedWorkspaceGroupsDialog />
       <SidebarTaskNavButton />
       {showArtifactsButton ? (
         <ContextMenu>

@@ -1,4 +1,3 @@
-import { PinnedWorkspaceGroupsDialog } from '../../PinnedWorkspaceGroupsDialog'
 import React, { useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useAppStore } from '@/store/index'
@@ -22,7 +21,7 @@ import { getPinnedWorktreeDisplayPolicy } from '../../../../../../shared/sidebar
 import {
   getProjectGroupHeaderKey,
   isProjectSectionGroupKey
-} from '../../../../../../shared/sidebar-list/group-keys'
+} from '../../../../../../shared/sidebar-list/sections/group-keys'
 import { selectWorktreeListReviewCacheInputs } from './review-cache-inputs'
 import type { VirtualizedScrollAnchor } from '@/hooks/useVirtualizedScrollAnchor'
 import { SidebarWorktreeListDialogs } from '../rows/ProjectGroupDialogs'
@@ -286,17 +285,11 @@ const WorktreeList = React.memo(function WorktreeList({
   )
   // Clear Filters must outrank empty project headers when filtering hides every workspace.
   if (rowModel.rows.length === 0 || filtersHideAllRows) {
-    return (
-      <>
-        <PinnedWorkspaceGroupsDialog />
-        <SidebarWorktreeListEmptyState hasFilters={hasFilters} onClearFilters={clearFilters} />
-      </>
-    )
+    return <SidebarWorktreeListEmptyState hasFilters={hasFilters} onClearFilters={clearFilters} />
   }
 
   return (
     <>
-      <PinnedWorkspaceGroupsDialog />
       {projectsCollapseTarget && projectCollapseKeys.length > 0
         ? createPortal(
             <ProjectsCollapseAllButton
@@ -373,6 +366,9 @@ const WorktreeList = React.memo(function WorktreeList({
         folderWorkspaces={folderWorkspaces}
         selectedWorktreeIds={selection.selectedWorktreeIds}
         selectedWorktrees={selection.selectedWorktrees}
+        focusedWorktree={selection.focusedWorktree}
+        focusedWorkspaceExecutionHostId={selection.focusedWorkspaceExecutionHostId}
+        onKeyboardSelect={selection.selectWorktree}
         onSelectionGesture={selection.updateSelectionForGesture}
         onImmediateWorktreeActivate={handleImmediateWorktreeActivate}
         onContextMenuSelect={selection.selectForContextMenu}

@@ -4,7 +4,7 @@ import type { WorkspaceRowFilters } from '../workspace-view/workspace-row-filter
 import type { WorkspaceStatusDefinition } from '../worktree/types'
 import type { PinnedWorkspaceGrouping } from './custom-pinned-groups'
 import type { PinnedWorktreeDisplayPolicy, WorktreeGroupBy } from './row-types'
-import type { SortBy } from './smart-sort'
+import type { WorkspaceSortBy as SortBy } from '../workspace-view/workspace-row-sort'
 
 export type SidebarFeedView = {
   pinnedWorkspaceGrouping?: PinnedWorkspaceGrouping

@@ -1,5 +1,5 @@
 import type { Worktree } from '../worktree/types'
-import { ALL_GROUP_KEY } from './group-keys'
+import { ALL_GROUP_KEY } from './sections/group-keys'
 import {
   hasCustomPinnedGroup,
   isPinnedSectionKey,
@@ -7,40 +7,40 @@ import {
 } from './custom-pinned-groups'
 import { buildPinnedGroupHeader } from './pinned-group-header'
 import { buildPinnedStatusSections } from './pinned-status-sections'
-import { appendOrderedGroups, type SectionAppendContext } from './group-sections'
+import { appendOrderedGroups, type SectionAppendContext } from './sections/group-sections'
 
 import {
   getLaneHostWorktreeCounts,
   getLaneHostWorktreeIds,
   getMixedWorktreeHostContextLabels,
   getNoticeHostContextLabels
-} from './host-labels'
+} from './hosts/host-labels'
 import { buildProjectGroupingIndex, getProjectGroupingForRepo } from '../project-section-grouping'
 import {
   buildWorktreeOccurrencePlan,
   type WorktreeOccurrenceSection
 } from '../worktree-occurrence-plan'
 import { getWorktreeHostIdentity } from '../worktree/host-qualified-identity'
-import type { OrderedGroupEntry, WorktreeGroupEntry } from './worktree-group-entry'
+import type { OrderedGroupEntry, WorktreeGroupEntry } from './sections/worktree-group-entry'
 
 import {
   appendProjectGroupSections,
   getProjectGroupOccurrencePaths
-} from './project-group-sections'
-import { getSidebarLineageChildren } from './pinned-section-worktrees'
-import { emitPinnedGroup } from './pinned-group-rows'
-import { appendWorktreeRows, buildPendingCreationRow } from './row-builders'
-import { getRenderableFolderWorkspaces } from './folder-workspace-lanes'
+} from './sections/project-group-sections'
+import { getSidebarLineageChildren } from './lineage/pinned-section-worktrees'
+import { emitPinnedGroup } from './sections/pinned-group-rows'
+import { appendWorktreeRows, buildPendingCreationRow } from './sections/row-builders'
+import { getRenderableFolderWorkspaces } from './folders/folder-workspace-lanes'
 import {
   getFolderLaneSections,
   getSidebarFolderOccurrences,
   isFolderLaneSectionKey
-} from './folder-workspace-occurrences'
+} from './folders/folder-workspace-occurrences'
 import type { PendingCreationRef, Row } from './row-types'
-import { orderMainWorktreeFirst } from './section-order'
-import { appendImportedWorktreeLines } from './imported-worktree-lines'
+import { orderMainWorktreeFirst } from './sections/section-order'
+import { appendImportedWorktreeLines } from './sections/imported-worktree-lines'
 import { withRepoSectionDisplayLabels } from '../project-section-order'
-import { buildOrderedGroups } from './worktree-grouping'
+import { buildOrderedGroups } from './sections/worktree-grouping'
 
 type SidebarOccurrenceSection = WorktreeOccurrenceSection<Worktree> & { group: WorktreeGroupEntry }
 

@@ -1,4 +1,8 @@
-import { useId, useState, type CSSProperties, type ReactNode } from 'react'
+import {
+  NativeChatCrewFrame,
+  NativeChatCrewPanel
+} from '../../orchestration-crew/NativeChatCrewPanel'
+import { useId, useState, type CSSProperties, type ReactNode, type ComponentProps } from 'react'
 import { NativeChatActivityMap } from './NativeChatActivityMap'
 import { nativeChatPaneHeader } from '../pane/actions/NativeChatPaneHeader'
 import type { NativeChatHandOff } from '../pane/actions/use-native-chat-hand-off'
@@ -45,6 +49,7 @@ export function NativeChatActivityMapLayout({
   controller,
   agentLabel,
   hostOnline,
+  crew,
   children
 }: {
   pane: Omit<NativeChatStructuredViewProps, 'mode'>
@@ -54,6 +59,7 @@ export function NativeChatActivityMapLayout({
   controller: ActivityController
   agentLabel: string
   hostOnline: boolean
+  crew?: ComponentProps<typeof NativeChatCrewPanel>
   children: ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -85,7 +91,13 @@ export function NativeChatActivityMapLayout({
           ) : null
         }
       >
-        {children}
+        {crew ? (
+          <NativeChatCrewFrame panel={<NativeChatCrewPanel {...crew} />}>
+            {children}
+          </NativeChatCrewFrame>
+        ) : (
+          children
+        )}
       </NativeChatActivityMapFrame>
     </>
   )
