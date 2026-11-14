@@ -21596,6 +21596,42 @@
         "questionNotSentDetail": "Your question is still in this chat. Send /btw again to retry.",
         "questionUnconfirmed": "{{agent}} couldn't confirm the side chat got your question",
         "questionUnconfirmedDetail": "Check the side chat before asking again. Your question is still in this chat."
+      },
+      "activityMap": {
+        "state": {
+          "running": "Running",
+          "completed": "Completed",
+          "failed": "Failed",
+          "interrupted": "Interrupted",
+          "unknown": "Unconfirmed",
+          "waiting": "Waiting for you",
+          "observed": "Observed"
+        },
+        "title": "Activity map",
+        "close": "Close activity map",
+        "context": "{{percent}}% context used",
+        "estimated": "estimated",
+        "offline": "Waiting for session updates",
+        "workingAgents": "Subagents working: {{count}}",
+        "recent": "Recent activity",
+        "empty": "Send a message to see activity here.",
+        "subagent": "subagent",
+        "loaded": "Based on loaded activity. Shell scripts stay in Shell; unreported activity is omitted.",
+        "station": {
+          "you": "You",
+          "model": "Model",
+          "memory": "Memory",
+          "files": "Files",
+          "shell": "Shell",
+          "network": "Network",
+          "browser": "Browser",
+          "agents": "Agents",
+          "skills": "Skills",
+          "tools": "Tools"
+        },
+        "diagram": "Observed activity around the selected agent",
+        "working": "Working",
+        "session": "Session"
       }
     },
     "tab": {
@@ -22732,6 +22768,14 @@
       "DictationIndicator": {
         "cleaningUp": "Cleaning up…",
         "skipCleanup": "Skip cleanup and insert as heard"
+      }
+    },
+    "terminal": {
+      "activityMap": {
+        "resize": "Resize activity map",
+        "terminal": "Terminal",
+        "unsupported": "Run a supported agent such as Codex or Claude in this terminal to see activity.",
+        "empty": "Activity from this terminal will appear here as the agent works."
       }
     }
   },
