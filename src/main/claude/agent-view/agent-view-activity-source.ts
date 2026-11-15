@@ -132,7 +132,7 @@ function registerActivityMap(on) {
   on('turn.step', async function* ($, event, next) {
     const startedAt = await activityNow($)
     const id = 'claude-step:' + event.turnId + ':' + event.index
-    const fact = { ...activityFact(id, 'model', event.model + ' · Step ' + (event.index + 1), 'running', startedAt, event.agentId, 'step'), transcriptIds: [] }
+    const fact = { ...activityFact(id, 'model', event.model + ' \u00b7 Step ' + (event.index + 1), 'running', startedAt, event.agentId, 'step'), transcriptIds: [] }
     steps.set(event.agentId || 'core', fact)
     if (!event.agentId) {
       try {

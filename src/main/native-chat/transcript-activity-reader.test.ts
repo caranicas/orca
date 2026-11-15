@@ -310,3 +310,53 @@ it.each([
   ])
   expect(reader.snapshot().statistics?.faults).toEqual({})
 })
+
+it('rejects context reports older than a model change, compaction or clearing', () => {
+  const reader = createTranscriptActivityReader('claude')
+  const report = {
+    paneKey: 'tab:pane',
+    sessionId: 'session',
+    model: 'claude-sonnet-4-6',
+    observedAt: 1000,
+    contextUsage: {
+      usedTokens: 40000,
+      windowTokens: 200000,
+      percentage: 20,
+      estimated: false,
+      categories: []
+    }
+  }
+  reader.observeContextReport(report)
+  reader.observe(
+    JSON.stringify({
+      type: 'assistant',
+      timestamp: '1970-01-01T00:00:02Z',
+      message: { id: 'new-model', model: 'claude-opus-4-6' }
+    }),
+    'model-change'
+  )
+  reader.observeContextReport({ ...report, observedAt: 1500 })
+  expect(reader.snapshot()).toMatchObject({ model: 'claude-opus-4-6', contextUsage: null })
+  reader.observeContextReport({ ...report, model: 'claude-opus-4-6', observedAt: 2500 })
+  expect(reader.snapshot().contextUsage?.percentage).toBe(20)
+  reader.observe(
+    JSON.stringify({
+      type: 'system',
+      subtype: 'compact_boundary',
+      timestamp: '1970-01-01T00:00:03Z'
+    }),
+    'compact'
+  )
+  reader.observeContextReport({ ...report, model: 'claude-opus-4-6', observedAt: 2750 })
+  expect(reader.snapshot().contextUsage).toBeNull()
+  reader.observe(
+    JSON.stringify({
+      type: 'system',
+      subtype: 'context_cleared',
+      timestamp: '1970-01-01T00:00:04Z'
+    }),
+    'clear'
+  )
+  reader.observeContextReport({ ...report, model: 'claude-opus-4-6', observedAt: 3500 })
+  expect(reader.snapshot().contextUsage).toBeNull()
+})

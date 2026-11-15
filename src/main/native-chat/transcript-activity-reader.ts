@@ -66,6 +66,7 @@ export function createTranscriptActivityReader(
         })
       }
       model = fact.model
+      contextAt = Math.max(contextAt, modelAt)
       contextUsage = null
       claudeWindow = null
       claudeInput = null
@@ -257,7 +258,7 @@ export function createTranscriptActivityReader(
     observe,
     modelRequests: activity.modelRequests,
     observeContextReport(report: ClaudeStatuslineContext) {
-      if (report.observedAt >= contextAt) {
+      if (report.observedAt >= Math.max(contextAt, modelAt)) {
         apply({
           model: report.model,
           context: report.contextUsage,
