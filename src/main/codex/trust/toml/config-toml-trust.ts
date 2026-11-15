@@ -27,6 +27,8 @@ import { observe } from '../../configuration/codex-path-observation'
 import '../../configuration/toml/config-toml-syntax'
 
 export type CodexEventLabel =
+  | 'pre_model_request'
+  | 'post_model_request'
   | 'pre_tool_use'
   | 'permission_request'
   | 'post_tool_use'

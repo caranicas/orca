@@ -1,4 +1,5 @@
 import { AgentSessionSelectionSchema } from '../agent-session/options/agent-session-execution-options'
+import { ActivityMapProviderOptionsParam } from './activity-map-params'
 import {
   SendBody,
   MAX_OPTION_LABEL,
@@ -331,7 +332,8 @@ export const HistoryParams = z
     sessionId: SessionId,
     direction: z.enum(AGENT_SESSION_HISTORY_DIRECTIONS),
     cursor: JournalCursor.optional(),
-    limit: z.number().int().positive().max(AGENT_SESSION_HISTORY_MAX_LIMIT).optional()
+    limit: z.number().int().positive().max(AGENT_SESSION_HISTORY_MAX_LIMIT).optional(),
+    activityMapOptions: ActivityMapProviderOptionsParam
   })
   .strict()
 

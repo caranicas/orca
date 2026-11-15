@@ -34,7 +34,6 @@ export async function awaitExplicitAgentPluginGuestReadiness(args: {
     ? args.launchAgent
     : detectExplicitPiAgentKindFromCommand(args.launchCommand)
   const claude =
-    args.settings?.claudeSubagentNavigationEnabled !== false &&
     isAgentStatusHooksEnabledForAgent(args.settings, 'claude') &&
     (args.launchAgent === 'claude' ||
       (!args.launchAgent && getAgentLaunchExecutableName(args.launchCommand) === 'claude'))

@@ -14,6 +14,8 @@ export const CLAUDE_HOOK_EVENT_FIRST_VERSIONS = {
   SessionEnd: '1.0.85',
   SubagentStart: '2.0.43',
   PermissionRequest: '2.0.45',
+  PermissionDenied: '2.1.90',
+  PreCompact: '1.0.48',
   PostToolUseFailure: '2.0.56',
   TeammateIdle: '2.1.33',
   Elicitation: '2.1.63',

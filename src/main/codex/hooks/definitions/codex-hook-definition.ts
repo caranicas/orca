@@ -28,6 +28,10 @@ import {
 export const CODEX_EVENTS = [
   'SessionStart',
   'UserPromptSubmit',
+  'PreModelRequest',
+  'PostModelRequest',
+  'PreCompact',
+  'PostCompact',
   'PreToolUse',
   'PermissionRequest',
   'PostToolUse',
@@ -59,6 +63,10 @@ export function getCodexConfigTomlPath(
 export const CODEX_EVENT_LABEL: Record<(typeof CODEX_EVENTS)[number], CodexEventLabel> = {
   SessionStart: CODEX_HOOK_EVENT_LABEL.SessionStart!,
   UserPromptSubmit: CODEX_HOOK_EVENT_LABEL.UserPromptSubmit!,
+  PreModelRequest: CODEX_HOOK_EVENT_LABEL.PreModelRequest!,
+  PostModelRequest: CODEX_HOOK_EVENT_LABEL.PostModelRequest!,
+  PreCompact: CODEX_HOOK_EVENT_LABEL.PreCompact!,
+  PostCompact: CODEX_HOOK_EVENT_LABEL.PostCompact!,
   PreToolUse: CODEX_HOOK_EVENT_LABEL.PreToolUse!,
   PermissionRequest: CODEX_HOOK_EVENT_LABEL.PermissionRequest!,
   PostToolUse: CODEX_HOOK_EVENT_LABEL.PostToolUse!,

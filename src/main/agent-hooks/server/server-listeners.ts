@@ -1,4 +1,5 @@
 import { cliWriterExecutionMatcher, type CliWriterExecutionMatches } from './cli-writer-observation'
+import { recordTranscriptActivityObservation } from '../../native-chat/transcript-activity-observations'
 import type {
   AgentStatusClearIpcPayload,
   AgentStatusIpcPayload
@@ -45,6 +46,11 @@ export abstract class AgentHookServerListeners extends AgentHookServerState {
 
   protected emitEnrichedStatus(row: EnrichedAgentHookEventPayload): void {
     const enriched = this.programStatusFacets.stitch(row)
+    try {
+      recordTranscriptActivityObservation(enriched)
+    } catch {
+      // Activity observers cannot interrupt status delivery.
+    }
     this.onAgentStatus?.(enriched)
     for (const listener of this.enrichedStatusListeners) {
       try {

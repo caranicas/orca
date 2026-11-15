@@ -1,3 +1,5 @@
+import { activityMapChildBlocks } from './activity-map-child-blocks'
+import type { ActivityMapClassificationOptions } from './activity-map-classification-options'
 import { agentJournalToolCallLifecycle } from '../../agent-journal-tool-call-lifecycle'
 import type {
   NativeChatBlock,
@@ -6,11 +8,13 @@ import type {
   NativeChatToolResultBlock
 } from '../../native-chat/native-chat-types'
 import { pairNativeChatToolResults } from '../../native-chat/tools/native-chat-tool-pairing'
+import { isNoiseMessage } from '../../native-chat/native-chat-noise'
 import { activityMapToolDetails, type ActivityMapEvent } from './agent-activity-map'
 
 function isUserMessage(message: NativeChatMessage): boolean {
   return (
     message.role === 'user' &&
+    (!isNoiseMessage(message) || Boolean(message.from)) &&
     message.blocks.some((block) => block.type === 'text' || block.type === 'image-ref')
   )
 }
@@ -43,7 +47,8 @@ function terminalToolResults(messages: readonly NativeChatMessage[]) {
 
 /** Use transcript evidence only; an absent result never proves a call is still running. */
 export function projectTerminalAgentActivityMap(
-  messages: readonly NativeChatMessage[]
+  messages: readonly NativeChatMessage[],
+  options?: ActivityMapClassificationOptions
 ): ActivityMapEvent[] {
   const events: ActivityMapEvent[] = []
   const resultByCall = terminalToolResults(messages)
@@ -54,12 +59,14 @@ export function projectTerminalAgentActivityMap(
         message.agentId !== undefined && message.producerKind !== 'background' ? 'agents' : 'core',
       startedAt: message.timestamp ?? 0
     } as const
-    if (isUserMessage(message) || message.role === 'reasoning') {
+    events.push(...activityMapChildBlocks(message.blocks, base))
+    if (isUserMessage(message)) {
       events.push({
         ...base,
-        station: message.role === 'reasoning' ? 'model' : message.from ? 'agents' : 'you',
-        label: message.role === 'reasoning' ? 'Reasoning' : 'Message',
-        state: message.state ?? 'observed'
+        station: message.from ? 'agents' : 'you',
+        label: 'Message',
+        state: message.state ?? 'observed',
+        ...(!message.from && base.origin === 'core' ? { mark: 'prompt' as const } : {})
       })
     }
     for (const [index, block] of message.blocks.entries()) {
@@ -71,7 +78,9 @@ export function projectTerminalAgentActivityMap(
       events.push({
         ...base,
         id: `${message.id}:tool:${index}`,
-        ...activityMapToolDetails(block),
+        ...(block.callId ? { callId: block.callId } : {}),
+        ...(message.agentId ? { agentId: message.agentId } : {}),
+        ...activityMapToolDetails(block, options),
         state: result
           ? result.isError
             ? 'failed'
@@ -79,7 +88,9 @@ export function projectTerminalAgentActivityMap(
           : block.endedAs === 'unverifiable'
             ? 'unknown'
             : (lifecycle ?? 'unknown'),
-        ...(block.durationMs !== undefined ? { durationMs: block.durationMs } : {})
+        ...(block.durationMs !== undefined || result?.durationMs !== undefined
+          ? { durationMs: block.durationMs ?? result?.durationMs }
+          : {})
       })
     }
   }

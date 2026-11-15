@@ -47,6 +47,9 @@ export function normalizeClaudeEvent(
   paneKey: string,
   hookPayload: Record<string, unknown>
 ): ParsedAgentStatusPayload | null {
+  if (eventName === 'PreCompact') {
+    return buildClaudeCachedLeadStatusPayload(state, eventName, paneKey, hookPayload)
+  }
   const eventAgentId = readString(hookPayload, 'agent_id')
   if (
     eventName === 'SubagentStart' ||
@@ -133,6 +136,7 @@ export function normalizeClaudeEvent(
     eventName === 'UserPromptSubmit' ||
     eventName === 'PostToolUse' ||
     eventName === 'PostToolUseFailure' ||
+    eventName === 'PermissionDenied' ||
     (eventName === 'PreToolUse' && !isAskUserQuestion)
       ? 'working'
       : eventName === 'PermissionRequest' || eventName === 'Elicitation' || isAskUserQuestion

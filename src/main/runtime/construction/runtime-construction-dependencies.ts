@@ -1,3 +1,4 @@
+import type { SubscribeTranscriptHookActivity } from '../../native-chat/transcript-hook-activity'
 import type { CliWriterObservation } from '../../agent-hooks/server/cli-writer-observation'
 import type { ExecutionHostScope } from '../../../shared/execution-host'
 import type { IPtyProvider } from '../../providers/pty-provider-contract'
@@ -39,6 +40,7 @@ export type RuntimeConstructionDependencies = {
   getAgentProviderSessionSnapshot?: (tabId?: string) => AgentStatusIpcPayload[]
   getAgentProviderSessionRowsForPane?: (paneKey: string) => AgentStatusIpcPayload[]
   getAcceptedAgentReply?: (paneKey: string, leadTurnKey: number) => string | undefined
+  subscribeAgentActivity?: SubscribeTranscriptHookActivity
   subscribeAgentStatusRowChanges?: (listener: (paneKey: string) => void) => () => void
   subscribeAgentProviderSessionChanges?: (
     listener: (sessions: readonly { paneKey: string; sessionId: string }[]) => void

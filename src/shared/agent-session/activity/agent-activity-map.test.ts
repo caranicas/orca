@@ -57,8 +57,8 @@ describe('projectAgentActivityMap', () => {
     expect(result.map(({ station, label }) => ({ station, label }))).toEqual([
       { station: 'files', label: 'src/app.ts' },
       { station: 'files', label: 'src/app.ts' },
-      { station: 'shell', label: 'exec_command' },
-      { station: 'shell', label: 'PowerShell' },
+      { station: 'shell', label: 'export' },
+      { station: 'shell', label: 'shell' },
       { station: 'network', label: 'example.com' }
     ])
     expect(JSON.stringify(result)).not.toMatch(/private|password|token=|cat |SECRET/)
@@ -172,8 +172,7 @@ describe('projectAgentActivityMap', () => {
       row(4, { kind: 'message', role: 'assistant', blocks: [{ type: 'text', text: 'secret' }] })
     ])
     expect(result.map(({ id, station, state }) => ({ id, station, state }))).toEqual([
-      { id: 'item-2', station: 'you', state: 'waiting' },
-      { id: 'item-3', station: 'model', state: 'running' }
+      { id: 'item-2', station: 'you', state: 'waiting' }
     ])
     expect(JSON.stringify(result)).not.toMatch(/secret|private/)
   })

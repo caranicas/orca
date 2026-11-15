@@ -1,8 +1,10 @@
 import { CLAUDE_AGENT_VIEW_PATH } from '../../../shared/claude-agent-view'
 import { parseAgentHookEndpointFile } from '../../../shared/agent-hook-listener/transport/agent-hook-endpoint-file'
+import { CLAUDE_ACTIVITY_MAP_MOD_SOURCE } from './agent-view-activity-source'
 
 export const CLAUDE_AGENT_VIEW_MOD_SOURCE = String.raw`
 const parseEndpoint = ${parseAgentHookEndpointFile.toString()}
+${CLAUDE_ACTIVITY_MAP_MOD_SOURCE}
 
 let identity
 let configDir
@@ -58,6 +60,7 @@ let viewRevision = 0
   }
 
 export function register(on) {
+  registerActivityMap(on)
   on('ui.render', { component: 'AbovePrompt' }, async ($, event, next) => {
     if (!paneKey) return next(event)
     const result = await next(event)

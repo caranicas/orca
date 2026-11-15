@@ -1,35 +1,36 @@
-import { Check, Circle, CircleHelp, Pause, X } from 'lucide-react'
-import { useMemo } from 'react'
+import { mergeTerminalActivity } from '../../../../../shared/agent-session/activity/merge-terminal-activity'
+import { activityMapColors } from './activity-map-colors'
+import { activityMapEventLabel } from '../../../../../shared/agent-session/activity/activity-map-event-label'
+import { activityMapProviderClassification } from '../../../../../shared/agent-session/activity/activity-map-provider-options'
+import { ActivityMapSettings } from './ActivityMapSettings'
+import {
+  useActivityMapPreferences,
+  useActivityMapText,
+  useActivityMapProviderOptions
+} from './use-activity-map-preferences'
+import { cn } from '@/lib/class-names'
+import type { ActivityMapStatistics } from '../../../../../shared/agent-session/activity/activity-map-statistics'
+import { X, Minus, Plus, Eye, EyeOff } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useTranslate } from '@/i18n/use-translate'
 import { useNow } from '@/hooks/use-now'
-import { cn } from '@/lib/class-names'
+import { ActivityMapFeed } from './ActivityMapFeed'
 import { NativeChatActivityMapDiagram } from './NativeChatActivityMapDiagram'
 import {
   projectAgentActivityMap,
-  type ActivityMapEvent,
-  type ActivityMapState
+  type ActivityMapEvent
 } from '../../../../../shared/agent-session/activity/agent-activity-map'
 import type { AgentJournalRenderItem } from '../../../../../shared/agent-session/journal/agent-session-journal-types'
 import type { StructuredAgentContextUsage } from '../../../../../shared/agent-session/structured-agent-session-context-usage'
 import type { StructuredAgentSubagentRoster } from '../../../../../shared/agent-session/view/structured-agent-session-subagent-roster'
-import { formatToolDuration } from '../../../../../shared/native-chat/tools/native-chat-tool-identity'
 import type { StructuredAgentHostClock } from '../../../../../shared/agent-session/structured-agent-session-reducer'
-
-const STATE_ICONS = {
-  running: Circle,
-  completed: Check,
-  failed: X,
-  interrupted: Pause,
-  unknown: CircleHelp,
-  waiting: CircleHelp,
-  observed: Circle
-} satisfies Record<ActivityMapState, typeof Circle>
 
 export function NativeChatActivityMap({
   items,
   events: projectedEvents,
   agentLabel,
+  model,
   working,
   live,
   hostClock,
@@ -37,11 +38,13 @@ export function NativeChatActivityMap({
   subagentRoster,
   onClose,
   notice,
-  emptyMessage
+  emptyMessage,
+  statistics
 }: {
   items?: readonly AgentJournalRenderItem[]
   events?: readonly ActivityMapEvent[]
   agentLabel: string
+  model?: string | null
   working: boolean
   live: boolean
   hostClock?: StructuredAgentHostClock | null
@@ -50,29 +53,34 @@ export function NativeChatActivityMap({
   onClose: () => void
   notice?: string
   emptyMessage?: string
+  statistics?: ActivityMapStatistics
 }) {
   const t = useTranslate()
-  const stateLabels = {
-    running: t('components.native-chat.activityMap.state.running', 'Running'),
-    completed: t('components.native-chat.activityMap.state.completed', 'Completed'),
-    failed: t('components.native-chat.activityMap.state.failed', 'Failed'),
-    interrupted: t('components.native-chat.activityMap.state.interrupted', 'Interrupted'),
-    unknown: t('components.native-chat.activityMap.state.unknown', 'Unconfirmed'),
-    waiting: t('components.native-chat.activityMap.state.waiting', 'Waiting for you'),
-    observed: t('components.native-chat.activityMap.state.observed', 'Observed')
-  }
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const text = useActivityMapText()
+  const { options, update } = useActivityMapPreferences()
+  const zooms = [160, 200, 240, 280, 340, 400, null]
+  const zoom = zooms.indexOf(options.zoom)
+  const providerOptions = useActivityMapProviderOptions()
+  const classification = useMemo(
+    () => activityMapProviderClassification(providerOptions),
+    [providerOptions]
+  )
   const events = useMemo(
-    () => projectedEvents ?? projectAgentActivityMap(items ?? []),
-    [items, projectedEvents]
+    () =>
+      (
+        projectedEvents ??
+        mergeTerminalActivity(projectAgentActivityMap(items ?? [], classification), [], [])
+      )
+        .filter((event) => event.mark !== 'metadata')
+        .map((event) => ({ ...event, label: activityMapEventLabel(event, text) })),
+    [items, projectedEvents, classification, text]
   )
   const active = events.filter((event) => event.state === 'running' || event.state === 'waiting')
-  const now = useNow(1000, live && active.length > 0)
-  const hostNow = hostClock ? hostClock.hostNow + now - hostClock.receivedAt : null
-  const activeIds = new Set(active.map((event) => event.id))
-  const recent = [
-    ...active,
-    ...events.filter((event) => !activeIds.has(event.id)).toReversed()
-  ].slice(0, 16)
+  const now = useNow(1000, live)
+  const hostNow = hostClock
+    ? hostClock.hostNow + (live ? Math.max(0, now - hostClock.receivedAt) : 0)
+    : null
   const workingAgents = [...subagentRoster.values()].filter(
     ({ entry }) => entry.state === 'working'
   ).length
@@ -80,36 +88,86 @@ export function NativeChatActivityMap({
     <aside
       aria-label={t('components.native-chat.activityMap.title', 'Activity map')}
       data-native-chat-activity-map=""
+      style={{
+        ...activityMapColors(options.colors),
+        backgroundColor:
+          options.background === 'solid' ? 'var(--activity-map-background, var(--card))' : undefined
+      }}
       onKeyDown={(event) => {
-        if (event.key === 'Escape') {
+        if (
+          event.key === 'Escape' &&
+          !settingsOpen &&
+          !event.defaultPrevented &&
+          event.target instanceof Node &&
+          event.currentTarget.contains(event.target)
+        ) {
           event.stopPropagation()
           onClose()
         }
       }}
-      className="flex h-full min-h-0 flex-col bg-card text-card-foreground"
+      className={cn(
+        'flex h-full min-h-0 flex-col text-card-foreground',
+        options.background === 'solid' ? 'bg-card' : 'bg-transparent',
+        options.theme !== 'auto' && `activity-map-theme-${options.theme}`
+      )}
     >
       <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
-        <h2 className="text-xs font-semibold">
-          {t('components.native-chat.activityMap.title', 'Activity map')}
-        </h2>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          aria-label={t('components.native-chat.activityMap.close', 'Close activity map')}
-          onClick={onClose}
-        >
-          <X className="size-3.5" />
-        </Button>
+        <h2 className="text-xs font-semibold">{text.title}</h2>
+        <div className="flex items-center gap-0.5">
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={text.zoomOut}
+            disabled={zoom === 0}
+            onClick={() => update({ zoom: zooms[Math.max(0, zoom - 1)] })}
+          >
+            <Minus className="size-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={text.zoomIn}
+            disabled={zoom === zooms.length - 1}
+            onClick={() => update({ zoom: zooms[Math.min(zooms.length - 1, zoom + 1)] })}
+          >
+            <Plus className="size-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={options.minimized ? text.showMap : text.hideMap}
+            aria-pressed={options.minimized}
+            onClick={() => update({ minimized: !options.minimized })}
+          >
+            {options.minimized ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
+          </Button>
+          <ActivityMapSettings onOpenChange={setSettingsOpen} />
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={t('components.native-chat.activityMap.close', 'Close activity map')}
+            onClick={onClose}
+          >
+            <X className="size-3.5" />
+          </Button>
+        </div>
       </div>
       <div className="scrollbar-sleek min-h-0 flex-1 overflow-y-auto">
-        <NativeChatActivityMapDiagram
-          events={events}
-          agentLabel={agentLabel}
-          working={working}
-          live={live}
-          contextPercent={contextUsage?.percentage}
-          workingAgents={workingAgents}
-        />
+        {!options.minimized ? (
+          <div className="mx-auto max-w-full" style={{ width: options.zoom ?? '100%' }}>
+            <NativeChatActivityMapDiagram
+              events={events}
+              agentLabel={agentLabel}
+              model={model}
+              working={working || active.length > 0 || workingAgents > 0}
+              live={live}
+              contextPercent={contextUsage?.percentage}
+              workingAgents={workingAgents}
+              hostNow={hostNow}
+              statistics={statistics}
+            />
+          </div>
+        ) : null}
         <div className="space-y-3 px-3 pb-3">
           {contextUsage ? (
             <p className="text-xs text-muted-foreground">
@@ -129,71 +187,31 @@ export function NativeChatActivityMap({
           ) : null}
           {workingAgents > 0 ? (
             <p className="text-xs text-muted-foreground">
-              {emptyMessage ??
-                t(
-                  'components.native-chat.activityMap.workingAgents',
-                  'Subagents working: {{count}}',
-                  { count: workingAgents }
-                )}
-            </p>
-          ) : null}
-          <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('components.native-chat.activityMap.recent', 'Recent activity')}
-          </h3>
-          {recent.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
               {t(
-                'components.native-chat.activityMap.empty',
-                'Send a message to see activity here.'
+                'components.native-chat.activityMap.workingAgents',
+                'Subagents working: {{count}}',
+                { count: workingAgents }
               )}
             </p>
-          ) : (
-            <ol className="space-y-2">
-              {recent.map((event) => {
-                const Icon = STATE_ICONS[event.state]
-                const duration =
-                  event.durationMs ??
-                  (live && event.state === 'running' && hostNow !== null
-                    ? Math.max(0, hostNow - event.startedAt)
-                    : undefined)
-                return (
-                  <li key={event.id} className="flex items-start gap-2 text-sm">
-                    <span className="sr-only">{stateLabels[event.state]}</span>
-                    <Icon
-                      aria-hidden="true"
-                      className={cn(
-                        'mt-0.5 size-3.5 shrink-0',
-                        event.state === 'failed' ? 'text-destructive' : 'text-muted-foreground'
-                      )}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-mono text-xs">{event.label}</div>
-                      <div className="text-2xs text-muted-foreground">
-                        {t(
-                          `components.native-chat.activityMap.station.${event.station}`,
-                          event.station
-                        )}
-                        {event.origin === 'agents'
-                          ? ` · ${t('components.native-chat.activityMap.subagent', 'subagent')}`
-                          : ''}
-                      </div>
-                    </div>
-                    {duration !== undefined ? (
-                      <span className="shrink-0 font-mono text-2xs text-muted-foreground">
-                        {formatToolDuration(duration)}
-                      </span>
-                    ) : null}
-                  </li>
-                )
-              })}
-            </ol>
-          )}
-          <p className="text-2xs text-muted-foreground">
-            {t(
-              'components.native-chat.activityMap.loaded',
-              'Based on loaded activity. Shell scripts stay in Shell; unreported activity is omitted.'
-            )}
+          ) : null}
+          <p className="truncate font-mono text-xs">
+            {active.length > 0
+              ? `${text.stations[active.at(-1)!.station]}: ${active.at(-1)!.label}${active.length > 1 ? text.andMore(active.length - 1) : ''}`
+              : working
+                ? t('components.native-chat.activityMap.working', 'Working')
+                : text.idle}
           </p>
+          {events.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {emptyMessage ??
+                t(
+                  'components.native-chat.activityMap.empty',
+                  'Send a message to see activity here.'
+                )}
+            </p>
+          ) : (
+            <ActivityMapFeed events={events} hostNow={hostNow} live={live} />
+          )}
         </div>
       </div>
     </aside>

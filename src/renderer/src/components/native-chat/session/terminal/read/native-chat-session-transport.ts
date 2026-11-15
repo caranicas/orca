@@ -12,6 +12,7 @@ import {
   parseRuntimeNativeChatTurnLifecycle,
   runtimeNativeChatReadError
 } from './native-chat-runtime-contract'
+import { readTerminalActivityTelemetry } from '../../../../../../../shared/agent-session/activity/terminal-activity-telemetry'
 import { translate } from '@/i18n/i18n'
 
 /** Match local IPC so session consumers can read local or runtime-owned transcripts. */
@@ -48,12 +49,22 @@ function createRuntimeNativeChatTransport(environmentId: string): NativeChatSess
   const target: RuntimeClientTarget = { kind: 'environment', environmentId }
 
   return {
-    readSession: async (agent, sessionId, limit, transcriptPath) => {
+    readSession: async (agent, sessionId, limit, transcriptPath, options) => {
       try {
         const result = await callRuntimeRpc<unknown>(
           target,
           'nativeChat.readSession',
-          { agent, sessionId, limit, transcriptPath, capabilities: { transcriptSourceOrder: 1 } },
+          {
+            agent,
+            sessionId,
+            limit,
+            transcriptPath,
+            activityMapOptions: options?.activityMapOptions,
+            capabilities: {
+              transcriptSourceOrder: 1,
+              ...(options?.activityMap ? { activityMap: 1 } : {})
+            }
+          },
           { timeoutMs: 15_000 }
         )
         return parseRuntimeNativeChatReadSessionResult(result)
@@ -98,11 +109,17 @@ function createRuntimeNativeChatTransport(environmentId: string): NativeChatSess
               method: 'nativeChat.subscribe',
               params: {
                 subscriptionId,
+                paneKey: args.paneKey,
+                activityMapOptions: args.activityMapOptions,
                 agent,
                 sessionId,
                 transcriptPath,
                 limit,
-                capabilities: { transcriptPending: 1, transcriptSourceOrder: 1 }
+                capabilities: {
+                  transcriptPending: 1,
+                  transcriptSourceOrder: 1,
+                  ...(args.activityMap ? { activityMap: 1 } : {})
+                }
               },
               timeoutMs: 15_000
             },
@@ -126,15 +143,18 @@ function createRuntimeNativeChatTransport(environmentId: string): NativeChatSess
                   }
                   return
                 }
+                // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: Authenticated transcript RPC; discriminant and message array are checked below.
                 const frame = response.result as {
                   type?: string
                   messages?: NativeChatAppendedMessages
                   hasMore?: boolean
                   error?: string
                   lifecycle?: unknown
+                  activityMap?: unknown
                   pending?: boolean
                 }
                 const lifecycle = parseRuntimeNativeChatTurnLifecycle(frame?.lifecycle)
+                const activityMap = readTerminalActivityTelemetry(frame?.activityMap)
                 // Pending frames stop the spinner without claiming a settled initial transcript.
                 const pending = frame?.pending === true
                 if (
@@ -153,6 +173,7 @@ function createRuntimeNativeChatTransport(environmentId: string): NativeChatSess
                       hasMore: frame.hasMore ?? frame.messages.length >= (limit ?? 300),
                       ...(frame.error ? { error: frame.error } : {}),
                       ...(lifecycle ? { lifecycle } : {}),
+                      ...(activityMap ? { activityMap } : {}),
                       ...(pending ? { pending: true } : {})
                     })
                   } else if (frame.type === 'snapshot') {
@@ -162,6 +183,7 @@ function createRuntimeNativeChatTransport(environmentId: string): NativeChatSess
                       hasMore: frame.hasMore ?? false,
                       ...(frame.error ? { error: frame.error } : {}),
                       ...(lifecycle ? { lifecycle } : {}),
+                      ...(activityMap ? { activityMap } : {}),
                       ...(pending ? { pending: true } : {})
                     })
                   } else {
@@ -171,12 +193,14 @@ function createRuntimeNativeChatTransport(environmentId: string): NativeChatSess
                             type: 'replacement',
                             messages: frame.messages,
                             hasMore: frame.hasMore ?? false,
-                            ...(lifecycle ? { lifecycle } : {})
+                            ...(lifecycle ? { lifecycle } : {}),
+                            ...(activityMap ? { activityMap } : {})
                           }
                         : {
                             type: 'appended',
                             messages: frame.messages,
-                            ...(lifecycle ? { lifecycle } : {})
+                            ...(lifecycle ? { lifecycle } : {}),
+                            ...(activityMap ? { activityMap } : {})
                           }
                     )
                   }

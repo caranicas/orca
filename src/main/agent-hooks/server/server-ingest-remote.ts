@@ -7,10 +7,7 @@ import {
 } from '../../../shared/agent-status/contracts/agent-status-types'
 import { isTurnEndedAt } from '../../../shared/agent-hook-listener/state/agent-hook-turn-end-timing'
 import { restoreShedStatusFields } from '../../../shared/agent-hook-listener/transport/agent-hook-relay'
-import {
-  MAX_PANE_KEY_LEN,
-  warnOnHookEnvOrVersionMismatch
-} from '../../../shared/agent-hook-listener/listener-limits'
+import * as HookLimits from '../../../shared/agent-hook-listener/listener-limits'
 import {
   canAcceptClaudeCompactCompletion,
   isClaudeCompactCompletionConsumed,
@@ -69,7 +66,7 @@ export abstract class AgentHookServerIngestRemote extends AgentHookServerIngestS
       trackEmptyPaneKeyHook(envelope, this.attributionDiagnostics)
       return
     }
-    if (paneKey.length > MAX_PANE_KEY_LEN || !parsedPaneKey) {
+    if (paneKey.length > HookLimits.MAX_PANE_KEY_LEN || !parsedPaneKey) {
       return
     }
     if (
@@ -106,6 +103,7 @@ export abstract class AgentHookServerIngestRemote extends AgentHookServerIngestS
     let tabId = paneKey !== physicalPaneKey ? parsedPaneKey.tabId : reportedTabId
     const {
       hookEventName,
+      activityMapEvent,
       source,
       providerPromptId,
       grokPromptBoundary,
@@ -247,7 +245,7 @@ export abstract class AgentHookServerIngestRemote extends AgentHookServerIngestS
       normalizedPayload.agentType === 'claude' &&
       typeof envelope.claudeRunningNonAgentTask === 'boolean' &&
       (envelope.isReplay !== true || !this.runtimeObservedStatusPaneKeys.has(paneKey))
-    warnOnHookEnvOrVersionMismatch(this.state, {
+    HookLimits.warnOnHookEnvOrVersionMismatch(this.state, {
       version: envelope.version,
       env: envelope.env,
       expectedEnv: this.env
@@ -269,6 +267,7 @@ export abstract class AgentHookServerIngestRemote extends AgentHookServerIngestS
       promptInteractionKey,
       hookEventName,
       providerPromptId,
+      activityMapEvent,
       grokPromptBoundary,
       compactTrigger,
       toolUseId,

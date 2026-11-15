@@ -20,10 +20,7 @@ import type { StatsCollector } from '../../stats/collector'
 
 import type { PrepareClaudeAuth } from '../../ipc/pty/host-env/types'
 
-import {
-  type RuntimeFileCommandSurface,
-  installRuntimeFileCommandSurface
-} from './runtime-file-command-surface'
+import * as FileCommands from './runtime-file-command-surface'
 import {
   type RuntimeGitCommandSurface,
   installRuntimeGitCommandSurface
@@ -122,6 +119,7 @@ export abstract class OrcaRuntimeWithStateFields extends OrcaRuntimeWithLinearCo
   /** The agent's full final reply for that finished lead turn; status rows carry only a capped preview. */
   readonly getAcceptedAgentReply: Bindings['getAcceptedAgentReply']
   /** Synchronous on every hook status row change, including clears. */
+  readonly subscribeAgentActivity: Bindings['subscribeAgentActivity']
   readonly subscribeAgentStatusRowChanges: Bindings['subscribeAgentStatusRowChanges']
 
   protected readonly machineName = new RuntimeMachineName(
@@ -144,7 +142,7 @@ export abstract class OrcaRuntimeWithStateFields extends OrcaRuntimeWithLinearCo
     this.machineName.start()
     this.getSetupTerminalTitle = deps?.getSetupTerminalTitle ?? (() => 'Setup')
     this.prepareClaudeAuth = deps?.prepareClaudeAuth
-    installRuntimeFileCommandSurface(
+    FileCommands.installRuntimeFileCommandSurface(
       this,
       this.fileSearch,
       this.terminalArtifacts,
@@ -261,6 +259,7 @@ export abstract class OrcaRuntimeWithStateFields extends OrcaRuntimeWithLinearCo
       deps?.getAgentProviderSessionSnapshot ?? deps?.getAgentStatusSnapshot ?? null
     this.getAgentProviderSessionRowsForPaneFn = deps?.getAgentProviderSessionRowsForPane ?? null
     this.getAcceptedAgentReply = deps?.getAcceptedAgentReply ?? (() => undefined)
+    this.subscribeAgentActivity = deps?.subscribeAgentActivity ?? (() => () => {})
     this.subscribeAgentStatusRowChanges = deps?.subscribeAgentStatusRowChanges ?? (() => () => {})
     this.attestAgentHookCompatibilityAuthorityFn =
       deps?.attestAgentHookCompatibilityAuthority ?? null
@@ -316,7 +315,7 @@ export abstract class OrcaRuntimeWithStateFields extends OrcaRuntimeWithLinearCo
 // oxlint-disable-next-line typescript/consistent-type-definitions -- SAFETY: This merge models the constructor-installed canonical methods.
 export interface OrcaRuntimeWithStateFields
   extends
-    RuntimeFileCommandSurface,
+    FileCommands.RuntimeFileCommandSurface,
     RuntimeGitCommandSurface,
     RuntimeRepositoryCommandSurface,
     RuntimeReviewCommandSurface,

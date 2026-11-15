@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import { parsePaneKey } from '../../../shared/workspace-layout/stable-pane-id'
 import { claudeAgentViewChord } from './agent-view-keybindings'
+import { receiveClaudeActivityReport } from './agent-view-activity-reports'
 import {
   CLAUDE_AGENT_VIEW_SHORTCUTS,
   ClaudeAgentViewObservation,
@@ -103,6 +104,9 @@ export class ClaudeAgentViewBridge {
   }
 
   receive(body: unknown): BridgeReply {
+    if (receiveClaudeActivityReport(body) !== undefined) {
+      return {}
+    }
     const parsed = Message.safeParse(body)
     if (!parsed.success) {
       return {}

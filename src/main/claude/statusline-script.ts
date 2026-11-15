@@ -52,7 +52,7 @@ export function getManagedStatusLineScript(target: 'local' | 'posix' = 'local'):
       `:${STATUSLINE_PROBE_LABEL}`,
       // Non-subscriber payloads lack rate_limits; skip their endpoint lookup and curl spawn.
       // Escaped quotes match the JSON key, avoiding false matches in paths.
-      '"%SystemRoot%\\System32\\findstr.exe" /c:\\"rate_limits\\" "%ORCA_STATUSLINE_PAYLOAD_FILE%" >nul 2>nul',
+      '"%SystemRoot%\\System32\\findstr.exe" /c:\\"rate_limits\\" /c:\\"context_window\\" "%ORCA_STATUSLINE_PAYLOAD_FILE%" >nul 2>nul',
       `if errorlevel 1 goto :${STATUSLINE_CLEANUP_LABEL}`,
       // Refresh stale endpoint coordinates after Orca restarts, falling back to PTY env.
       'if defined ORCA_AGENT_HOOK_ENDPOINT if exist "%ORCA_AGENT_HOOK_ENDPOINT%" call "%ORCA_AGENT_HOOK_ENDPOINT%" 2>nul',
@@ -97,7 +97,7 @@ export function getManagedStatusLineScript(target: 'local' | 'posix' = 'local'):
     ...buildPosixClaudeBackgroundJobGuardLines(),
     // Non-subscriber payloads lack rate_limits; avoid spawning curl for them.
     'case "$payload" in',
-    '  *\'"rate_limits"\'*) ;;',
+    '  *\'"rate_limits"\'*|*\'"context_window"\'*) ;;',
     '  *) exit 0 ;;',
     'esac',
     'if [ -n "$ORCA_AGENT_HOOK_ENDPOINT" ] && [ -r "$ORCA_AGENT_HOOK_ENDPOINT" ]; then',
