@@ -41,11 +41,13 @@ export function transcriptActivityMessage(
             ...(block.durationMs !== undefined ? { durationMs: block.durationMs } : {}),
             origin,
             agentId: message.agentId,
-            state: block.isError
-              ? ('failed' as const)
-              : taskId
-                ? ('running' as const)
-                : ('completed' as const),
+            state: block.isInterrupted
+              ? ('interrupted' as const)
+              : block.isError
+                ? ('failed' as const)
+                : taskId
+                  ? ('running' as const)
+                  : ('completed' as const),
             ...(taskId ? { taskId } : {}),
             endedAt: message.timestamp ?? 0
           }

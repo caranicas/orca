@@ -96,6 +96,7 @@ export type NativeChatToolResultBlock = {
   type: 'tool-result'
   output: string
   isError?: boolean
+  isInterrupted?: boolean
   durationMs?: number
   /** The call this result answers, when the producer knows it; otherwise pairing is positional. */
   callId?: string

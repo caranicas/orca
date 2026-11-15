@@ -155,7 +155,11 @@ export function activityMapHookEvent(
     }
   }
   if (name === 'Stop' || name === 'Interrupt' || name === 'SubagentStop') {
-    return { ...event, id: `lifecycle:${name}`, mark: 'metadata' }
+    return {
+      ...event,
+      id: typeof payload.turn_id === 'string' ? `turn:${payload.turn_id}` : `lifecycle:${name}`,
+      mark: 'metadata'
+    }
   }
   return undefined
 }

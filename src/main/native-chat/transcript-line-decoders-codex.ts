@@ -273,7 +273,7 @@ function codexCallInput(payload: Record<string, unknown>): unknown {
 
 function codexToolResult(output: unknown, callId: string | null): NativeChatBlock {
   const record = asRecord(output)
-  const { isError, durationMs } = codexToolResultFacts(
+  const { isError, isInterrupted, durationMs } = codexToolResultFacts(
     typeof output === 'string' ? (parseJsonObject(output) ?? output) : output
   )
   return {
@@ -281,6 +281,7 @@ function codexToolResult(output: unknown, callId: string | null): NativeChatBloc
     output: toolResultOutput(record?.content ?? record?.output ?? output),
     ...(callId ? { callId } : {}),
     ...(durationMs !== undefined ? { durationMs } : {}),
+    ...(isInterrupted ? { isInterrupted: true } : {}),
     ...(isError ? { isError: true } : {})
   }
 }

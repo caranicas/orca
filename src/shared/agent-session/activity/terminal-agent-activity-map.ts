@@ -82,9 +82,11 @@ export function projectTerminalAgentActivityMap(
         ...(message.agentId ? { agentId: message.agentId } : {}),
         ...activityMapToolDetails(block, options),
         state: result
-          ? result.isError
-            ? 'failed'
-            : 'completed'
+          ? result.isInterrupted
+            ? 'interrupted'
+            : result.isError
+              ? 'failed'
+              : 'completed'
           : block.endedAs === 'unverifiable'
             ? 'unknown'
             : (lifecycle ?? 'unknown'),

@@ -271,3 +271,42 @@ describe('terminal provider context accounting', () => {
     ])
   })
 })
+
+it.each([
+  ['aborted by user after 0.1s', 100],
+  ['Wall time: 0.3 seconds\naborted by user', 300],
+  ['aborted before dispatch', undefined]
+])('retains Codex cancellation as interrupted rather than successful: %s', (output, durationMs) => {
+  const reader = createTranscriptActivityReader('codex')
+  reader.observe(
+    JSON.stringify({
+      type: 'response_item',
+      payload: {
+        type: 'custom_tool_call',
+        call_id: 'cancelled',
+        name: 'exec',
+        input: 'await wait()'
+      }
+    }),
+    'call'
+  )
+  reader.observe(
+    JSON.stringify({
+      type: 'response_item',
+      payload: {
+        type: 'custom_tool_call_output',
+        call_id: 'cancelled',
+        output
+      }
+    }),
+    'result'
+  )
+  expect(reader.snapshot().events).toMatchObject([
+    {
+      callId: 'cancelled',
+      state: 'interrupted',
+      ...(durationMs === undefined ? {} : { durationMs })
+    }
+  ])
+  expect(reader.snapshot().statistics?.faults).toEqual({})
+})

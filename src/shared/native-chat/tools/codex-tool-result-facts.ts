@@ -1,4 +1,20 @@
-export function codexToolResultFacts(output: unknown): { isError: boolean; durationMs?: number } {
+export function codexToolResultFacts(output: unknown): {
+  isError: boolean
+  isInterrupted?: boolean
+  durationMs?: number
+} {
+  if (typeof output === 'string') {
+    const cancelled =
+      /^aborted by user after (\d+(?:\.\d+)?)s$/.exec(output) ??
+      /^Wall time: (\d+(?:\.\d+)?) seconds\naborted by user$/.exec(output)
+    if (cancelled || output === 'aborted before dispatch') {
+      return {
+        isError: false,
+        isInterrupted: true,
+        ...(cancelled ? { durationMs: Number(cancelled[1]) * 1000 } : {})
+      }
+    }
+  }
   if (output && typeof output === 'object' && !Array.isArray(output)) {
     const record = Object.fromEntries(Object.entries(output))
     const metadata =

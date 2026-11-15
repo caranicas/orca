@@ -93,7 +93,9 @@ export function createTranscriptHookActivity(input: {
         const verdict = agentMainAgentVerdict(row.payload)
         if (verdict === 'success' || verdict === 'failure' || verdict === 'cancellation') {
           events.push({
-            id: `turn:${row.nativeTurnKey ?? row.providerPromptId ?? row.turnEndedAt ?? at}`,
+            id: row.activityMapEvent?.id.startsWith('turn:')
+              ? row.activityMapEvent.id
+              : `turn:${row.nativeTurnKey ?? row.providerPromptId ?? row.turnEndedAt ?? at}`,
             station: 'you',
             origin: 'core',
             startedAt: at,
@@ -109,7 +111,11 @@ export function createTranscriptHookActivity(input: {
                 : verdict === 'failure'
                   ? 'failed'
                   : 'interrupted',
-            ...(verdict === 'success' ? { mark: 'done' } : {})
+            ...(verdict === 'success'
+              ? { mark: 'done' }
+              : verdict === 'cancellation'
+                ? { mark: 'interrupted' }
+                : {})
           })
         }
         remember()

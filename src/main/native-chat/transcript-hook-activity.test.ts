@@ -97,3 +97,30 @@ describe('pane-scoped terminal activity', () => {
     expect(tracker.events()).toEqual([])
   })
 })
+
+it('uses the provider turn id to merge an Interrupt hook with its retained cancellation', () => {
+  const { tracker, send } = observer()
+  send('Interrupt', '', {
+    payload: { agentType: 'codex', state: 'done', prompt: '', interrupted: true },
+    activityMapEvent: activityMapHookEvent('Interrupt', { turn_id: 'turn-a' })
+  })
+  expect(
+    mergeTerminalActivity(
+      [
+        {
+          id: 'turn:turn-a',
+          station: 'you',
+          origin: 'core',
+          state: 'interrupted',
+          label: 'Interrupted',
+          mark: 'interrupted',
+          startedAt: 2000,
+          durationMs: 4583
+        }
+      ],
+      tracker.events(),
+      []
+    )
+  ).toMatchObject([{ id: 'turn:turn-a', state: 'interrupted', durationMs: 4583 }])
+  tracker.dispose()
+})
