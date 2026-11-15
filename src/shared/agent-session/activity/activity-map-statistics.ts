@@ -52,7 +52,7 @@ export function createActivityMapStatistics(
       event.startedAt >= clearedAt
     ) {
       for (const station of Object.keys(faults)) {
-        delete faults[station]
+        Reflect.deleteProperty(faults, station)
       }
       clearedAt = event.startedAt
     }
