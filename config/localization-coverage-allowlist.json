@@ -264,5 +264,19 @@
     "text": "text-[13px] leading-5",
     "dynamic": false,
     "count": 1
+  },
+  {
+    "filePath": "src/renderer/src/components/native-chat/activity-map/activity-map-colors.ts",
+    "kind": "object-property:label",
+    "text": "--muted-foreground",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "src/renderer/src/components/native-chat/activity-map/activity-map-colors.ts",
+    "kind": "object-property:error",
+    "text": "--destructive",
+    "dynamic": false,
+    "count": 1
   }
 ]

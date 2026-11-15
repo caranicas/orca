@@ -31,7 +31,7 @@ describe('terminal activity projection', () => {
         {
           type: 'tool-call',
           name: 'exec_command',
-          input: { cmd: 'private command' },
+          input: { cmd: 'node --token=private' },
           callId: 'shell'
         }
       ]),
@@ -43,6 +43,7 @@ describe('terminal activity projection', () => {
     expect(events).toEqual([
       {
         id: 'call:tool:0',
+        callId: 'read',
         origin: 'core',
         startedAt: 1000,
         station: 'files',
@@ -51,10 +52,11 @@ describe('terminal activity projection', () => {
       },
       {
         id: 'call:tool:1',
+        callId: 'shell',
         origin: 'core',
         startedAt: 1000,
         station: 'shell',
-        label: 'exec_command',
+        label: 'node',
         state: 'failed'
       }
     ])
@@ -87,11 +89,18 @@ describe('terminal activity projection', () => {
         message('call', 'assistant', [
           { type: 'tool-call', name: 'Bash', input: {}, state: 'running', callId: 'shell' }
         ]),
-        message('result', 'user', [{ type: 'tool-result', output: 'ok', callId: 'shell' }])
+        message('result', 'user', [{ type: 'tool-result', output: 'ok', callId: 'shell' }]),
+        message('task-notice', 'user', [
+          {
+            type: 'text',
+            text: '<task-notification><task-id>task-1</task-id><status>completed</status></task-notification>'
+          }
+        ])
       ])
     ).toEqual([
       {
         id: 'call:tool:0',
+        callId: 'shell',
         origin: 'core',
         startedAt: 1000,
         station: 'shell',
@@ -101,7 +110,7 @@ describe('terminal activity projection', () => {
     ])
   })
 
-  it('preserves reported reasoning and interrupted or unverifiable calls', () => {
+  it('does not infer model requests from reasoning and preserves interruption or uncertainty', () => {
     expect(
       projectTerminalAgentActivityMap([
         message('thought', 'reasoning', [{ type: 'text', text: 'private reasoning' }]),
@@ -111,14 +120,6 @@ describe('terminal activity projection', () => {
         ])
       ])
     ).toEqual([
-      {
-        id: 'thought',
-        origin: 'core',
-        startedAt: 1000,
-        station: 'model',
-        label: 'Reasoning',
-        state: 'observed'
-      },
       {
         id: 'calls:tool:0',
         origin: 'core',

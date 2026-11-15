@@ -168,6 +168,15 @@ export function normalizeCodexEvent(
   hookPayload: Record<string, unknown>,
   originalEventName: unknown = eventName
 ): ParsedAgentStatusPayload | null {
+  if (eventName === 'PreCompact' || eventName === 'PostCompact') {
+    const lead = state.codexLeadStateByPaneKey.get(paneKey)
+    return lead
+      ? buildCodexStatusPayload(state, eventName, '', paneKey, hookPayload, {
+          ...resolveCodexPaneStatus(state, paneKey, lead),
+          updateLead: false
+        })
+      : null
+  }
   if (eventName === 'SubagentStart' || eventName === 'SubagentStop') {
     return normalizeCodexSubagentLifecycleEvent(state, eventName, paneKey, hookPayload)
   }

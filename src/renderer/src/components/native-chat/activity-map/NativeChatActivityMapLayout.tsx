@@ -1,5 +1,15 @@
-import { useId, useState, type CSSProperties, type ReactNode } from 'react'
+import { useId, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { NativeChatActivityMap } from './NativeChatActivityMap'
+import { useActivityMapJournal } from './use-activity-map-journal'
+import { codexContextPercentage } from '../../../../../shared/agent-session/activity/terminal-activity-telemetry'
+import { toRuntimeExecutionHostId } from '../../../../../shared/execution-host'
+import { useActivityMapModelHistory } from './use-activity-map-model-history'
+import { useAppStore } from '@/store'
+import { resolveWorkspaceDirectory } from '@/lib/workspace/paths/workspace-directory'
+import { projectAgentActivityMap } from '../../../../../shared/agent-session/activity/agent-activity-map'
+import { activityMapProviderClassification } from '../../../../../shared/agent-session/activity/activity-map-provider-options'
+import { useActivityMapProviderOptions } from './use-activity-map-preferences'
+import { mergeTerminalActivity } from '../../../../../shared/agent-session/activity/merge-terminal-activity'
 import { nativeChatPaneHeader } from '../pane/actions/NativeChatPaneHeader'
 import type { NativeChatHandOff } from '../pane/actions/use-native-chat-hand-off'
 import type { NativeChatStructuredViewProps } from '../native-chat-view-types'
@@ -35,7 +45,8 @@ type ActivityController = Pick<
   | 'status'
   | 'contextUsage'
   | 'subagentRoster'
->
+> &
+  Partial<Pick<ReturnType<typeof useStructuredAgentSession>, 'optionSnapshot'>>
 
 export function NativeChatActivityMapLayout({
   pane,
@@ -58,6 +69,61 @@ export function NativeChatActivityMapLayout({
 }) {
   const [open, setOpen] = useState(false)
   const triggerId = useId()
+  const journal = useActivityMapJournal({
+    target: pane.target,
+    sessionId: pane.sessionId,
+    epoch: controller.epoch,
+    items: controller.journalItems,
+    enabled: open && pane.isVisible && controller.readCurrent && hostOnline
+  })
+  const contextUsage =
+    controller.contextUsage && pane.agent === 'codex'
+      ? {
+          ...controller.contextUsage,
+          estimated: true,
+          percentage: codexContextPercentage(
+            controller.contextUsage.usedTokens,
+            controller.contextUsage.windowTokens
+          )
+        }
+      : controller.contextUsage
+  const reportedModel = controller.optionSnapshot?.find(
+    (option) => option.id === 'model' && option.valueSource === 'reported'
+  )
+  const model = reportedModel?.kind.type === 'select' ? reportedModel.kind.currentValue : undefined
+  const host = pane.target.kind === 'environment' ? pane.target.environmentId : null
+  const cwd = useAppStore((state) =>
+    ownerWorktreeId
+      ? resolveWorkspaceDirectory(
+          state,
+          ownerWorktreeId,
+          host ? toRuntimeExecutionHostId(host) : 'local'
+        )
+      : null
+  )
+  const change = useActivityMapModelHistory({
+    host,
+    cwd: cwd ?? undefined,
+    provider: pane.agent,
+    sessionId: pane.sessionId,
+    model,
+    at: controller.hostClock?.hostNow,
+    withinSession: true
+  })
+  const options = useActivityMapProviderOptions()
+  const events = useMemo(
+    () =>
+      mergeTerminalActivity(
+        journal?.events ??
+          projectAgentActivityMap(
+            controller.journalItems,
+            activityMapProviderClassification(options)
+          ),
+        change ? [change] : [],
+        []
+      ),
+    [journal, controller.journalItems, options, change]
+  )
   return (
     <>
       {nativeChatPaneHeader(pane, ownerWorktreeId, colorScheme, handOff, {
@@ -71,11 +137,14 @@ export function NativeChatActivityMapLayout({
             <NativeChatActivityMap
               key={`${pane.sessionId}:${controller.epoch}:${controller.contextClear.clears}`}
               items={controller.journalItems}
+              events={events}
+              statistics={journal?.statistics}
               agentLabel={agentLabel}
+              model={model}
               working={controller.isWorking}
               live={controller.readCurrent && controller.status === 'ready' && hostOnline}
               hostClock={controller.hostClock}
-              contextUsage={controller.contextUsage}
+              contextUsage={contextUsage}
               subagentRoster={controller.subagentRoster}
               onClose={() => {
                 setOpen(false)

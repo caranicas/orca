@@ -3,6 +3,7 @@ import type {
   NativeChatReadSessionResult
 } from '../../../../../../../preload/api/native-chat-api'
 import type { NativeChatTurnLifecycle } from '../../../../../../../shared/native-chat/native-chat-types'
+import { readTerminalActivityTelemetry } from '../../../../../../../shared/agent-session/activity/terminal-activity-telemetry'
 import { translate } from '@/i18n/i18n'
 
 export function runtimeNativeChatReadError(): string {
@@ -50,9 +51,11 @@ export function parseRuntimeNativeChatReadSessionResult(
   const record = value as Record<string, unknown>
   if (Array.isArray(record.messages)) {
     const lifecycle = parseRuntimeNativeChatTurnLifecycle(record.lifecycle)
+    const activityMap = readTerminalActivityTelemetry(record.activityMap)
     return {
       messages: record.messages as NativeChatAppendedMessages,
-      ...(lifecycle ? { lifecycle } : {})
+      ...(lifecycle ? { lifecycle } : {}),
+      ...(activityMap ? { activityMap } : {})
     }
   }
   if (typeof record.error === 'string') {

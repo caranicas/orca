@@ -12,6 +12,7 @@ import {
   type AgentChildWorkMembership,
   type AgentChildWorkOperation,
   type AgentChildWorkOutcome,
+  type AgentChildWorkProviderTiming,
   type AgentChildWorkState
 } from './agent-status-child-work'
 import { agentStatusSubjectsEqual } from '../contracts/agent-status-subject'
@@ -30,6 +31,7 @@ export type AgentChildWorkView = {
   state: AgentChildWorkState
   membership: AgentChildWorkMembership
   outcome?: AgentChildWorkOutcome
+  providerTiming?: AgentChildWorkProviderTiming
   operation?: AgentChildWorkOperation
   lastMessage?: string
   /** Present only when the owner is in the same projection; otherwise the main agent owns it. */
@@ -129,6 +131,7 @@ export function projectAgentChildWorkViews(
       state: record.state,
       membership: record.membership,
       ...(record.outcome !== undefined ? { outcome: record.outcome } : {}),
+      ...(record.providerTiming ? { providerTiming: { ...record.providerTiming } } : {}),
       ...(record.operation !== undefined ? { operation: { ...record.operation } } : {}),
       ...(record.lastMessage !== undefined ? { lastMessage: record.lastMessage } : {}),
       ...(owner !== undefined ? { parentChildWorkId: owner } : {}),

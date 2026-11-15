@@ -17,11 +17,13 @@ import {
   decodeOmpTranscriptLine
 } from './transcript-line-decoders'
 import { decodeTranscriptStream } from './transcript-stream-lines'
+import type { TerminalActivityTelemetry } from '../../shared/agent-session/activity/terminal-activity-telemetry'
 
 export type ReadTranscriptResult =
   | {
       messages: NativeChatMessage[]
       lifecycle?: NativeChatTurnLifecycle
+      activityMap?: TerminalActivityTelemetry
       sourceEmpty?: boolean
       forkTipItemIds?: string[]
     }

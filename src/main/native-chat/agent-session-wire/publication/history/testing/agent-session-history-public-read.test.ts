@@ -11,7 +11,11 @@ import {
 } from '../../../../agent-session-journal/store-lifecycle/journal-host-database-test-support'
 import type { AgentSessionJournal } from '../../../../agent-session-journal/journal-store'
 
-import { createAgentSessionCatchUpReader } from '../agent-session-history-page'
+import {
+  createAgentSessionCatchUpReader,
+  readAgentSessionHistory
+} from '../agent-session-history-page'
+import { DEFAULT_ACTIVITY_MAP_PROVIDER_OPTIONS } from '../../../../../../shared/agent-session/activity/activity-map-provider-options'
 
 const IDENTITY = {
   sessionId: 'session-1',
@@ -28,6 +32,65 @@ const item = (ordinal: number) => ({
   threadId: 'thread-1',
   turnId: 'turn-1',
   ordinal
+})
+
+it('reports whole-session activity with caller memory mappings outside a one-row page', async () => {
+  const options = { fence: 1, turnScope: AGENT_JOURNAL_THREAD_SCOPE }
+  await journal.appendItem(
+    item(1),
+    {
+      kind: 'tool-call',
+      name: 'Bash',
+      input: { command: 'git status' },
+      callId: 'git',
+      state: 'completed'
+    },
+    options
+  )
+  await journal.appendItem(
+    item(2),
+    {
+      kind: 'tool-call',
+      name: 'Read',
+      input: { file_path: '/work/notes/facts.txt' },
+      callId: 'facts',
+      state: 'running'
+    },
+    options
+  )
+  await journal.appendItem(
+    item(2),
+    {
+      kind: 'tool-call',
+      name: 'Read',
+      input: { file_path: '/work/notes/facts.txt' },
+      callId: 'facts',
+      state: 'failed'
+    },
+    options
+  )
+  await journal.appendItem(
+    item(3),
+    { kind: 'message', role: 'user', blocks: [{ type: 'text', text: 'Try again' }] },
+    options
+  )
+  const result = readAgentSessionHistory(journal, {
+    sessionId: 'session-1',
+    direction: 'tail',
+    limit: 1,
+    activityMapOptions: { ...DEFAULT_ACTIVITY_MAP_PROVIDER_OPTIONS, memoryPaths: ['/notes/'] }
+  })
+  expect(result.page.items.map((item) => item.body.kind)).toEqual(['message'])
+  expect(result.page.activityMap?.statistics).toEqual({
+    counts: { shell: 1, memory: 1, you: 1 },
+    faults: {},
+    clearedAt: expect.any(Number),
+    pushed: 0
+  })
+  expect(result.page.activityMap?.events.find((event) => event.callId === 'facts')).toMatchObject({
+    station: 'memory',
+    state: 'failed'
+  })
 })
 
 beforeEach(async () => {

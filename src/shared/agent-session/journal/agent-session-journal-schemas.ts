@@ -74,7 +74,9 @@ const Block = openDiscriminatedUnion(
     z.object({
       type: z.literal('tool-result'),
       output: z.string(),
-      isError: z.boolean().optional()
+      isError: z.boolean().optional(),
+      isInterrupted: z.boolean().optional(),
+      durationMs: z.number().finite().nonnegative().optional()
     }),
     z.object({
       type: z.literal('image-ref'),

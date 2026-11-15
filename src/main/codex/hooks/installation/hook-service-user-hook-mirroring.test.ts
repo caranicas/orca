@@ -161,15 +161,20 @@ describe('CodexHookService', () => {
     const runtimeHooks = JSON.parse(readFileSync(managedHooksPath, 'utf-8')) as {
       hooks: Record<string, { hooks?: { command?: string }[] }[]>
     }
-    expect(runtimeHooks.hooks.PreCompact?.[0]?.hooks?.[0]?.command).toBe('pre-compact-user')
-    expect(runtimeHooks.hooks.PostCompact?.[0]?.hooks?.[0]?.command).toBe('post-compact-disabled')
-
+    const preIndex = runtimeHooks.hooks.PreCompact.findIndex((definition) =>
+      definition.hooks?.some((hook) => hook.command === 'pre-compact-user')
+    )
+    const postIndex = runtimeHooks.hooks.PostCompact.findIndex((definition) =>
+      definition.hooks?.some((hook) => hook.command === 'post-compact-disabled')
+    )
+    expect(readRuntimeHookCommands(managedHooksPath)).toContain('pre-compact-user')
+    expect(readRuntimeHookCommands(managedHooksPath)).toContain('post-compact-disabled')
     const runtimeToml = readFileSync(join(managedCodexHome, 'config.toml'), 'utf-8')
     expect(runtimeToml).toContain(
-      `${hookTrustHeader(`${managedHooksPath}:pre_compact:0:0`)}\nenabled = true`
+      `${hookTrustHeader(`${managedHooksPath}:pre_compact:${preIndex}:0`)}\nenabled = true`
     )
     expect(runtimeToml).toContain(
-      `${hookTrustHeader(`${managedHooksPath}:post_compact:0:0`)}\nenabled = false`
+      `${hookTrustHeader(`${managedHooksPath}:post_compact:${postIndex}:0`)}\nenabled = false`
     )
     expect(runtimeToml).not.toContain(hookTrustHeader(`${systemHooksPath}:pre_compact:0:0`, true))
     expect(runtimeToml).not.toContain(hookTrustHeader(`${systemHooksPath}:post_compact:0:0`, true))

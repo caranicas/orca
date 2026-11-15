@@ -1,5 +1,6 @@
+import { useNativeChatTrimHistory } from './use-native-chat-trim-history'
 import { useNativeChatOlderHistory } from '../../../viewport/history/use-native-chat-older-history'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   NATIVE_CHAT_SOURCE_PRIORITY,
   type NativeChatMessage
@@ -10,7 +11,7 @@ import {
   createNativeChatMerger,
   replaceList
 } from '../../../../../../../shared/native-chat/native-chat-merge'
-import { mergeNativeChatLiveSession } from '../../../../../../../shared/native-chat/native-chat-live-status'
+import { useNativeChatLiveReadResult } from './use-native-chat-live-read-result'
 import {
   hasMoreNativeChatHistory,
   NATIVE_CHAT_INITIAL_LIMIT
@@ -25,18 +26,15 @@ import { useNativeChatTranscriptLifecycle } from './use-native-chat-transcript-l
 import { useNativeChatHookStatus } from '../../status/use-native-chat-hook-status'
 import { useNativeChatAssembledMessages } from '../assembly/use-native-chat-assembled-messages'
 import { createNativeChatReadRetryTimer } from './native-chat-read-retry-timer'
-import { openNativeChatTranscriptStream } from './native-chat-stream-teardown'
+import {
+  openNativeChatTranscriptStream,
+  nextNativeChatTranscriptSubscriptionId
+} from './native-chat-stream-teardown'
+import type { TerminalActivityTelemetry } from '../../../../../../../shared/agent-session/activity/terminal-activity-telemetry'
 import { takeNativeChatOpenWake } from '../../../pane/routing/native-chat-open-wake'
 
 // Keep the base axis stable through non-ready reads.
 const EMPTY_MESSAGES: readonly NativeChatMessage[] = []
-
-let subscriptionCounter = 0
-
-function nextSubscriptionId(): string {
-  subscriptionCounter += 1
-  return `native-chat-${subscriptionCounter}-${Date.now()}`
-}
 
 // New transcripts may take minutes to flush (#8401); explicit host-pending frames override this guessed retry window.
 export const NOTFOUND_RETRY_WINDOW_MS = 60_000
@@ -45,12 +43,24 @@ export const NOTFOUND_RETRY_WINDOW_MS = 60_000
 export function useNativeChatLiveSession(
   args: UseNativeChatLiveSessionArgs
 ): NativeChatLiveSession {
-  const { paneKey, agent, sessionId, transcriptPath, runtimeEnvironmentId, enabled = true } = args
+  const {
+    paneKey,
+    agent,
+    sessionId,
+    transcriptPath,
+    runtimeEnvironmentId,
+    enabled = true,
+    activityMapOptions,
+    activityMap: wantActivityMap = false
+  } = args
   const transport = useMemo(
     () => getNativeChatSessionTransport(runtimeEnvironmentId ?? null),
     [runtimeEnvironmentId]
   )
   const [read, setRead] = useState<ReadState>({ phase: 'loading' })
+  const [activityMap, setActivityMap] = useState<
+    (TerminalActivityTelemetry & { receivedAt: number }) | undefined
+  >()
   const [hasMore, setHasMore] = useState(false)
   const [loadingEarlier, setLoadingEarlier] = useState(false)
   const [olderHistoryGeneration, setOlderHistoryGeneration] = useState(0)
@@ -86,7 +96,9 @@ export function useNativeChatLiveSession(
     runtimeEnvironmentId ?? null,
     agent,
     sessionId,
-    transcriptPath ?? null
+    transcriptPath ?? null,
+    wantActivityMap,
+    activityMapOptions
   ])
   const retainedSourceKeyRef = useRef(sourceKey)
 
@@ -101,6 +113,7 @@ export function useNativeChatLiveSession(
       if (sourceChanged) {
         limitRef.current = NATIVE_CHAT_INITIAL_LIMIT
         transcriptLifecycleControl.reset()
+        setActivityMap(undefined)
         setRead({ phase: 'loading' })
         replaceList(appendMergerRef.current, [])
         setAppended([])
@@ -109,6 +122,7 @@ export function useNativeChatLiveSession(
       return () => undefined
     }
     transcriptLifecycleControl.reset()
+    setActivityMap(undefined)
     if (!sessionId) {
       setRead({ phase: 'ready', messages: [] })
       replaceList(appendMergerRef.current, [])
@@ -133,7 +147,11 @@ export function useNativeChatLiveSession(
     replaceList(appendMergerRef.current, [])
     setAppended([])
     setHasMore(false)
-    const wake = { wakeWslDistro: takeNativeChatOpenWake(latestPaneKey.current, sourceKey) }
+    const wake = {
+      wakeWslDistro: takeNativeChatOpenWake(latestPaneKey.current, sourceKey),
+      activityMap: wantActivityMap,
+      activityMapOptions
+    }
 
     // Seed independently for silent streams, but never overwrite an authoritative frame.
     function loadSession(attempt: number): void {
@@ -162,6 +180,9 @@ export function useNativeChatLiveSession(
           }
           const messages = boundNativeChatWindow(result?.messages ?? [], limitRef.current)
           transcriptLifecycleControl.replace(result?.lifecycle)
+          setActivityMap(
+            result?.activityMap ? { ...result.activityMap, receivedAt: Date.now() } : undefined
+          )
           setRead({ phase: 'ready', messages })
           setHasMore(hasMoreNativeChatHistory(messages.length, limitRef.current))
         })
@@ -174,7 +195,7 @@ export function useNativeChatLiveSession(
 
     loadSession(0)
 
-    const subscriptionId = nextSubscriptionId()
+    const subscriptionId = nextNativeChatTranscriptSubscriptionId()
     const closeStream = openNativeChatTranscriptStream(
       transport,
       {
@@ -183,6 +204,9 @@ export function useNativeChatLiveSession(
         sessionId,
         transcriptPath: transcriptPath ?? undefined,
         limit: limitRef.current,
+        activityMap: wantActivityMap,
+        activityMapOptions,
+        paneKey,
         wakeWslDistro: wake.wakeWslDistro
       },
       (frame) => {
@@ -209,6 +233,9 @@ export function useNativeChatLiveSession(
           }
           frameArrived = true
           transcriptLifecycleControl.replace(frame.lifecycle)
+          setActivityMap(
+            frame.activityMap ? { ...frame.activityMap, receivedAt: Date.now() } : undefined
+          )
           const messages = boundNativeChatWindow(frame.messages, limitRef.current)
           replaceList(appendMergerRef.current, messages)
           setAppended([])
@@ -217,6 +244,9 @@ export function useNativeChatLiveSession(
           return
         }
         transcriptLifecycleControl.append(frame.lifecycle)
+        if (frame.activityMap) {
+          setActivityMap({ ...frame.activityMap, receivedAt: Date.now() })
+        }
         // Bound the deduped append tail; the base read/assembler still cover trimmed turns.
         setAppended(applyAppend(appendMergerRef.current, frame.messages, limitRef.current))
       }
@@ -227,7 +257,18 @@ export function useNativeChatLiveSession(
       retryTimer.cancel()
       closeStream()
     }
-  }, [agent, enabled, sessionId, sourceKey, transcriptPath, transport, transcriptLifecycleControl])
+  }, [
+    paneKey,
+    agent,
+    enabled,
+    sessionId,
+    sourceKey,
+    transcriptPath,
+    transport,
+    transcriptLifecycleControl,
+    wantActivityMap,
+    activityMapOptions
+  ])
 
   const loadEarlier = useNativeChatOlderHistory({
     agent,
@@ -247,43 +288,22 @@ export function useNativeChatLiveSession(
     setHasMore
   })
 
-  const trimHistory = useCallback(() => {
-    if (
-      !latestEnabled.current ||
-      latestSessionId.current !== sessionId ||
-      latestTransport.current !== transport
-    ) {
-      return
-    }
-    limitRef.current = NATIVE_CHAT_INITIAL_LIMIT
-    // Retire pagination without closing the independently owned live stream.
-    transcriptEpochRef.current += 1
-    setOlderHistoryGeneration(transcriptEpochRef.current)
-    setLoadingEarlier(false)
-    const merger = appendMergerRef.current
-    const bounded = boundNativeChatWindow(merger.list, NATIVE_CHAT_INITIAL_LIMIT)
-    const trimmedAppend = bounded !== merger.list
-    setRead((current) => {
-      if (current.phase !== 'ready') {
-        return current
-      }
-      // Evict the base too when the append prefix is gone, keeping one contiguous suffix.
-      const messages = trimmedAppend
-        ? []
-        : boundNativeChatWindow(current.messages, NATIVE_CHAT_INITIAL_LIMIT)
-      return messages === current.messages ? current : { ...current, messages }
-    })
-    if (trimmedAppend) {
-      replaceList(merger, bounded)
-      setAppended(merger.list)
-    }
-    if (
-      (read.phase === 'ready' && read.messages.length > NATIVE_CHAT_INITIAL_LIMIT) ||
-      trimmedAppend
-    ) {
-      setHasMore(true)
-    }
-  }, [read, sessionId, transport])
+  const trimHistory = useNativeChatTrimHistory({
+    sessionId,
+    transport,
+    read,
+    latestEnabled,
+    latestSessionId,
+    latestTransport,
+    limitRef,
+    transcriptEpochRef,
+    appendMergerRef,
+    setOlderHistoryGeneration,
+    setLoadingEarlier,
+    setRead,
+    setAppended,
+    setHasMore
+  })
 
   // Keep status-only hook updates from rerunning the assembler.
   const baseMessages = read.phase === 'ready' ? read.messages : EMPTY_MESSAGES
@@ -294,44 +314,23 @@ export function useNativeChatLiveSession(
     appended
   })
 
-  return useMemo<NativeChatLiveSession>(() => {
-    const session = mergeNativeChatLiveSession({
-      messages: normalizedMessages,
-      sessionId,
-      agent,
-      hookState,
-      stateStartedAt: hookStateStartedAt,
-      transcriptLifecycle,
-      statusTailMessage: assembledMessages.at(-1),
-      hookHasWorkingSubagents,
-      // Live content outranks stale errors/spinners; apply overrides only before any append (#8401).
-      loading: read.phase === 'loading' && appended.length === 0,
-      ...(read.phase === 'error' && appended.length === 0 ? { error: read.error } : {})
-    })
-    return {
-      ...session,
-      hasMore,
-      loadingEarlier,
-      olderHistoryGeneration,
-      loadEarlier,
-      trimHistory,
-      readPhase: read.phase
-    }
-  }, [
-    normalizedMessages,
-    assembledMessages,
-    read,
+  return useNativeChatLiveReadResult({
+    messages: normalizedMessages,
     sessionId,
     agent,
     hookState,
-    hookStateStartedAt,
+    stateStartedAt: hookStateStartedAt,
     transcriptLifecycle,
+    statusTailMessage: assembledMessages.at(-1),
     hookHasWorkingSubagents,
+    loading: read.phase === 'loading' && appended.length === 0,
+    error: read.phase === 'error' && appended.length === 0 ? read.error : undefined,
+    activityMap,
     hasMore,
     loadingEarlier,
     olderHistoryGeneration,
     loadEarlier,
     trimHistory,
-    appended
-  ])
+    readPhase: read.phase
+  })
 }
