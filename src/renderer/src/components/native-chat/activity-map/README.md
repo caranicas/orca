@@ -50,6 +50,8 @@ These constraints were disclosed before completion-only/unknown fallbacks. They 
 
 Reasoning text and generic idle transitions are never proof of a model request or successful answer. Claude native model steps are provider step observations; another plugin can answer a step without making an API request.
 
+Older Codex versions can omit model-request hooks: [CI's actual 0.150.1 binary](https://github.com/caranicas/orca/actions/runs/43762622211/job/132962161150) accepts the managed hook file but its `hooks/list` reports no `pre_model_request` or `post_model_request`. Its advertised hooks still undergo the full file-entry hash/trust contract. Explicit transcript responses remain usable where present; missing starts remain unknown. This is version-specific provider evidence, not a missing-reader justification. A read-only isolated probe of installed 0.169.0 reports all 13 managed hooks, including both model hooks, and its cross-position hash contract passes on Windows. The native Windows default-home fixture cannot redirect Known Folder lookup with HOME/USERPROFILE; its full real-home sub-suite is not claimed to pass locally.
+
 ## Source evidence
 
 Codex inspected at [ecf54824c6e72757d8ce9dfc85e2bbea57ff75fd](https://github.com/openai/codex/tree/ecf54824c6e72757d8ce9dfc85e2bbea57ff75fd), then checked against installed-version [rust-v0.169.0 / a41fe5b443652cbdbee57717fbb9fd78d8d8b32a](https://github.com/openai/codex/tree/a41fe5b443652cbdbee57717fbb9fd78d8d8b32a).
