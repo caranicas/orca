@@ -166,8 +166,10 @@ export async function readStructuredAgentSessionOptions(
   // After every await: a pick or a replaced child since the live read retires its report.
   const currentChild =
     live && started.kind === 'live' && context.sessions.get(sessionId)?.child === started.child
+      ? started.child
+      : undefined
   const reportedModel =
-    currentChild && started.modelPicks === structuredAgentSessionModelPicks(started.child)
+    currentChild && started.modelPicks === structuredAgentSessionModelPicks(currentChild)
       ? (options.current.reportedModel ??
         (agent === 'claude' && options.current.confirmed?.includes('model')
           ? options.current.model
