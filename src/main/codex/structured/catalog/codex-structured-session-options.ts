@@ -62,7 +62,12 @@ export async function readLiveCodexSessionOptions(
   session: CodexSession,
   _timeoutMs: number | undefined
 ): Promise<StructuredAgentSessionLiveOptions> {
-  return composeLiveCodexCatalog(session, codexSessionCapabilities(session))
+  return {
+    ...composeLiveCodexCatalog(session, codexSessionCapabilities(session)),
+    ...(session.transcriptPath
+      ? { transcriptPath: session.transcriptPath, transcriptSessionId: session.threadId }
+      : {})
+  }
 }
 
 export async function applyCodexStructuredSessionOption(

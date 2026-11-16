@@ -3,6 +3,7 @@ import {
   type ActivityMapProviderOptions
 } from '../../shared/agent-session/activity/activity-map-provider-options'
 import { activityMapModelRequestKey } from '../../shared/agent-session/activity/activity-map-model-request'
+import { codexTranscriptTurnActivity } from './transcript-codex-turn-activity'
 import { createTranscriptActivityEvents } from './transcript-activity-events'
 import { transcriptActivityMessage } from './transcript-activity-message'
 import {
@@ -207,27 +208,7 @@ export function createTranscriptActivityReader(
             : {})
         }
       }
-      if (
-        payload.type === 'task_complete' ||
-        payload.type === 'turn_complete' ||
-        payload.type === 'turn_aborted'
-      ) {
-        const duration = count(payload.duration_ms)
-        const failed = payload.error != null
-        fact.event = {
-          ...event,
-          id: `turn:${extractString(payload.turn_id) ?? id}`,
-          station: 'you',
-          label: failed
-            ? 'Turn failed'
-            : payload.type === 'turn_aborted'
-              ? 'Interrupted'
-              : 'Answer ready',
-          state: failed ? 'failed' : payload.type === 'turn_aborted' ? 'interrupted' : 'completed',
-          mark: failed ? undefined : payload.type === 'turn_aborted' ? 'interrupted' : 'done',
-          ...(duration !== null ? { durationMs: duration } : {})
-        }
-      }
+      fact.event = codexTranscriptTurnActivity(payload, event, options?.language) ?? fact.event
     } else {
       Object.assign(fact, claudeTranscriptActivityFact(record, event))
     }

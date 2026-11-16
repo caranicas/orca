@@ -6,8 +6,10 @@ import { toRuntimeExecutionHostId } from '../../../../../shared/execution-host'
 import { useActivityMapModelHistory } from './use-activity-map-model-history'
 import { useAppStore } from '@/store'
 import { resolveWorkspaceDirectory } from '@/lib/workspace/paths/workspace-directory'
-import { projectAgentActivityMap } from '../../../../../shared/agent-session/activity/agent-activity-map'
-import { activityMapProviderClassification } from '../../../../../shared/agent-session/activity/activity-map-provider-options'
+import { activityMapJournalSummary } from '../../../../../shared/agent-session/activity/activity-map-journal-summary'
+import { activityMapJournalTelemetry } from '../../../../../shared/agent-session/activity/activity-map-journal-telemetry'
+import { structuredAgentSessionPaneKey } from '../../../../../shared/agent-session/view/structured-agent-session-projection'
+import { useNativeChatLiveSession } from '../session/terminal/read/use-native-chat-live-session'
 import { useActivityMapProviderOptions } from './use-activity-map-preferences'
 import { mergeTerminalActivity } from '../../../../../shared/agent-session/activity/merge-terminal-activity'
 import { nativeChatPaneHeader } from '../pane/actions/NativeChatPaneHeader'
@@ -46,7 +48,12 @@ type ActivityController = Pick<
   | 'contextUsage'
   | 'subagentRoster'
 > &
-  Partial<Pick<ReturnType<typeof useStructuredAgentSession>, 'optionSnapshot'>>
+  Partial<
+    Pick<
+      ReturnType<typeof useStructuredAgentSession>,
+      'optionSnapshot' | 'transcriptPath' | 'transcriptSessionId'
+    >
+  >
 
 export function NativeChatActivityMapLayout({
   pane,
@@ -69,14 +76,86 @@ export function NativeChatActivityMapLayout({
 }) {
   const [open, setOpen] = useState(false)
   const triggerId = useId()
+  return (
+    <>
+      {nativeChatPaneHeader(pane, ownerWorktreeId, colorScheme, handOff, {
+        open,
+        triggerId,
+        toggle: () => setOpen((value) => !value)
+      })}
+      <NativeChatActivityMapFrame
+        panel={
+          open && pane.isVisible ? (
+            <NativeChatActivityMapSession
+              key={JSON.stringify([
+                pane.target,
+                pane.sessionId,
+                controller.epoch,
+                controller.contextClear.clears,
+                controller.transcriptPath,
+                controller.transcriptSessionId
+              ])}
+              pane={pane}
+              ownerWorktreeId={ownerWorktreeId}
+              controller={controller}
+              agentLabel={agentLabel}
+              hostOnline={hostOnline}
+              onClose={() => {
+                setOpen(false)
+                document.getElementById(triggerId)?.focus({ preventScroll: true })
+              }}
+            />
+          ) : null
+        }
+      >
+        {children}
+      </NativeChatActivityMapFrame>
+    </>
+  )
+}
+
+function NativeChatActivityMapSession({
+  pane,
+  ownerWorktreeId,
+  controller,
+  agentLabel,
+  hostOnline,
+  onClose
+}: {
+  pane: Omit<NativeChatStructuredViewProps, 'mode'>
+  ownerWorktreeId: string | null
+  controller: ActivityController
+  agentLabel: string
+  hostOnline: boolean
+  onClose: () => void
+}) {
+  const options = useActivityMapProviderOptions()
+  const host = pane.target.kind === 'environment' ? pane.target.environmentId : null
+  const transcript = useNativeChatLiveSession({
+    agent: pane.agent,
+    paneKey: structuredAgentSessionPaneKey(pane.tabId, pane.sessionId),
+    sessionId: controller.transcriptSessionId ?? null,
+    transcriptPath: controller.transcriptPath,
+    runtimeEnvironmentId: host,
+    enabled:
+      pane.agent === 'codex' &&
+      Boolean(controller.transcriptPath) &&
+      Boolean(controller.transcriptSessionId) &&
+      pane.isVisible &&
+      controller.readCurrent &&
+      hostOnline,
+    activityMap: true,
+    activityMapOptions: options
+  })
+  const telemetry = transcript.readPhase === 'ready' ? transcript.activityMap : undefined
   const journal = useActivityMapJournal({
     target: pane.target,
     sessionId: pane.sessionId,
     epoch: controller.epoch,
     items: controller.journalItems,
-    enabled: open && pane.isVisible && controller.readCurrent && hostOnline
+    enabled: pane.isVisible && controller.readCurrent && hostOnline
   })
-  const contextUsage =
+  const nativeContextUsage =
     controller.contextUsage && pane.agent === 'codex'
       ? {
           ...controller.contextUsage,
@@ -87,11 +166,14 @@ export function NativeChatActivityMapLayout({
           )
         }
       : controller.contextUsage
-  const reportedModel = controller.optionSnapshot?.find(
-    (option) => option.id === 'model' && option.valueSource === 'reported'
-  )
-  const model = reportedModel?.kind.type === 'select' ? reportedModel.kind.currentValue : undefined
-  const host = pane.target.kind === 'environment' ? pane.target.environmentId : null
+  const contextUsage = telemetry ? telemetry.contextUsage : nativeContextUsage
+  const reportedModel = controller.optionSnapshot?.find((option) => option.id === 'model')
+  const model =
+    telemetry?.model ??
+    reportedModel?.reportedModel ??
+    (reportedModel?.valueSource === 'reported' && reportedModel.kind.type === 'select'
+      ? reportedModel.kind.currentValue
+      : undefined)
   const cwd = useAppStore((state) =>
     ownerWorktreeId
       ? resolveWorkspaceDirectory(
@@ -107,55 +189,32 @@ export function NativeChatActivityMapLayout({
     provider: pane.agent,
     sessionId: pane.sessionId,
     model,
-    at: controller.hostClock?.hostNow,
+    at: telemetry?.modelAt ?? controller.hostClock?.hostNow,
     withinSession: true
   })
-  const options = useActivityMapProviderOptions()
-  const events = useMemo(
-    () =>
-      mergeTerminalActivity(
-        journal?.events ??
-          projectAgentActivityMap(
-            controller.journalItems,
-            activityMapProviderClassification(options)
-          ),
-        change ? [change] : [],
-        []
-      ),
-    [journal, controller.journalItems, options, change]
-  )
+  const activity = useMemo(() => {
+    const combined = activityMapJournalTelemetry(
+      journal ?? activityMapJournalSummary(controller.journalItems, options),
+      telemetry
+    )
+    return {
+      ...combined,
+      events: mergeTerminalActivity(combined.events, change ? [change] : [], [])
+    }
+  }, [journal, controller.journalItems, options, telemetry, change])
   return (
-    <>
-      {nativeChatPaneHeader(pane, ownerWorktreeId, colorScheme, handOff, {
-        open,
-        triggerId,
-        toggle: () => setOpen((value) => !value)
-      })}
-      <NativeChatActivityMapFrame
-        panel={
-          open && pane.isVisible ? (
-            <NativeChatActivityMap
-              key={`${pane.sessionId}:${controller.epoch}:${controller.contextClear.clears}`}
-              items={controller.journalItems}
-              events={events}
-              statistics={journal?.statistics}
-              agentLabel={agentLabel}
-              model={model}
-              working={controller.isWorking}
-              live={controller.readCurrent && controller.status === 'ready' && hostOnline}
-              hostClock={controller.hostClock}
-              contextUsage={contextUsage}
-              subagentRoster={controller.subagentRoster}
-              onClose={() => {
-                setOpen(false)
-                document.getElementById(triggerId)?.focus({ preventScroll: true })
-              }}
-            />
-          ) : null
-        }
-      >
-        {children}
-      </NativeChatActivityMapFrame>
-    </>
+    <NativeChatActivityMap
+      items={controller.journalItems}
+      events={activity.events}
+      statistics={activity.statistics}
+      agentLabel={agentLabel}
+      model={model}
+      working={controller.isWorking}
+      live={controller.readCurrent && controller.status === 'ready' && hostOnline}
+      hostClock={controller.hostClock}
+      contextUsage={contextUsage}
+      subagentRoster={controller.subagentRoster}
+      onClose={onClose}
+    />
   )
 }

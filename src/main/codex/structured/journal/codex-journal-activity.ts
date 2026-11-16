@@ -25,7 +25,7 @@ export function createCodexJournalActivity(
     const responseId = readRecord(event.params).responseId
     if (event.method === 'rawResponse/completed' && typeof responseId === 'string' && responseId) {
       fact = {
-        id: `codex-response:${event.threadId}:${responseId}`,
+        id: `model:${responseId}`,
         station: 'model',
         origin: 'core',
         state: 'completed',
