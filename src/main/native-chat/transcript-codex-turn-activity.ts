@@ -30,7 +30,7 @@ export function codexTranscriptTurnActivity(
   const duration = activityMeasurement(payload.duration_ms)
   const failed = payload.error != null
   const interrupted = payload.type === 'turn_aborted'
-  const answer = payload.last_agent_message !== null
+  const answer = typeof payload.last_agent_message === 'string' && payload.last_agent_message !== ''
   return {
     ...event,
     id: `turn:${turnId ?? event.id}`,

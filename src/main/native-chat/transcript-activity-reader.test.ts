@@ -40,6 +40,7 @@ it.each([
     state: 'completed',
     mark: undefined
   },
+  { type: 'turn_complete', outcome: {}, state: 'completed', mark: undefined },
   { type: 'turn_aborted', outcome: {}, state: 'interrupted', mark: 'interrupted' },
   {
     type: 'turn_complete',
