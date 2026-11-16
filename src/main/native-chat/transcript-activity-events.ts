@@ -10,6 +10,21 @@ import { matchingActivityMapCompaction } from '../../shared/agent-session/activi
 export function createTranscriptActivityEvents(seed?: TerminalActivityTelemetry) {
   let events = seed?.events ?? []
   const statistics = createActivityMapStatistics(seed?.statistics, events)
+  const core =
+    seed && seed.coreModelCount === undefined
+      ? null
+      : createActivityMapStatistics(
+          { counts: { model: seed?.coreModelCount ?? 0 }, faults: {}, clearedAt: 0 },
+          events
+        )
+  const coreModel = (event: ActivityMapEvent) =>
+    event.station === 'model' && event.origin === 'core'
+  function count(event: ActivityMapEvent) {
+    statistics.observe(event)
+    if (coreModel(event)) {
+      core?.observe(event)
+    }
+  }
   function observe(fact: Pick<TranscriptActivityFact, 'event' | 'decoded'>) {
     for (const observed of [
       ...(fact.decoded?.events ?? []),
@@ -38,7 +53,7 @@ export function createTranscriptActivityEvents(seed?: TerminalActivityTelemetry)
           ...new Set([...(prior?.transcriptIds ?? []), ...(event.transcriptIds ?? [])])
         ].slice(-64)
       }
-      statistics.observe(next)
+      count(next)
       events = [...events.filter((row) => activityMapEventKey(row) !== key), next]
     }
     for (const result of fact.decoded?.results ?? []) {
@@ -59,7 +74,7 @@ export function createTranscriptActivityEvents(seed?: TerminalActivityTelemetry)
           ...(result.taskId ? { taskId: result.taskId } : {}),
           ...(result.state !== 'running' ? { endedAt: result.endedAt } : {})
         }
-        statistics.observe(next)
+        count(next)
         return next
       })
     }
@@ -80,7 +95,7 @@ export function createTranscriptActivityEvents(seed?: TerminalActivityTelemetry)
           return event
         }
         const next: ActivityMapEvent = { ...event, state, endedAt: notice.endedAt }
-        statistics.observe(next)
+        count(next)
         return next
       })
     }
@@ -94,7 +109,10 @@ export function createTranscriptActivityEvents(seed?: TerminalActivityTelemetry)
     modelRequests: statistics.modelRequests,
     snapshot: (additional: readonly ActivityMapEvent[] = []) => ({
       events,
-      statistics: statistics.snapshot(additional)
+      statistics: statistics.snapshot(additional),
+      ...(core
+        ? { coreModelCount: core.snapshot(additional.filter(coreModel)).counts.model ?? 0 }
+        : {})
     })
   }
 }

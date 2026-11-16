@@ -27,6 +27,55 @@ const model = (name: string) =>
     payload: { model: name }
   })
 
+it.each([
+  {
+    type: 'task_complete',
+    outcome: { last_agent_message: 'Finished' },
+    state: 'completed',
+    mark: 'done'
+  },
+  {
+    type: 'task_complete',
+    outcome: { last_agent_message: null },
+    state: 'completed',
+    mark: undefined
+  },
+  { type: 'turn_aborted', outcome: {}, state: 'interrupted', mark: 'interrupted' },
+  {
+    type: 'turn_complete',
+    outcome: { error: { message: 'Failed' } },
+    state: 'failed',
+    mark: undefined
+  }
+])(
+  'reconciles a recorded turn start with $type without inventing a model request',
+  ({ type, outcome, state, mark }) => {
+    const reader = createTranscriptActivityReader('codex')
+    reader.observe(
+      JSON.stringify({
+        type: 'event_msg',
+        timestamp: '2026-11-15T22:57:23.695Z',
+        payload: { type: 'task_started', turn_id: 'turn-1' }
+      }),
+      'start-record'
+    )
+    expect(reader.snapshot().events).toMatchObject([
+      { id: 'turn:turn-1', station: 'you', state: 'running', inbound: true }
+    ])
+    reader.observe(
+      JSON.stringify({
+        type: 'event_msg',
+        timestamp: '2026-11-15T22:57:29.000Z',
+        payload: { type, turn_id: 'turn-1', ...outcome }
+      }),
+      'end-record'
+    )
+    expect(reader.snapshot().events).toMatchObject([
+      { id: 'turn:turn-1', station: 'you', state, mark, inbound: false }
+    ])
+  }
+)
+
 describe('terminal provider context accounting', () => {
   it('counts the retained-context record and its uniquely enclosing compaction item once', () => {
     const reader = createTranscriptActivityReader('codex')

@@ -9,6 +9,7 @@ export type TerminalActivityTelemetry = {
   contextUsage: StructuredAgentContextUsage | null
   /** Host clock accompanying this snapshot, never a renderer receipt timestamp. */
   statistics?: ActivityMapStatistics
+  coreModelCount?: number
   contextAt?: number
   hostNow: number
   events: ActivityMapEvent[]
@@ -163,6 +164,11 @@ export function readTerminalActivityTelemetry(
     })
   }
   return {
+    ...(typeof record.coreModelCount === 'number' &&
+    Number.isSafeInteger(record.coreModelCount) &&
+    record.coreModelCount >= 0
+      ? { coreModelCount: record.coreModelCount }
+      : {}),
     ...(typeof record.cwd === 'string' ? { cwd: record.cwd.slice(0, 4096) } : {}),
     ...(typeof record.modelAt === 'number' && Number.isFinite(record.modelAt)
       ? { modelAt: record.modelAt }

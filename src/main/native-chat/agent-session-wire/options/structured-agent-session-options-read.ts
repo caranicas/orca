@@ -164,16 +164,16 @@ export async function readStructuredAgentSessionOptions(
   const projected = live?.projectCurrent?.({ ...saved, ...(model ? { model } : {}) })
   const reportedEffort = projected?.confirmed?.includes('effort') ? projected.effort : undefined
   // After every await: a pick or a replaced child since the live read retires its report.
+  const currentChild =
+    live && started.kind === 'live' && context.sessions.get(sessionId)?.child === started.child
   const reportedModel =
-    live &&
-    started.kind === 'live' &&
-    context.sessions.get(sessionId)?.child === started.child &&
-    started.modelPicks === structuredAgentSessionModelPicks(started.child)
+    currentChild && started.modelPicks === structuredAgentSessionModelPicks(started.child)
       ? (options.current.reportedModel ??
         (agent === 'claude' && options.current.confirmed?.includes('model')
           ? options.current.model
           : undefined))
       : undefined
+  const transcriptSource = currentChild ? options : undefined
   const current = {
     ...selected.current,
     ...options.current,
@@ -248,6 +248,12 @@ export async function readStructuredAgentSessionOptions(
   return {
     ...options,
     ...recovery,
+    ...(options.transcriptSessionId !== undefined
+      ? {
+          transcriptPath: transcriptSource?.transcriptPath,
+          transcriptSessionId: transcriptSource?.transcriptSessionId
+        }
+      : {}),
     forkSupport:
       capabilities?.fork === 'checkpoint'
         ? 'supported'

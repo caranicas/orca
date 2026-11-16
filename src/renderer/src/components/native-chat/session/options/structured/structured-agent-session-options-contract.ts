@@ -16,6 +16,7 @@ export type StructuredAgentSessionOptionsArgs = {
   providerStarting?: boolean
   providerRunning?: boolean
   hostOptionStamp?: string
+  contextBoundary?: number
   fence: number | null
   turnId: string | null
   /** The chat has a turn or a send: its value picks keep the remembered new-chat model. */

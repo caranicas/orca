@@ -26,6 +26,8 @@ export type AgentSessionOptionsResult = {
   sessionNeverStarted?: boolean
   /** Saved conversation on this execution host, resolved from the record's own account store. */
   transcriptPath?: string
+  /** Native provider identity owning transcriptPath; clients must match both before observing it. */
+  transcriptSessionId?: string
   rewind?: AgentSessionRewindSupport
   /** Whether this chat's agent copies its conversation natively; absent means unknown, never unsupported. */
   forkSupport?: 'unknown' | 'supported' | 'unsupported'
