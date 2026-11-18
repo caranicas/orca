@@ -578,8 +578,7 @@
       "resetZoom": "Reset zoom",
       "resetViewport": "Reset viewport size",
       "findOnPage": "Find on page",
-      "profile": "Profile",
-      "annotateOptions": "More annotate tools"
+      "profile": "Profile"
     }
   },
   "editor": {
@@ -709,13 +708,7 @@
         "administratorRestartSummary": "Local terminals and agents will close. Windows will ask you to approve.",
         "orcaCouldNotRestart": "Orca couldn’t restart.",
         "manualAdministratorSteps": "Manual steps",
-        "restartOrca": "Restart",
-        "confirmAdministratorRestart": "Restart as administrator?",
-        "administratorRestartConsequences": "Save your work first. After approval, terminals and agents on the current local terminal host close. Restored tabs open new administrator shells.",
-        "administratorPromptCancellation": "Canceling Windows’ prompt reopens Orca with its retained terminals. SSH and WSL permissions stay controlled on their hosts.",
-        "administratorRestartFailed": "Orca could not restart. Try again or use the manual instructions.",
-        "manualAdministratorHelp": "Manual instructions",
-        "administratorApproval": "Windows will ask for approval. Use your usual account."
+        "restartOrca": "Restart"
       },
       "limit": {
         "label": "Maximum running terminals",
@@ -1172,8 +1165,7 @@
       "undetectedCommandHint": "If the {{agent}} CLI is installed outside PATH, enter the full path to its executable on this host.",
       "agentActions": "{{agent}} actions",
       "defaultAutoBadge": "Default · Auto",
-      "newAgentsTitle": "New agents",
-      "sameAsChoice": "Same as {{agent}} · {{choice}}"
+      "newAgentsTitle": "New agents"
     },
     "followSymlinkedDirectoriesKeywords": {
       "symlink": "symlink",
@@ -1185,8 +1177,7 @@
     "followSymlinkedDirectoriesDescription": "Search linked folders in Quick Open and expand local linked folders in File Explorer.",
     "accounts": {
       "codexRemoveHome": "Orca deletes this account's Codex folder on {{host}}, including its sign-in, MCP logins and any Codex history stored only in that folder. This cannot be undone. If it is selected, the next Codex you start uses System default.",
-      "claudeRemoveProfile": "Orca deletes this account's own Claude folder and the sign-in saved in it on {{host}}. Your System default login and chat history shared with it stay. If it is selected, the next Claude you start uses System default.",
-      "claudeRemoveFolder": "Orca deletes this account's Claude folder and its sign-in from this computer. Chat history shared with System default stays. If it is selected, the next Claude you start uses System default."
+      "claudeRemoveProfile": "Orca deletes this account's own Claude folder and the sign-in saved in it on {{host}}. Your System default login and chat history shared with it stay. If it is selected, the next Claude you start uses System default."
     },
     "sourceControl": {
       "gitOperationInAnotherWorkspace": "Git operation running elsewhere",
@@ -1204,9 +1195,6 @@
         "extraArgs": "Extra CLI arguments",
         "launchOptions": "Model and permissions",
         "savedLaunchOptions": "Saved options: {{value0}}. Older servers use their own permission settings."
-      },
-      "actionPermissions": {
-        "sameAsAgent": "Same as {{agent}}"
       }
     },
     "ssh": {
@@ -4758,15 +4746,7 @@
         "pane": {
           "CloseTerminalDialog": {
             "1d1a7a9c1f": "Cancel",
-            "stop_agent_title": "Stop this agent?",
-            "automatic_resume_warning": "This terminal will not resume automatically. Cancel and put the workspace to sleep to resume it later.",
-            "stop_command_title": "Stop running command?",
-            "stop_chat_description": "Closing this chat will stop the agent's current work.",
-            "stop_agent_description": "Closing this terminal will stop the agent's current work.",
-            "stop_command_description": "Closing this terminal will stop the command running inside it.",
-            "dont_ask_again": "Don't ask again for running terminals",
-            "stop_agent_confirm": "Stop Agent",
-            "stop_command_confirm": "Stop and Close"
+            "stop_agent_title": "Stop this agent?"
           },
           "MobileDriverOverlay": {
             "c6460cf584": "Take back",
@@ -5482,9 +5462,7 @@
             "staleCodexSessions_one": "{{count}} Codex session is still on the old account.",
             "staleCodexSessions_other": "{{count}} Codex sessions are still on the old account.",
             "windowWeeks": "{{value0}}wk",
-            "museUsageMenu": "Muse Usage",
-            "7657e3db9c": "Codex Account",
-            "d450654fa2": "Claude Account"
+            "museUsageMenu": "Muse Usage"
           },
           "StatusBarUsageEmptyCta": {
             "828c764a79": "Connect an account",
@@ -5904,12 +5882,7 @@
             "noLinkedIssue": "No linked issue",
             "noLinkedReview": "No linked PR",
             "browserTabsOpen_one": "{{count}} browser tab open",
-            "browserTabsOpen_other": "{{count}} browser tabs open",
-            "completedAgents_one": "{{count}} completed agent",
-            "completedAgents_other": "{{count}} completed agents",
-            "activeAndCompletedAgents": "{{active}}, {{completed}}",
-            "completedAgentsRetained_one": "{{count}} completed agent retained",
-            "completedAgentsRetained_other": "{{count}} completed agents retained"
+            "browserTabsOpen_other": "{{count}} browser tabs open"
           },
           "workspaceSpaceFormat": {
             "cancellingScan": "Cancelling scan",
@@ -6397,9 +6370,7 @@
           "6cb1fbe039": "This computer",
           "3677ae58e7": "Skills Orca installed from a link. Reinstall, go back to an earlier version, or remove them.",
           "44d118a8f7": "Installed by Orca",
-          "dab29e4b54": "{{installed}} installed · {{updated}} updated · {{keptLocal}} kept local",
-          "0900db719a": "— disconnected",
-          "176fef9516": "· SSH"
+          "dab29e4b54": "{{installed}} installed · {{updated}} updated · {{keptLocal}} kept local"
         },
         "SkillInstallReviewContent": {
           "89e2601162": "Discard and replace",
@@ -6431,9 +6402,7 @@
           "63cc9e31fe": "Destination",
           "0785d0a503": "— update required",
           "8562dd1e6e": "This computer",
-          "b8a0b706ad": "Machine",
-          "85d85880df": "· SSH",
-          "71eefd7660": "— disconnected"
+          "b8a0b706ad": "Machine"
         },
         "SkillInstallWorkspaceCombobox": {
           "search": "Search workspaces...",
@@ -6915,8 +6884,7 @@
           "reasonFirstMessageUnavailable": "Orca couldn't find this workspace's first message.",
           "reasonAlreadyNamed": "This workspace was already renamed.",
           "reasonUnavailable": "Orca can't name this branch anymore.",
-          "branchNameKept": "Branch name kept",
-          "dismissError": "Dismiss error"
+          "branchNameKept": "Branch name kept"
         },
         "CreateProjectLocationField": {
           "95548e33bf": "Choose parent folder...",
@@ -7025,8 +6993,7 @@
           "issueCommand": "Issue command",
           "newVmRecipe": "New VM recipe",
           "vmRecipe": "VM recipe",
-          "thisRepository": "this repository",
-          "alwaysTrustRepo": "Always trust <code>orca.yaml</code> in <repo/>"
+          "thisRepository": "this repository"
         },
         "PendingWorktreeRow": {
           "af21e953d1": "Cancel worktree creation",
@@ -7793,9 +7760,7 @@
         },
         "DeleteWorktreeDialogFooter": {
           "c0e972d726": "Cancel",
-          "cf95e3b5bb": "Close",
-          "deleting": "Deleting...",
-          "forceDeleting": "Force Deleting..."
+          "cf95e3b5bb": "Close"
         },
         "HostRemoveDialog": {
           "1a2b3c4d5e": "Removed {{value0}}",
@@ -7999,10 +7964,7 @@
         },
         "ForgetSshWorkspaceDialog": {
           "cancel": "Cancel",
-          "forget": "Remove from Orca",
-          "ghostBody": "{{host}} is no longer a saved SSH host, so this workspace is no longer connected to a live host. It can only be removed from Orca — files and branches on the remote are left untouched.",
-          "removeTitle": "Remove “{{name}}” from Orca?",
-          "savedHostBody": "This workspace’s project isn’t served by Orca’s server on {{host}}, so Orca can’t delete it there. You can remove it from Orca; files, the Git worktree, and branches on {{host}} are left untouched."
+          "forget": "Remove from Orca"
         },
         "MarkdownImageLightbox": {
           "image": "Image",
@@ -8283,9 +8245,6 @@
           "browseFolder": "Browse folder…",
           "cloneFromUrl": "Clone from URL…",
           "createNewProject": "Create new project…"
-        },
-        "DeleteWorktreeWarningPanels": {
-          "mainWorktreeNotice": "This is the <strong>main worktree</strong> (the original clone directory)."
         }
       },
       "shared": {
@@ -8307,10 +8266,7 @@
           "confirmRestart": "Restart",
           "busyRestarting": "Restarting…",
           "confirmKillAll": "Kill all sessions",
-          "busyKilling": "Killing…",
-          "d762b41f41": "Restart failed.",
-          "b5954e12d3": "Restart failed — check logs.",
-          "a702d4196e": "This closes every terminal tab across all workspaces and requests shutdown for its current terminal sessions. Any unsaved terminal work is lost. The daemon itself keeps running, and new terminals can be opened immediately. This can't be undone."
+          "busyKilling": "Killing…"
         },
         "MacFolderAccessFixDialog": {
           "stepAllow": "Allow Orca under Files and Folders",
@@ -8513,8 +8469,7 @@
           "4d274a02f0": "OpenCode Go session cookie",
           "4d41177f74": "MiniMax session cookie",
           "7e9977b560": "Add account",
-          "109431f707": "OpenCode Go workspace id",
-          "380a7736cc": "Removing this account permanently deletes its managed Codex home, including all Codex session history and MCP logins stored inside. This cannot be undone. If the account is currently active, Orca falls back to the system default Codex login."
+          "109431f707": "OpenCode Go workspace id"
         },
         "AdvancedPane": {
           "40b29e0bf3": "Restart",
@@ -13466,18 +13421,7 @@
               "accessTokenPlaceholder": "Repository, project, or workspace access token",
               "emailPlaceholder": "you@example.com",
               "apiTokenPlaceholder": "Atlassian API token",
-              "baseUrlPlaceholder": "https://api.bitbucket.org/2.0",
-              "description": "Use a Bitbucket Cloud credential to browse pull requests and build statuses. Orca verifies it before saving.",
-              "remoteRuntime": "Stored on this machine, not on the active remote runtime — set ORCA_BITBUCKET_* there instead. Environment variables always take precedence over what you save here.",
-              "environmentManaged": "Bitbucket is already configured through ORCA_BITBUCKET_* environment variables, which take precedence. Unset them to save a credential in Orca.",
-              "email": "Atlassian account email",
-              "baseUrl": "API base URL (optional)",
-              "tokenHint": "Repository, project, and workspace access tokens are created from the matching Bitbucket settings page and need read access to pull requests.",
-              "basicHint": "Create an Atlassian API token for your account, then pair it with the email address that owns it.",
-              "scopesTitle": "Select these Bitbucket API token scopes:",
-              "docsLink": "Bitbucket API token docs",
-              "storageNote": "Stored on this machine with encrypted storage when the OS keychain is available. ORCA_BITBUCKET_* environment variables always take precedence over what you save here.",
-              "verifying": "Verifying..."
+              "baseUrlPlaceholder": "https://api.bitbucket.org/2.0"
             }
           },
           "integration": {
@@ -14066,12 +14010,7 @@
           "close": "Close",
           "reclaimedNotStarted": "The lock was cleared, but Orca’s server did not start.",
           "manualDeleteCommand": "Delete the lock on the host by hand:",
-          "manualDeleteWarning": "Only do this if no other machine sharing this home runs Orca for this profile.",
-          "title": "Recover Orca’s server",
-          "description": "Orca’s server on this host won’t start because a lock from an earlier run is still in place.",
-          "confirmCheck": "No other machine sharing this home is running Orca",
-          "eligible": "Nothing answers on this machine at its old address, but Orca can’t rule out another machine with the same name that shares this home folder.",
-          "warning": "Only continue if no other machine sharing this home runs Orca for this profile."
+          "manualDeleteWarning": "Only do this if no other machine sharing this home runs Orca for this profile."
         },
         "claudeSubagentNavigation": {
           "title": "Claude subagent navigation",
@@ -14237,8 +14176,7 @@
           "remoteVms": "Remote/VMs",
           "games": "Games",
           "agents": "Agents",
-          "integrations": "Integrations",
-          "languages": "Languages"
+          "integrations": "Integrations"
         },
         "PluginUpdateAllDialog": {
           "previewError": "Couldn’t read this update",
@@ -14269,10 +14207,7 @@
           "becomesDefaultEditor": "Becomes the default editor for {{value0}}",
           "needApproval": "Need your approval",
           "readyToUpdate": "Ready to update",
-          "movedRepository": "Comes from a different repository",
-          "newAccess": "New: {{value0}}",
-          "sourceMoved": "New source: {{value0}} (was {{value1}})",
-          "review": "Review"
+          "movedRepository": "Comes from a different repository"
         },
         "PluginAuthor": {
           "publisher": "Publisher",
@@ -14458,11 +14393,7 @@
           "uncompared": "Orca couldn’t compare this version with the one you approved. Check what it can access before you update.",
           "newInVersion": "New in this version:",
           "titleMany": "Review {{value0}} updates",
-          "history": "See its changes on GitHub",
-          "back": "Back",
-          "explain": "This update asks for more than the version you approved. It installs only if you approve it here.",
-          "before": "Before",
-          "after": "After"
+          "history": "See its changes on GitHub"
         },
         "PluginNotOfficialWarning": {
           "unknownPublisher": "its publisher",
@@ -14485,10 +14416,7 @@
           "failed": "Couldn’t update {{value0}}",
           "morePlugins": "and {{value0}} more plugins",
           "uncompared": "Orca couldn’t compare it with the version you approved.",
-          "held": "{{value0}} changed after you reviewed it, so it waits for your review in Settings → Plugins.",
-          "oneDescription": "Published by {{value0}}. It won’t update until you review it.",
-          "manyDescription": "They won’t update until you review them.",
-          "review": "Review"
+          "held": "{{value0}} changed after you reviewed it, so it waits for your review in Settings → Plugins."
         },
         "PluginInstallTrustDialog": {
           "titleFolder": "Make sure you trust this folder",
@@ -16125,8 +16053,7 @@
             "checking": "Checking {{value0}}",
             "agentCheckedCount_one": "{{agent}}: {{settled}} of {{total}} history candidate checked",
             "agentCheckedCount_other": "{{agent}}: {{settled}} of {{total}} history candidates checked",
-            "historyRefreshed": "History refreshed",
-            "scanned": "Scanned {{value0}}"
+            "historyRefreshed": "History refreshed"
           },
           "run": {
             "source": {
@@ -17235,13 +17162,6 @@
                       "c94ff11e91": "Could not re-check setup status."
                     }
                   }
-                },
-                "tab": {
-                  "intro": {
-                    "actions": {
-                      "68a5dc6604": "Could not hide Mobile Emulator."
-                    }
-                  }
                 }
               }
             }
@@ -17271,17 +17191,6 @@
             "pasteTooLarge": "Paste is too large for emulator keyboard input.",
             "unsupportedPasteText": "Emulator keyboard paste supports US keyboard text only.",
             "pasteTargetUnavailable": "Emulator keyboard paste failed because the device is not ready."
-          },
-          "mobile": {
-            "emulator": {
-              "hidden": {
-                "toast": {
-                  "e8f098a870": "Mobile Emulator hidden",
-                  "c46c979c1d": "Re-enable Mobile Emulator anytime in",
-                  "600f9a745a": "Settings › Mobile Emulator"
-                }
-              }
-            }
           }
         }
       },
@@ -17779,9 +17688,7 @@
           "folderEmpty": "Folder path cannot be empty",
           "folderOutsideWorkspace": "Folder must be inside the current workspace",
           "nameTaken": "A file with that name already exists",
-          "saveFailed": "Failed to save file",
-          "2d7d39dc63": ".md",
-          "e365f3c638": "Name your markdown file and pick a folder."
+          "saveFailed": "Failed to save file"
         },
         "export": {
           "active": {
@@ -18286,13 +18193,7 @@
             "8e24fe4f75": "Crash report sent.",
             "8b8473c544": "Crash report copied.",
             "765591798d": "Checking for crash reports...",
-            "ead6fc0510": "No automatic crash report was captured. You can still send details and include recent diagnostic logs when available.",
-            "b4951cd27c": "Send Report",
-            "88fea8e84e": "Don't Send",
-            "50b00dc327": "Copy Details",
-            "6d3ebe216a": "Diagnostic text",
-            "b082f27490": "Attach recent diagnostic logs",
-            "e59f0b9427": "Sends a capped redacted log bundle with the report."
+            "ead6fc0510": "No automatic crash report was captured. You can still send details and include recent diagnostic logs when available."
           },
           "submit": {
             "notice": {
@@ -18318,9 +18219,7 @@
             "reportNotesPlaceholder": "Optional: what happened?",
             "uiErrorNotesPlaceholder": "Optional: what were you doing before this UI error?",
             "renderError": "React render error",
-            "renderErrorIn": "React render error in {{surface}}",
-            "closedDescription": "Send a privacy-safe diagnostic report to help us understand what happened.",
-            "closedNotesPlaceholder": "Optional: what were you doing before Orca closed?"
+            "renderErrorIn": "React render error in {{surface}}"
           }
         }
       },
@@ -19506,8 +19405,7 @@
       "confirmation": {
         "dialog": {
           "56f5c60e0c": "Cancel",
-          "92bac3217e": "Don't ask again",
-          "8490e5d36a": "Confirm"
+          "92bac3217e": "Don't ask again"
         },
         "skip": {
           "saved": "We'll skip this confirmation next time.",
@@ -19640,32 +19538,13 @@
               "keep": {
                 "orca": {
                   "button": "Keep Orca"
-                },
-                "title": "Keep terminal links in Orca's browser?",
-                "description": "Or use your system browser by default."
+                }
               },
               "orca": {
-                "button": "Open in Orca",
-                "note": "Orca can use imported cookies for logged-in sites."
+                "button": "Open in Orca"
               },
               "system": {
                 "button": "Use system browser"
-              },
-              "badge": "Terminal link",
-              "preview": "Preview",
-              "title": "Open terminal links in Orca's browser?",
-              "description": "Use Orca's browser for terminal links, or keep your system browser.",
-              "link": {
-                "label": "Link"
-              },
-              "settings": {
-                "note": "Change this later in Settings → Browser."
-              },
-              "shortcut": {
-                "note": {
-                  "prefix": "When links open in Orca,",
-                  "suffix": "click opens system browser once."
-                }
               }
             }
           }
@@ -21827,16 +21706,11 @@
         "titleHasUsage": "{{agent}} has usage again",
         "statusCanContinueNowAuto": "{{agent}} can continue now. Orca will continue this chat at {{time}}.",
         "statusCanContinueNow": "{{agent}} can continue now.",
-        "titleCanContinueNow": "{{agent}} can continue now",
-        "continueNow": "Continue Now",
-        "leadIn": "Continue this chat without waiting:"
+        "titleCanContinueNow": "{{agent}} can continue now"
       },
       "usageLimitAutoContinue": {
         "cancelFailed": "Couldn't cancel automatic continuation. Try again.",
-        "scheduled": "Orca will continue this chat at {{time}}.",
-        "openSetting": "Continue automatically when limits reset",
-        "cancelled": "Orca won't continue this chat automatically.",
-        "cancel": "Don't continue"
+        "scheduled": "Orca will continue this chat at {{time}}."
       },
       "settings": "Chat settings",
       "composerWorkspace": {
@@ -22256,8 +22130,7 @@
               "comment": "Comment",
               "prunable": "Prunable",
               "locked": "Locked",
-              "finishedAgents": "Finished agents",
-              "retainedAgents": "Finished agents"
+              "finishedAgents": "Finished agents"
             }
           },
           "forceDeleteRisk_one": "{{count}} workspace currently shows risk and may need a force delete",
@@ -22279,8 +22152,7 @@
           "restoreFailed": "Could not stop ignoring {{value0}}",
           "ignoreTooltip": "Ignore: skip in bulk delete",
           "stopIgnoring": "Stop ignoring",
-          "stopIgnoringNamed": "Stop ignoring {{value0}}",
-          "retainedDoneAgents": "Finished agent transcripts"
+          "stopIgnoringNamed": "Stop ignoring {{value0}}"
         },
         "scan": {
           "progress": "Scanning workspaces ({{value0}}/{{value1}})",
@@ -22402,18 +22274,7 @@
       "modeLatestStatus": "Latest status (recommended)",
       "modeFullTranscript": "Full transcript",
       "modeFullCost": "Slower, and uses more of your plan or API credits.",
-      "startSessionSentence": "Start session",
-      "dialogTitle": "Hand Off to Another Agent",
-      "dialogDescription": "Start a fresh Agent session from this stopping point. The original session stays unchanged.",
-      "originalAgent": "Original Agent: {{agent}}",
-      "modeFocused": "Focused handoff (Recommended)",
-      "modeFocusedDescription": "Uses the latest status and current workspace, reading older transcript details only when needed.",
-      "modeLoadedDescription": "Uses recent messages currently loaded in this chat and the current workspace.",
-      "modeCapturedDescription": "Uses captured text and the current workspace.",
-      "modeFull": "Full session transcript",
-      "modeFullDescription": "Asks the new Agent to read the complete saved session before continuing. This can take longer and use significant context, plan usage, or API credits.",
-      "startsIn": "Starts in:",
-      "startSession": "Start New Session"
+      "startSessionSentence": "Start session"
     },
     "status": {
       "bar": {
@@ -22785,16 +22646,14 @@
           "matchesCount_one": "Matches 1 workspace now",
           "matchesCount_other": "Matches {{count}} workspaces now",
           "checking": "Checking which workspaces match…",
-          "checkFailed": "Couldn't check which workspaces match.",
-          "title": "Rules"
+          "checkFailed": "Couldn't check which workspaces match."
         },
         "protection": {
           "title": "Protection",
           "keepIgnoredFiles": "Keep workspaces with ignored files",
           "keepIgnoredFilesDescription": "Files like .env and local config can't be recovered. node_modules and build output don't count.",
           "alwaysKeptLabel": "Always kept",
-          "alwaysKeptList": "Pinned workspaces, running agents or terminals, unsaved editor changes, uncommitted changes, unpushed commits.",
-          "alwaysKept": "Always kept: pinned workspaces, running agents or terminals, unsaved editor changes, uncommitted changes, unpushed commits."
+          "alwaysKeptList": "Pinned workspaces, running agents or terminals, unsaved editor changes, uncommitted changes, unpushed commits."
         },
         "activity": {
           "loadFailed": "Couldn't load activity: {{error}}",
@@ -22829,9 +22688,7 @@
           "description_other": "{{count}} workspaces match right now. They'll be deleted a few seconds after you turn this on.",
           "summary": "{{count}} will be deleted",
           "cancel": "Cancel",
-          "turnOn": "Turn on",
-          "keepNamed": "Keep {{name}}",
-          "keep": "Keep"
+          "turnOn": "Turn on"
         },
         "reason": {
           "merged": "Merged",
@@ -22890,9 +22747,7 @@
           "automaticDescription": "Whether automatic cleanup is on, when it runs next, and running the rules now.",
           "runRulesNow": "run rules now",
           "cleanUpNow": "clean up now",
-          "schedule": "schedule",
-          "statusDescription": "Run the cleanup rules now, or review workspaces yourself.",
-          "reviewWorkspaces": "review workspaces"
+          "schedule": "schedule"
         },
         "status": {
           "lastRunFailed": "Last run {{when}} couldn't finish: {{error}}",
@@ -22905,13 +22760,7 @@
           "justNow": "just now",
           "inUnderAMinute": "in under a minute",
           "lastRunChats_one": "Last run {{when}} deleted 1 chat from a deleted workspace.",
-          "lastRunChats_other": "Last run {{when}} deleted {{count}} chats from deleted workspaces.",
-          "offDetail": "Nothing is removed until you turn on a rule.",
-          "running": "Cleaning up now…",
-          "on": "Automatic cleanup is on.",
-          "off": "Automatic cleanup is off.",
-          "review": "Review workspaces",
-          "turnOnHint": "Turn on a rule to use this."
+          "lastRunChats_other": "Last run {{when}} deleted {{count}} chats from deleted workspaces."
         },
         "change": {
           "title": "Change {{rule}}?",
@@ -22960,8 +22809,7 @@
           "off": "Off",
           "runningButton": "Running…",
           "runNow": "Run rules now"
-        },
-        "cleanUpNow": "Clean up now"
+        }
       },
       "repository": {
         "workspaceCleanup": {
@@ -23979,9 +23827,7 @@
         "agentNotSupported": "agent not supported"
       },
       "consentTranscriptIndex": "Search matches session details and message previews. To search full conversations, enable full-text search (indexes local transcripts, unredacted). Paired devices can search them too.",
-      "noMatchesToShow": "No matching sessions to show.",
-      "noMatches": "No matching sessions in the indexed history. Try another query or scope.",
-      "consent": "Enable full-text search? Orca builds an index on this computer from local agent transcripts, including full conversations. Content is not redacted. Authenticated paired clients can search it."
+      "noMatchesToShow": "No matching sessions to show."
     }
   },
   "sessionHistory": {
@@ -24123,24 +23969,7 @@
       "alsoStop": "Also stop the running server (closes all Codex sessions using it, including outside Orca)",
       "couldNotTurnOff": "Couldn’t turn off sharing.",
       "stopFailedAfterOff": "Sharing is off, but the server didn’t stop.",
-      "turnOffAndStop": "Turn off and stop server",
-      "dialogTitle": "Give each Codex tab its own server",
-      "dialogDescription": "Codex sessions started directly in a terminal share one background server. Orca keeps the Codex sessions it starts separate. When sessions share a server, closing one can end the others, and agent status can be wrong.",
-      "copy": "Copy",
-      "done": "Done",
-      "step1Title": "Turn off Codex server sharing",
-      "step1Note": "This changes your Codex settings, so it also applies outside Orca.",
-      "step2Title": "Stop the running shared server",
-      "undo": "To undo, run codex features enable daemon_auto_start.",
-      "step2Warning": "Closes any open Codex sessions that share the server",
-      "turnOff": "Turn off",
-      "turnedOff": "Turned off",
-      "turnOffFailed": "Orca couldn't turn this off.",
-      "stopped": "Stopped",
-      "stopFailed": "Orca couldn't stop the server.",
-      "confirmStopTitle": "Stop the shared server?",
-      "confirmStopDescription": "This closes any open Codex sessions that share it, including ones outside Orca.",
-      "runs": "Runs"
+      "turnOffAndStop": "Turn off and stop server"
     },
     "paneMove": {
       "failed": "Couldn't move the pane to a new tab."
@@ -24488,10 +24317,7 @@
     "moreActions": "More force delete options",
     "moreBranchActions": "More branch delete options",
     "alwaysForceDeleteBranches": "Always delete preserved branches",
-    "alwaysForceDeleteBranchesDescription": "Applies to branches kept after future workspace deletions.",
-    "moreDeleteOptions": "More delete options",
-    "alwaysDelete": "Always delete",
-    "alwaysDeleteTooltip": "Skip this confirmation for future deletions."
+    "alwaysForceDeleteBranchesDescription": "Applies to branches kept after future workspace deletions."
   },
   "worktree": {
     "setupTrust": {
@@ -25205,15 +25031,7 @@
       "title": "Display language",
       "settingsError": "Could not load your settings.",
       "loadingSettings": "Loading settings…",
-      "loading": "Loading language…",
-      "requestSuccess": "Language request recorded. You can continue onboarding.",
-      "device": "System language: {{language}}",
-      "unsupported": "System language: {{language}}. This language is not supported yet.",
-      "unknown": "Your system language could not be detected. Choose a language below.",
-      "loadError": "Could not load this language. Try again.",
-      "saveError": "Could not save your language preference. Try again.",
-      "other": "Other language…",
-      "saving": "Saving language…"
+      "loading": "Loading language…"
     }
   },
   "resourceManager": {
@@ -25272,8 +25090,7 @@
     "restartLocal": "Restart local daemon",
     "killAllLocal": "Kill all local sessions",
     "killFailed": "The terminal could not be ended. Last-observed sessions are retained.",
-    "metricDetails": "Metric details",
-    "localDaemonScope": "This affects terminals on this computer."
+    "metricDetails": "Metric details"
   },
   "browserExtensions": {
     "permission": {
@@ -25871,14 +25688,7 @@
     "noChat": "No chat for {{agent}}",
     "noTerminal": "No terminal for {{agent}}",
     "openAsChat": "Open as chat",
-    "openAsTerminal": "Open as terminal",
-    "catalogUnsupported": "{{agent}} models are unavailable on this host. You can keep your current choices or use Arguments.",
-    "catalogFailed": "Could not load {{agent}} models. Close and reopen the agent picker to try again.",
-    "catalogSignIn": "Sign in to {{agent}} to load its models, then close and reopen the agent picker.",
-    "catalogInstall": "Install {{agent}} on this host to load its models, then close and reopen the agent picker.",
-    "catalogUnresolved": "{{agent}} models have not loaded. Close and reopen the agent picker to try again.",
-    "toggleArguments": "Toggle Arguments",
-    "use": "Use"
+    "openAsTerminal": "Open as terminal"
   },
   "automations": {
     "runFailures": {
@@ -25949,8 +25759,7 @@
       "skippedReview": "Setup didn't run: this run's branch has different orca.yaml setup commands than the ones approved for this automation. Review them to run setup in later runs.",
       "reviewAction": "Review and approve setup",
       "listSkipped": "Setup skipped",
-      "listSkippedTitle": "The last run skipped setup because its branch's orca.yaml setup commands changed. Review them from the actions menu.",
-      "approve": "Approve"
+      "listSkippedTitle": "The last run skipped setup because its branch's orca.yaml setup commands changed. Review them from the actions menu."
     }
   },
   "codeHost": {
@@ -26280,8 +26089,7 @@
     "disabledReason": {
       "needsPermission": "Agent needs permission",
       "approvalUnseen": "Agent may be waiting for approval",
-      "hostUpdateRequired": "Update Orca on this host to send to this agent",
-      "statusStale": "Agent status is stale"
+      "hostUpdateRequired": "Update Orca on this host to send to this agent"
     }
   },
   "wslDistroHold": {
@@ -26464,9 +26272,7 @@
       "summary": "Orca stopped responding",
       "title": "Report a freeze",
       "uncheckAttachments": "Uncheck \"Include the saved freeze report and recent logs (redacted)\" and try again, or copy the details.",
-      "includeRedacted": "Include the saved freeze report and recent logs (redacted)",
-      "attach": "Attach saved freeze report and diagnostic logs",
-      "attachDescription": "Sends the saved freeze report with a capped, redacted log bundle."
+      "includeRedacted": "Include the saved freeze report and recent logs (redacted)"
     },
     "includeRecentLogsRedacted": "Include recent logs (redacted)",
     "details": "Details",
