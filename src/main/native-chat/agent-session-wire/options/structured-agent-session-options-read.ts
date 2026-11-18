@@ -116,7 +116,7 @@ export async function readStructuredAgentSessionOptions(
   if (live) {
     const { catalogListing, effortFixed: _fixed, projectCurrent: _project, ...answer } = live
     options = answer
-    // Fill missing live listings from saved catalog state; absent records keep the childÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s answer.
+    // Fill missing live listings from saved catalog state; absent records keep the child's answer.
     if (!catalogListing && !answer.listedModelIds && store.getConversation(sessionId)) {
       const { listedModelIds } = await atRest()
       options = listedModelIds ? { ...answer, listedModelIds } : answer

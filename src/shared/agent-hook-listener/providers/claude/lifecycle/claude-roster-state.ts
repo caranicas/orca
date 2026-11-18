@@ -306,3 +306,15 @@ export function clearClaudeAnsweredQuestionWait(
     ...(publishedMainAgent ? { mainAgent: publishedMainAgent } : {})
   }
 }
+
+export function resetClaudeSessionStart(
+  state: HookListenerState,
+  paneKey: string,
+  model: string | undefined
+): void {
+  state.claudeSubagentRosterByPaneKey.delete(paneKey)
+  state.claudeRunningNonAgentTaskPaneKeys.delete(paneKey)
+  state.claudeActiveSessionCronPaneKeys.delete(paneKey)
+  state.claudeLaunchedBackgroundTasksByPaneKey.delete(paneKey)
+  setClaudeMainAgentTurnState(state, paneKey, { state: 'done', stateStartedAt: Date.now(), model })
+}
