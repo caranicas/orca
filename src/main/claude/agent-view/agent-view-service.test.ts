@@ -5,9 +5,7 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { ClaudeAgentViewService } from './agent-view-service'
 import { reconcileClaudeAgentViewConfig } from './agent-view-config'
 import { ensureClaudeAgentViewPluginAsync } from './agent-view-plugin'
-import {
-  resetLoginShellEnvironmentCacheForTests
-} from '../../startup/shell-environment/login-shell-environment'
+import { resetLoginShellEnvironmentCacheForTests } from '../../startup/shell-environment/login-shell-environment'
 
 const roots: string[] = []
 afterEach(async () => {

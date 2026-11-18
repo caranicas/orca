@@ -137,18 +137,20 @@ function fixture(width: number) {
   return defineFixture({
     width,
     store: {
-      agentStatusByPaneKey: acceptedAgentStatuses(Object.entries({
-        [PANE_KEY]: {
-          state: 'working',
-          prompt: '',
-          updatedAt: 1000,
-          stateStartedAt: 1000,
-          paneKey: PANE_KEY,
-          stateHistory: [],
-          agentType: 'codex',
-          providerSession: { key: 'session_id', id: 'terminal-map-fixture' }
-        }
-      }))
+      agentStatusByPaneKey: acceptedAgentStatuses(
+        Object.entries({
+          [PANE_KEY]: {
+            state: 'working',
+            prompt: '',
+            updatedAt: 1000,
+            stateStartedAt: 1000,
+            paneKey: PANE_KEY,
+            stateHistory: [],
+            agentType: 'codex',
+            providerSession: { key: 'session_id', id: 'terminal-map-fixture' }
+          }
+        })
+      )
     },
     setup: () => {
       window.api.nativeChat.readSession = async () => ({ messages: MESSAGES })

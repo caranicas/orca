@@ -1,5 +1,11 @@
-import { nativeChatLineDecoderForAgent, type NativeChatLineDecoder } from './transcript-decoding/native-chat-line-decoder'
-export { nativeChatLineDecoderForAgent, type NativeChatLineDecoder } from './transcript-decoding/native-chat-line-decoder'
+import {
+  nativeChatLineDecoderForAgent,
+  type NativeChatLineDecoder
+} from './transcript-decoding/native-chat-line-decoder'
+export {
+  nativeChatLineDecoderForAgent,
+  type NativeChatLineDecoder
+} from './transcript-decoding/native-chat-line-decoder'
 import { readOpenCodeNativeChatTranscriptTail } from './transcript-history/opencode/transcript-opencode'
 import type {
   NativeChatTailArgs,

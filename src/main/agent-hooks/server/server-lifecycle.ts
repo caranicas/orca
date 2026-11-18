@@ -6,9 +6,7 @@ import { parsePaneKey } from '../../../shared/workspace-layout/stable-pane-id'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { randomUUID } from 'node:crypto'
 
-import {
-  CLAUDE_STATUSLINE_PATHNAME
-} from '../../../shared/agent-usage/rate-limits/claude-statusline-rate-limits'
+import { CLAUDE_STATUSLINE_PATHNAME } from '../../../shared/agent-usage/rate-limits/claude-statusline-rate-limits'
 import { mergeAgentHookRequestHeaders } from '../../../shared/agent-hook-listener/hook-envelope'
 import { readRequestBody } from '../../../shared/agent-hook-listener/request-body'
 import { resolveHookSource } from '../../../shared/agent-hook-listener/source-routing'

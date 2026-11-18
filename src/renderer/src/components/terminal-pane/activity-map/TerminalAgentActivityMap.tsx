@@ -33,7 +33,7 @@ export function TerminalAgentActivityMap({
   const paneKey = makePaneKey(controller.tabId, leafId)
   const source = useAppStore(
     useShallow((state) => {
-      const entry = state.agentStatusByPaneKey[paneKey]
+      const entry = state.agentStatusByPaneKey.get(paneKey)
       const shell = state.paneForegroundAgentByPaneKey[paneKey]?.shellForeground === true
       return {
         agent: shell ? null : (entry?.agentType ?? controller.resolveAgentForLeaf(leafId)),

@@ -23,7 +23,3 @@ tests/e2e/cross-version-wire/release-checkouts/release-module-locations.ts src/m
 tests/e2e/cross-version-wire/release-checkouts/release-module-locations.ts src/renderer/src/runtime/remote-runtime-terminal-multiplexer.ts
 # The rollback negative control restores this source from its fixed affected archive.
 config/scripts/runtime-verification/ephemeral-store/run-ephemeral-vm-runtime-store-rollback-repro.mjs src/shared/ephemeral-vm-runtime-store.ts
-
-# Released fork compatibility source owners.
-tests/e2e/cross-version-wire/release-checkouts/release-module-locations.ts src/main/runtime/rpc/responses/rpc-response.ts
-.github/workflows/release-cut.yml src/main/skills/skill-provider-runtime-roots.test.ts

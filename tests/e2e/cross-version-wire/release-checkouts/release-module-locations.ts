@@ -59,12 +59,6 @@ export function releaseModuleLocation(
       return legacyRegistry
     }
   }
-  if (named === 'src/main/runtime/rpc/errors.ts') {
-    const responseModule = 'src/main/runtime/rpc/responses/rpc-response.ts'
-    if (tree.exists(responseModule)) {
-      return responseModule
-    }
-  }
   const name = posix.basename(named)
   const moved = tree.list(sourceRoot).filter((path) => posix.basename(path) === name)
   if (moved.length === 1) {

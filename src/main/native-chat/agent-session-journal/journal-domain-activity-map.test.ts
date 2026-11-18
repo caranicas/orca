@@ -11,7 +11,12 @@ it('includes off-page tool activity only when the reader requests the activity m
       revision: 1,
       sequence: 1,
       observedAt: 1000,
-      body: { kind: 'tool-call', name: 'Read', input: { file_path: '/src/app.ts' }, state: 'completed' }
+      body: {
+        kind: 'tool-call',
+        name: 'Read',
+        input: { file_path: '/src/app.ts' },
+        state: 'completed'
+      }
     })
     seedItem({
       itemId: 'answer',

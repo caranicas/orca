@@ -1,6 +1,8 @@
-import { resetClaudeSessionStart } from './lifecycle/claude-session-start-sources'
 import type { ParsedAgentStatusPayload } from '../../../agent-status/contracts/agent-status-types'
-import { CLAUDE_NEW_SESSION_START_SOURCES } from './lifecycle/claude-session-start-sources'
+import {
+  CLAUDE_NEW_SESSION_START_SOURCES,
+  resetClaudeSessionStart
+} from './lifecycle/claude-session-start-sources'
 import {
   heldTurnCountsAsFinished,
   isAgentStatusHeldOpenByChildWork

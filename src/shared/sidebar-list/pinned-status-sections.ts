@@ -1,5 +1,8 @@
 import type { WorkspaceStatusDefinition, Worktree } from '../worktree/types'
-import { cloneDefaultWorkspaceStatuses, getWorkspaceStatus } from '../workspace/status/workspace-statuses'
+import {
+  cloneDefaultWorkspaceStatuses,
+  getWorkspaceStatus
+} from '../workspace/status/workspace-statuses'
 import { PINNED_GROUP_KEY } from './sections/group-keys'
 import type { OrderedGroupEntry } from './sections/worktree-group-entry'
 

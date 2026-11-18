@@ -24,4 +24,3 @@ export function nativeChatLineDecoderForAgent(agent: AgentType): NativeChatLineD
   }
   return null
 }
-
