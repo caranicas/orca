@@ -1,5 +1,5 @@
 import type { NativeChatMessage } from '../../native-chat/native-chat-types'
-import { namedSubagents } from '../../native-chat/transcript/native-chat-subagent-items'
+import { namedSubagents } from '../../native-chat/transcript/subagents/native-chat-subagent-items'
 import type { AgentStatusEntry } from '../../agent-status/contracts/agent-status-types'
 import type { StructuredAgentSubagentRosterEntry } from '../view/structured-agent-session-subagent-roster'
 import type { ActivityMapEvent, ActivityMapState } from './agent-activity-map'

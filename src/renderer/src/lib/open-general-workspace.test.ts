@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Repo } from '../../../shared/repo-types'
+import type { Repo } from '../../../shared/repository/repo-types'
 import { isGeneralWorkspaceRepo } from '../../../shared/general-workspace'
 import { openGeneralWorkspace } from './open-general-workspace'
 

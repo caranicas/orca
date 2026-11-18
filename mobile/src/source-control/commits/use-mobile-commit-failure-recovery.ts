@@ -3,7 +3,7 @@ import type { ConnectionState } from '../../transport/connection/connection-stat
 import type { RpcClient } from '../../transport/rpc/rpc-client-contract'
 import { triggerError, triggerSuccess } from '../../platform/haptics/haptics'
 import { translate } from '../../i18n/mobile-i18n'
-import { useHostProtocolGates } from '../../components/host-protocol-gates-context'
+import { useHostProtocolGates } from '../../components/host-connection/host-protocol-gates-context'
 import {
   launchAgentWithPrompt,
   promptedLaunchNotice
@@ -91,12 +91,7 @@ export function useMobileCommitFailureRecovery({
       return false
     }
     if (!client || connState !== 'connected') {
-      setLaunchError(
-        translate(
-          'sourceControl.useMobileCommitFailureRecovery.waitingForDesktop',
-          'Waiting for desktop...'
-        )
-      )
+      setLaunchError(translate('common.waitingForHost', 'Waiting for host…'))
       triggerError()
       return false
     }

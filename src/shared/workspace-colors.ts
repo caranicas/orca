@@ -1,4 +1,4 @@
-import { REPO_COLORS } from './repo-badge-color'
+import { REPO_COLORS } from './repository/appearance/repo-badge-color'
 
 export const WORKSPACE_COLORS = [...REPO_COLORS, '#1d4ed8'] as const
 

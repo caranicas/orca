@@ -1,8 +1,8 @@
-import type { ActivityMapProviderOptions } from '../../shared/agent-session/activity/activity-map-provider-options'
-import type { SubscribeTranscriptHookActivity } from './transcript-hook-activity'
+import type { ActivityMapProviderOptions } from '../../../shared/agent-session/activity/activity-map-provider-options'
+import type { SubscribeTranscriptHookActivity } from '../transcript-hook-activity'
 export const DESKTOP_READ_WINDOW = 300
 export const UNFLUSHED_SETTLE_MS = 1_500
-import type { TerminalActivityTelemetry } from '../../shared/agent-session/activity/terminal-activity-telemetry'
+import type { TerminalActivityTelemetry } from '../../../shared/agent-session/activity/terminal-activity-telemetry'
 
 import type { AgentType } from '../../../shared/agent-status/contracts/agent-status-types'
 import type {

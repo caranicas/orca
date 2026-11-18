@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { RuntimeClientTarget } from '../../../../../shared/runtime-client-target'
+import type { RuntimeClientTarget } from '../../../../../shared/remote-runtime/host-catalog/runtime-client-target'
 import type { AgentSessionHistoryResult } from '../../../../../shared/agent-session/agent-session-wire'
 import type { AgentJournalRenderItem } from '../../../../../shared/agent-session/journal/agent-session-journal-types'
 import type { ActivityMapJournalSummary } from '../../../../../shared/agent-session/activity/activity-map-journal-summary'

@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import {
   mergeNativeChatLiveSession,
   type NativeChatLiveMergeInput
-} from '../../../../../../../shared/native-chat/native-chat-live-status'
+} from '../../../../../../../shared/native-chat/transcript/streaming/native-chat-live-status'
 import type { NativeChatLiveSession } from './native-chat-live-session-contract'
 
 type Input = NativeChatLiveMergeInput &

@@ -13,7 +13,7 @@ import {
 import { NativeChatActivityMap } from './NativeChatActivityMap'
 import { useActivityMapJournal } from './use-activity-map-journal'
 import { codexContextPercentage } from '../../../../../shared/agent-session/activity/terminal-activity-telemetry'
-import { toRuntimeExecutionHostId } from '../../../../../shared/execution-host'
+import { toRuntimeExecutionHostId } from '../../../../../shared/execution-host/execution-host'
 import { useActivityMapModelHistory } from './use-activity-map-model-history'
 import { useAppStore } from '@/store'
 import { resolveWorkspaceDirectory } from '@/lib/workspace/paths/workspace-directory'
@@ -189,7 +189,6 @@ function NativeChatActivityMapSession({
   const reportedModel = controller.optionSnapshot?.find((option) => option.id === 'model')
   const model =
     telemetry?.model ??
-    reportedModel?.reportedModel ??
     (reportedModel?.valueSource === 'reported' && reportedModel.kind.type === 'select'
       ? reportedModel.kind.currentValue
       : undefined)

@@ -1,3 +1,4 @@
+import { readJournalDomainActivityMap } from './journal-domain-activity-map'
 import { boundedFrameItem } from '../agent-session-wire/publication/history/agent-session-bounded-frame-item'
 import {
   agentJournalItemForWire,
@@ -33,6 +34,7 @@ import { readJournalSqlWork } from './journal-sql-work-read'
 import type { JournalSqlWorkRead, JournalSqlWorkResult } from './journal-work-read'
 import { sameJournalCursor } from './replay/journal-cursor'
 import { readJournalDomainSourceHeaders } from './journal-domain-source-items'
+import { readJournalDomainAcceptedSendUnopened } from './journal-domain-accepted-unopened'
 import { journalContextEpoch } from './context-epochs/journal-context-epoch'
 import {
   latestTurnItem,
@@ -54,6 +56,8 @@ export type JournalDomainHistoryRequest = Omit<AgentSessionHistoryRequest, 'dire
   fence?: number
   scope?: 'every-agent' | 'own-agent'
   rowReplay?: boolean
+  /** Also answer whether an accepted send has no turn yet, in the page's snapshot. */
+  acceptedUnopened?: true
   reader?: {
     form: 'client' | 'bounded'
     budgetBytes?: number
@@ -82,6 +86,7 @@ export type JournalDomainHistoryWork = {
 export type JournalDomainHistoryFrame = {
   result: AgentSessionHistoryResult
   work?: JournalSqlWorkResult
+  acceptedUnopened?: boolean
 }
 
 export function readJournalDomainHistoryPage(
@@ -116,6 +121,7 @@ export function readJournalDomainHistoryFrame(
         ? { presentSubmission: queuedImageSubmissionPresenter(request.reader.queuedImages) }
         : {})
     })
+    result.page.activityMap = readJournalDomainActivityMap(db, head, request.activityMapOptions)
     const physicalCursor = { epoch: head.epoch, sequence: head.cursor.sequence }
     const answered =
       work &&
@@ -134,8 +140,18 @@ export function readJournalDomainHistoryFrame(
             work.read
           )
         : undefined
+    const acceptedUnopened = request.acceptedUnopened
+      ? readJournalDomainAcceptedSendUnopened(
+          new JournalSqlScope(db, request.sessionId, head.epoch),
+          latestTurnItem(db, head)?.sequence ?? -1
+        )
+      : undefined
     db.exec('COMMIT')
-    return { result, ...(answered ? { work: answered } : {}) }
+    return {
+      result,
+      ...(answered ? { work: answered } : {}),
+      ...(acceptedUnopened === undefined ? {} : { acceptedUnopened })
+    }
   } catch (error) {
     db.exec('ROLLBACK')
     throw error

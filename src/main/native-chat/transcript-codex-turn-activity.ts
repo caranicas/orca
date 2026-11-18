@@ -1,6 +1,6 @@
 import { activityMapText } from '../../shared/agent-session/activity/activity-map-text'
 import type { ActivityMapEvent } from '../../shared/agent-session/activity/agent-activity-map'
-import { extractString } from '../ai-vault/session-scanner-values'
+import { extractString } from '../../shared/text/trimmed-string'
 import { activityMeasurement } from './transcript-activity-fact'
 
 export function codexTranscriptTurnActivity(

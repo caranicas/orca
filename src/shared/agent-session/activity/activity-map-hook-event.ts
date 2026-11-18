@@ -6,7 +6,7 @@ import {
 import { activityMapModelRequestKey } from './activity-map-model-request'
 import type { ActivityMapEvent } from './agent-activity-map'
 import { activityMapToolDetails } from './agent-activity-map'
-import { createNonSecureContextUuid } from '../../non-secure-context-uuid'
+import { createNonSecureContextUuid } from '../../identifiers/non-secure-context-uuid'
 import { readActivityMapEvent } from './terminal-activity-telemetry'
 import { activityMapText } from './activity-map-text'
 import { activityMapTask } from './activity-map-task'

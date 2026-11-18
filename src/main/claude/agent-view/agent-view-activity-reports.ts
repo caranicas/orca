@@ -1,4 +1,5 @@
-import { asRecord, extractString } from '../../ai-vault/session-scanner-values'
+import { asRecord } from '../../ai-vault/parsing/session-record-fields'
+import { extractString } from '../../../shared/text/trimmed-string'
 import { parsePaneKey } from '../../../shared/workspace-layout/stable-pane-id'
 import { activityMapHookEvent } from '../../../shared/agent-session/activity/activity-map-hook-event'
 import { activityMapObserverOptions } from '../../../shared/agent-session/activity/activity-map-observer-options'

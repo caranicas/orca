@@ -6,7 +6,7 @@ import {
 } from './activity-map-provider-options'
 import { createActivityMapStatistics, type ActivityMapStatistics } from './activity-map-statistics'
 import { mergeTerminalActivity } from './merge-terminal-activity'
-import { agentSessionCurrentContextRows } from '../agent-session-context-clear'
+import { agentSessionCurrentContextRows } from '../conversation-context/agent-session-context-clear'
 
 export type ActivityMapJournalSummary = {
   events: ActivityMapEvent[]

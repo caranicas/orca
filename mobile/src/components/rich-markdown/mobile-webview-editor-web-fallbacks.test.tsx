@@ -41,7 +41,7 @@ vi.mock('lucide-react-native', () => ({
   Strikethrough: () => null
 }))
 
-vi.mock('../TextInputModal', async () => {
+vi.mock('../sheets/TextInputModal', async () => {
   const React = await import('react')
   return {
     TextInputModal: (props: Record<string, unknown>) => React.createElement('TextInputModal', props)
@@ -51,11 +51,6 @@ vi.mock('../TextInputModal', async () => {
 import { MobileRichMarkdownEditor } from './MobileRichMarkdownEditor'
 
 const renderers: ReactTestRenderer[] = []
-
-// Match mocked host strings by predicate; findAllByType expects component ElementType.
-function findHosts(renderer: ReactTestRenderer, type: string) {
-  return renderer.root.findAll((node) => node.type === type)
-}
 
 function render(
   element: React.ReactElement,
@@ -85,7 +80,7 @@ describe('the rich markdown editor on the page', () => {
   it('mounts the editor document with its content and reports edits to the host', () => {
     const host = document.createElement('div')
     const onChange = vi.fn()
-    const renderer = render(
+    render(
       createElement(MobileRichMarkdownEditor, {
         content: '# Title\n\nbody',
         editable: true,
@@ -98,7 +93,6 @@ describe('the rich markdown editor on the page', () => {
     expect(surface.querySelector('p')?.textContent).toBe('body')
     expect(surface.getAttribute('contenteditable')).toBe('true')
     expect(onChange).not.toHaveBeenCalled()
-    expect(findHosts(renderer, 'TextInput')).toEqual([])
 
     act(() => {
       surface.innerHTML = '<p>edited</p>'

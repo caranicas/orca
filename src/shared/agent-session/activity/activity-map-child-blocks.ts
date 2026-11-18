@@ -1,4 +1,4 @@
-import { namedSubagents } from '../../native-chat/transcript/native-chat-subagent-items'
+import { namedSubagents } from '../../native-chat/transcript/subagents/native-chat-subagent-items'
 import type { NativeChatBlock, NativeChatSubagentState } from '../../native-chat/native-chat-types'
 import type { ActivityMapEvent, ActivityMapState } from './agent-activity-map'
 import { clean } from './activity-map-labels'

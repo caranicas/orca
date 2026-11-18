@@ -1,6 +1,6 @@
-import type { WorktreeOccurrencePlan } from '../../worktree-occurrence-plan'
+import type { WorktreeOccurrencePlan } from '../lineage/worktree-occurrence-plan'
 import type { Worktree } from '../../worktree/types'
-import type { ExecutionHostId } from '../../execution-host'
+import type { ExecutionHostId } from '../../execution-host/execution-host'
 import { buildPinnedGroupHeader, type PinnedSectionHeader } from '../pinned-group-header'
 import { PINNED_GROUP_KEY } from './group-keys'
 import { appendWorktreeRows } from './row-builders'

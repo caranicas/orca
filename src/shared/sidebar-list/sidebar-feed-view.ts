@@ -1,5 +1,5 @@
-import type { ExecutionHostId, ExecutionHostScope } from '../execution-host'
-import type { ProjectOrderBy } from '../ui-chrome-types'
+import type { ExecutionHostId, ExecutionHostScope } from '../execution-host/execution-host'
+import type { ProjectOrderBy } from '../ui-chrome/ui-chrome-types'
 import type { WorkspaceRowFilters } from '../workspace-view/workspace-row-filters'
 import type { WorkspaceStatusDefinition } from '../worktree/types'
 import type { PinnedWorkspaceGrouping } from './custom-pinned-groups'

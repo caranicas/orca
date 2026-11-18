@@ -4,7 +4,7 @@ import { isFolderLaneSectionKey } from '../../../../../../shared/sidebar-list/fo
 import { ALL_GROUP_KEY } from '../../../../../../shared/sidebar-list/sections/group-keys'
 import { getNaturalWorktreeKeys } from '../listing/natural-worktree-keys'
 import { composeWorktreeHostIdentity } from '../../../../../../shared/worktree/host-qualified-identity'
-import type { ExecutionHostId } from '../../../../../../shared/execution-host'
+import type { ExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
 
 export type WorktreeDragUnitGroup = WorktreeDragGroup & {
   units: { worktreeId: string; worktreeIds: string[] }[]

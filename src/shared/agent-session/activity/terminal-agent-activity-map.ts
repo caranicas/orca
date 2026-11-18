@@ -1,6 +1,6 @@
 import { activityMapChildBlocks } from './activity-map-child-blocks'
 import type { ActivityMapClassificationOptions } from './activity-map-classification-options'
-import { agentJournalToolCallLifecycle } from '../../agent-journal-tool-call-lifecycle'
+import { agentJournalToolCallLifecycle } from '../journal/agent-journal-tool-call-lifecycle'
 import type {
   NativeChatBlock,
   NativeChatMessage,
@@ -8,7 +8,7 @@ import type {
   NativeChatToolResultBlock
 } from '../../native-chat/native-chat-types'
 import { pairNativeChatToolResults } from '../../native-chat/tools/native-chat-tool-pairing'
-import { isNoiseMessage } from '../../native-chat/native-chat-noise'
+import { isNoiseMessage } from '../../native-chat/transcript/messages/native-chat-noise'
 import { activityMapToolDetails, type ActivityMapEvent } from './agent-activity-map'
 
 function isUserMessage(message: NativeChatMessage): boolean {

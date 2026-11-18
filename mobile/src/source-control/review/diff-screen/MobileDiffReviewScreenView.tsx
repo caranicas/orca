@@ -12,7 +12,7 @@ import { MobileDiffReviewFooter } from './MobileDiffReviewFooter'
 import { MobileDiffReviewHeader } from './MobileDiffReviewHeader'
 import { useMobileDiffReviewOverflowActions } from './use-mobile-diff-review-overflow-actions'
 import { MobilePRSidebar } from '../pull-request/MobilePRSidebar'
-import { RightDrawer } from '../../../components/RightDrawer'
+import { RightDrawer } from '../../../components/right-drawer/RightDrawer'
 import {
   mobilePrSidebarStyles,
   PR_SIDEBAR_DOCK_WIDTH
@@ -23,7 +23,7 @@ import {
   shouldShowTrigger
 } from '../pull-request/mobile-pr-sidebar-presentation'
 import { mobileDiffReviewPositionLabel } from '../diff-state/mobile-diff-review-screen-model'
-import { getRuntimePathBasename } from '../../../../../src/shared/cross-platform-path'
+import { getRuntimePathBasename } from '../../../../../src/shared/file-access/cross-platform-path'
 import { mobileDiffReviewStyles as styles } from './mobile-diff-review-screen-styles'
 import { useMobileColorScheme } from '../../../theme/use-mobile-color-scheme'
 import type { HostConnectionInputs } from '../../../transport/connection/client-context-connection-metrics'

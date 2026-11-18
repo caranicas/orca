@@ -25,7 +25,7 @@ import { colors, pressedStyle } from '../../theme/mobile-theme'
 import { useMobileColorScheme } from '../../theme/use-mobile-color-scheme'
 import { useMobileTranslation } from '../../i18n/use-mobile-translation'
 import { styles } from '../../session/mobile-session-styles'
-import type { DiffComment } from '../../../../src/shared/diff-comment-types'
+import type { DiffComment } from '../../../../src/shared/file-review/diff-comment-types'
 import type {
   DiffCommentActions,
   DiffSyntaxState,
@@ -34,7 +34,7 @@ import type {
 import type { FileDocState, FileSyntaxState } from './session-document-state'
 import { DiffLineRow } from '../../source-control/review/review-notes/MobileSessionDiffLineRow'
 import { sendableMobileDiffComments } from '../../source-control/review/review-notes/mobile-diff-comments'
-import { MobileLoadErrorState, MobileStateView } from '../../components/MobileStateView'
+import { MobileLoadErrorState, MobileStateView } from '../../components/feedback/MobileStateView'
 import { useDurableDraftField } from '../../drafts/durable-draft-fields'
 
 type FileReaderProps = {

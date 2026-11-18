@@ -1,12 +1,13 @@
+import type { HiddenProjects } from '../project/catalog/hidden-projects'
 import type { FolderWorkspace } from '../folder-workspaces/folder-workspace-types'
-import type { ProjectGroup } from '../project-group-types'
-import type { Repo } from '../repo-types'
-import type { ProjectOrderBy } from '../ui-chrome-types'
+import type { ProjectGroup } from '../project/groups/project-group-types'
+import type { Repo } from '../repository/repo-types'
+import type { ProjectOrderBy } from '../ui-chrome/ui-chrome-types'
 import type { WorktreeLineage } from '../worktree/lineage-types'
 import type { SidebarLineageParentIdentities } from './lineage/worktree-lineage-projection'
 import type { WorkspaceStatusDefinition, Worktree } from '../worktree/types'
-import type { ExecutionHostId } from '../execution-host'
-import type { ProjectSectionModel } from '../project-section-grouping'
+import type { ExecutionHostId } from '../execution-host/execution-host'
+import type { ProjectSectionModel } from './sections/project-section-grouping'
 import type { WorkspaceSortBy } from '../workspace-view/workspace-row-sort'
 import type { PinnedWorkspaceGrouping } from './custom-pinned-groups'
 import type {
@@ -20,6 +21,7 @@ import type {
 } from './row-types'
 
 export type SidebarRowPlanInputs = {
+  hiddenProjects?: HiddenProjects
   pinnedWorkspaceGrouping?: PinnedWorkspaceGrouping
   groupBy: WorktreeGroupBy
   sortBy: WorkspaceSortBy

@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react'
 import { KeyboardAvoidingView, Pressable, Text, View } from 'react-native'
 import { Copy, Plus, Send, Trash2, X } from 'lucide-react-native'
-import type { DiffComment } from '../../../../../src/shared/diff-comment-types'
+import type { DiffComment } from '../../../../../src/shared/file-review/diff-comment-types'
 import { colors } from '../../../theme/mobile-theme'
 import { useMobileColorScheme } from '../../../theme/use-mobile-color-scheme'
 import type { Translate } from '../../../i18n/mobile-i18n'
 import { sendSheetMessage } from './mobile-diff-review-send-copy'
 import { useMobileTranslation } from '../../../i18n/use-mobile-translation'
-import type { ActionSheetAction } from '../../../components/ActionSheetModal'
-import { ActionSheetContent } from '../../../components/ActionSheetModal'
-import { ConfirmContent } from '../../../components/ConfirmModal'
+import type { ActionSheetAction } from '../../../components/sheets/ActionSheetModal'
+import { ActionSheetContent } from '../../../components/sheets/ActionSheetModal'
+import { ConfirmContent } from '../../../components/sheets/ConfirmModal'
 import { KeyedBottomDrawer } from '../../../components/bottom-drawer/keyed-bottom-drawer'
 import type { ComposerState, SendSheetState } from '../diff-state/mobile-diff-review-screen-model'
 import { reviewSheetKey, type ReviewSheet } from '../diff-actions/mobile-diff-review-sheets'
@@ -148,7 +148,7 @@ function useSendActions(
         disabled: comments.length === 0 || controller.agentLaunchAvailability !== 'available',
         ...(controller.agentLaunchAvailability === 'update-required'
           ? {
-              hint: t('components.diffReviewDrawers.updateRequired', 'Update Orca on your computer')
+              hint: t('components.diffReviewDrawers.updateRequired', 'Update Orca on this host')
             }
           : controller.agentLaunchAvailability === 'unverified'
             ? {

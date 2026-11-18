@@ -4,7 +4,7 @@ import type {
   PinnedWorkspaceGroup,
   PinnedWorkspaceGrouping
 } from '../../../shared/sidebar-list/custom-pinned-groups'
-import { normalizeRepoBadgeColor } from '../../../shared/repo-badge-color'
+import { normalizeRepoBadgeColor } from '../../../shared/repository/appearance/repo-badge-color'
 
 type SavedOrganization = {
   grouping: PinnedWorkspaceGrouping

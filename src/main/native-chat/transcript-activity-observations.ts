@@ -2,7 +2,7 @@ import {
   createTranscriptHookActivity,
   type TranscriptHookObservation
 } from './transcript-hook-activity'
-import { isLocalHookConnectionId } from '../../shared/wsl-hook-relay-contract'
+import { isLocalHookConnectionId } from '../../shared/agent-hook-listener/transport/wsl-hook-relay-contract'
 
 type Entry = {
   tracker: ReturnType<typeof createTranscriptHookActivity>

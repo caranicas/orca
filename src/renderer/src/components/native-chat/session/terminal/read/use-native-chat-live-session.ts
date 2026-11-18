@@ -10,7 +10,7 @@ import {
   boundNativeChatWindow,
   createNativeChatMerger,
   replaceList
-} from '../../../../../../../shared/native-chat/native-chat-merge'
+} from '../../../../../../../shared/native-chat/transcript/streaming/native-chat-merge'
 import { useNativeChatLiveReadResult } from './use-native-chat-live-read-result'
 import {
   hasMoreNativeChatHistory,

@@ -1,4 +1,4 @@
-import { ActivityMapProviderOptionsParam } from './activity-map-params'
+import { ActivityMapProviderOptionsParam } from '../activity-map-params'
 import { z } from 'zod'
 import type { AgentType } from '../../agent-status/contracts/agent-status-types'
 

@@ -1,4 +1,4 @@
-import type { ActivityMapProviderOptions } from '../../shared/agent-session/activity/activity-map-provider-options'
+import type { ActivityMapProviderOptions } from '../../../shared/agent-session/activity/activity-map-provider-options'
 import { ipcRenderer } from 'electron'
 import type {
   NativeChatAppendedPayload,
@@ -10,7 +10,7 @@ import type { AgentType } from '../../../shared/agent-status/contracts/agent-sta
 import {
   NATIVE_CHAT_VISUAL_GUEST_THEME_PUBLISH,
   type NativeChatVisualTheme
-} from '../../../shared/native-chat/native-chat-visual-shell'
+} from '../../../shared/native-chat/visuals/native-chat-visual-shell'
 
 export const nativeChatApi = {
   // Acknowledge the in-memory snapshot before guest creation can start its preload.
