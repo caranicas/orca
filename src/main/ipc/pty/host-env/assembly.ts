@@ -143,11 +143,9 @@ export function buildPtyHostEnv(
       if (guestEndpoint) {
         baseEnv.ORCA_AGENT_HOOK_ENDPOINT = guestEndpoint
       }
-      const claude =
-        opts.claudeSubagentNavigationEnabled !== false &&
-        isTuiAgentEnabled('claude', opts.disabledTuiAgents)
-          ? wslHookRelayManager.getClaudeAgentView(distro)
-          : null
+      const claude = isTuiAgentEnabled('claude', opts.disabledTuiAgents)
+        ? wslHookRelayManager.getClaudeAgentView(distro)
+        : null
       if (claude) {
         baseEnv.ORCA_CLAUDE_AGENT_VIEW_PLUGIN_DIR = claude.pluginDir
         baseEnv.ORCA_CLAUDE_CONFIG_DIR = claude.configDir

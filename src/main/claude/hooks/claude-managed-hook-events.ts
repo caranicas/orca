@@ -54,8 +54,16 @@ export const CLAUDE_EVENTS = [
     eventName: 'PermissionRequest',
     definition: { matcher: '*', hooks: [{ type: 'command', command: '' }] }
   },
+  {
+    eventName: 'PermissionDenied',
+    definition: { matcher: '*', hooks: [{ type: 'command', command: '' }] }
+  },
   // Manual /compact may omit Stop; PostCompact clears the pane after completion.
-  // PreCompact can fire on abort, so treating it as working would leave the pane stuck.
+  // PreCompact only observes activity: abort can omit PostCompact.
+  {
+    eventName: 'PreCompact',
+    definition: { hooks: [{ type: 'command', command: '' }] }
+  },
   {
     eventName: 'PostCompact',
     definition: { hooks: [{ type: 'command', command: '' }] }

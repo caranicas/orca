@@ -174,6 +174,7 @@ export type CodexSession = {
     serviceTier?: string | null
     serviceTierKnown?: true
   }
+  transcriptPath?: string
   /** The configured personality and tier a reset returns to, read before the first override. */
   nativeDefaults?: { personality?: string; serviceTier?: string }
   /** Acquisition facts overlaid by controls actually sent, independently of reports or saved picks. */

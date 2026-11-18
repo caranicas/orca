@@ -1,4 +1,8 @@
 import { readOpenCodeNativeChatTranscriptTail } from './transcript-history/opencode/transcript-opencode'
+import type {
+  NativeChatTailArgs,
+  NativeChatTailResult
+} from './transcript-watching/transcript-watch-contract'
 import { isENOENT } from '../ipc/filesystem/access/filesystem-path-containment'
 import type { AgentType } from '../../shared/agent-status/contracts/agent-status-types'
 import type {
@@ -6,7 +10,7 @@ import type {
   NativeChatTurnLifecycle
 } from '../../shared/native-chat/native-chat-types'
 import { resolveNativeChatTranscriptAgent } from '../../shared/native-chat/native-chat-agent-support'
-import { resolveSessionFilePath, type ResolveSessionFileOptions } from './session-file-resolver'
+import { resolveSessionFilePath } from './session-file-resolver'
 import { decodeClaudeTranscriptLine } from './transcript-decoding/transcript-line-decoders-claude'
 import { decodeCodexTranscriptLine } from './transcript-decoding/transcript-line-decoders-codex'
 import { decodeGrokTranscriptLine } from './transcript-decoding/transcript-line-decoders-grok'
@@ -30,6 +34,8 @@ import {
   transcriptFileStat
 } from './transcript-filesystem/wsl-transcript-fs-access'
 import { wslTranscriptFsRefusal } from './transcript-filesystem/wsl-transcript-fs-error'
+import { createTranscriptActivityReader } from './transcript-activity-reader'
+import type { TerminalActivityTelemetry } from '../../shared/agent-session/activity/terminal-activity-telemetry'
 
 export const MAX_NATIVE_CHAT_TRANSCRIPT_RECORD_BYTES = 2 * 1024 * 1024
 
@@ -61,10 +67,12 @@ export async function readNativeChatTranscriptTailFile(
   decodeLifecycle?: NativeChatTurnLifecycleDecoder | null,
   signal?: AbortSignal,
   onConsumedBoundary?: (boundary: Buffer) => void,
-  sourceOrder = false
+  sourceOrder = false,
+  activity?: ReturnType<typeof createTranscriptActivityReader>
 ): Promise<{
   messages: NativeChatMessage[]
   lifecycle?: NativeChatTurnLifecycle
+  activityMap?: TerminalActivityTelemetry
   consumedTo: number
   hasMore: boolean
   beforeOffset: number
@@ -109,7 +117,7 @@ export async function readNativeChatTranscriptTailFile(
     if (cursor === 0) {
       onConsumedBoundary?.(finalBoundaryByte)
     }
-    while (cursor > 0 && newestFirst.length <= limit) {
+    while (cursor > 0 && (newestFirst.length <= limit || (activity && !activity.complete))) {
       signal?.throwIfAborted()
       const start = Math.max(0, cursor - TAIL_CHUNK_BYTES)
       const buffer = Buffer.allocUnsafe(cursor - start)
@@ -133,7 +141,11 @@ export async function readNativeChatTranscriptTailFile(
         boundaryCaptured = true
       }
       let segmentEnd = bytesRead
-      for (let index = bytesRead - 1; index >= 0 && newestFirst.length <= limit; index--) {
+      for (
+        let index = bytesRead - 1;
+        index >= 0 && (newestFirst.length <= limit || (activity && !activity.complete));
+        index--
+      ) {
         if (buffer[index] !== 0x0a) {
           continue
         }
@@ -149,7 +161,11 @@ export async function readNativeChatTranscriptTailFile(
       }
       cursor = start
     }
-    if (cursor === 0 && lineParts.length > 0 && newestFirst.length <= limit) {
+    if (
+      cursor === 0 &&
+      lineParts.length > 0 &&
+      (newestFirst.length <= limit || (activity && !activity.complete))
+    ) {
       decodeLine(0, newestFirst)
     }
     let latest = Number.NEGATIVE_INFINITY
@@ -167,6 +183,7 @@ export async function readNativeChatTranscriptTailFile(
     return {
       messages: selected.map((entry) => entry.message),
       ...(lifecycle ? { lifecycle } : {}),
+      ...(activity ? { activityMap: activity.snapshot() } : {}),
       consumedTo,
       hasMore: limit > 0 && chronological.length > limit,
       beforeOffset: selected[0]?.offset ?? end,
@@ -223,6 +240,10 @@ export async function readNativeChatTranscriptTailFile(
     }
     ignoreNextMalformedRecord = false
     const fallbackId = transcriptFallbackId(filePath, lineOffset)
+    activity?.observe(line, fallbackId, true)
+    if (messages.length > limit) {
+      return
+    }
     // Use provider lifecycle records from the same window; visible assistant text cannot prove completion.
     lifecycle ??= decodeLifecycle?.(line, fallbackId) ?? undefined
     const message = decode(line, fallbackId)
@@ -233,25 +254,9 @@ export async function readNativeChatTranscriptTailFile(
 }
 
 export async function readNativeChatTranscriptTail(
-  args: ResolveSessionFileOptions & {
-    agent: AgentType
-    sessionId: string
-    transcriptPath?: string
-    filePath?: string
-    limit: number
-    beforeOffset?: number
-    sourceOrder?: boolean
-  },
+  args: NativeChatTailArgs,
   signal?: AbortSignal
-): Promise<
-  | {
-      messages: NativeChatMessage[]
-      lifecycle?: NativeChatTurnLifecycle
-      hasMore: boolean
-      beforeOffset: number
-    }
-  | { error: string; notFound?: true }
-> {
+): Promise<NativeChatTailResult> {
   if (resolveNativeChatTranscriptAgent(args.agent) === 'opencode') {
     return readOpenCodeNativeChatTranscriptTail(
       { ...args, agent: args.agent === 'zcode' ? 'zcode' : undefined },
@@ -260,7 +265,6 @@ export async function readNativeChatTranscriptTail(
     )
   }
   const decode = nativeChatLineDecoderForAgent(args.agent)
-  const decodeLifecycle = nativeChatTurnLifecycleDecoderForAgent(args.agent)
   if (!decode) {
     return { error: 'Transcript unavailable' }
   }
@@ -285,14 +289,18 @@ export async function readNativeChatTranscriptTail(
       decode,
       true,
       args.beforeOffset,
-      decodeLifecycle,
+      nativeChatTurnLifecycleDecoderForAgent(args.agent),
       signal,
       undefined,
-      args.sourceOrder
+      args.sourceOrder,
+      args.activityMap && args.beforeOffset === undefined
+        ? createTranscriptActivityReader(args.agent, undefined, args.activityMapOptions)
+        : undefined
     )
     signal?.throwIfAborted()
     return {
       messages: result.messages,
+      ...(result.activityMap ? { activityMap: result.activityMap } : {}),
       // Historical pages cannot rewind live lifecycle; only the current tail describes present turn state.
       ...(args.beforeOffset === undefined && result.lifecycle
         ? { lifecycle: result.lifecycle }

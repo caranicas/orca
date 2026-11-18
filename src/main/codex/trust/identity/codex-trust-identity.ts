@@ -33,6 +33,8 @@ function matcherPatternForEvent(
     case 'post_tool_use':
     case 'pre_compact':
     case 'post_compact':
+    case 'pre_model_request':
+    case 'post_model_request':
     case 'session_start':
     case 'subagent_start':
     case 'subagent_stop':
@@ -235,6 +237,8 @@ function isCodexEventLabel(value: string): value is CodexEventLabel {
     value === 'permission_request' ||
     value === 'post_tool_use' ||
     value === 'pre_compact' ||
+    value === 'pre_model_request' ||
+    value === 'post_model_request' ||
     value === 'post_compact' ||
     value === 'session_start' ||
     value === 'user_prompt_submit' ||

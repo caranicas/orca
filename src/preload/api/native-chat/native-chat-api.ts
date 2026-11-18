@@ -1,5 +1,7 @@
 import type { AgentType } from '../../../shared/agent-status/contracts/agent-status-types'
 import type { NativeChatVisualTheme } from '../../../shared/native-chat/native-chat-visual-shell'
+import type { ActivityMapProviderOptions } from '../../../shared/agent-session/activity/activity-map-provider-options'
+import type { TerminalActivityTelemetry } from '../../../shared/agent-session/activity/terminal-activity-telemetry'
 import type {
   NativeChatMessage,
   NativeChatTurnLifecycle
@@ -10,6 +12,7 @@ export type NativeChatReadSessionResult =
   | {
       messages: NativeChatMessage[]
       lifecycle?: NativeChatTurnLifecycle
+      activityMap?: TerminalActivityTelemetry
     }
   | { error: string; notFound?: true }
 
@@ -22,6 +25,7 @@ export type NativeChatSubscriptionFrame =
       hasMore: boolean
       error?: string
       lifecycle?: NativeChatTurnLifecycle
+      activityMap?: TerminalActivityTelemetry
       /** No transcript yet; do not treat this frame as settled session history. */
       pending?: boolean
     }
@@ -30,11 +34,13 @@ export type NativeChatSubscriptionFrame =
       messages: NativeChatMessage[]
       hasMore: boolean
       lifecycle?: NativeChatTurnLifecycle
+      activityMap?: TerminalActivityTelemetry
     }
   | {
       type: 'appended'
       messages: NativeChatMessage[]
       lifecycle?: NativeChatTurnLifecycle
+      activityMap?: TerminalActivityTelemetry
     }
 
 export type NativeChatAppendedPayload = {
@@ -43,6 +49,9 @@ export type NativeChatAppendedPayload = {
 }
 
 export type NativeChatSubscribeArgs = {
+  paneKey?: string
+  activityMapOptions?: ActivityMapProviderOptions
+  activityMap?: boolean
   /** Unique per caller to isolate live panes sharing a renderer. */
   subscriptionId: string
   agent: AgentType
@@ -65,7 +74,11 @@ export type NativeChatApi = {
     limit?: number,
     transcriptPath?: string,
     /** The user opened or paged this chat: may start its stopped local WSL distro (E9). */
-    options?: { wakeWslDistro?: boolean }
+    options?: {
+      wakeWslDistro?: boolean
+      activityMapOptions?: ActivityMapProviderOptions
+      activityMap?: boolean
+    }
   ) => Promise<NativeChatReadSessionResult>
   /** First frame is a bounded snapshot; later frames contain only appended messages. */
   subscribe: (

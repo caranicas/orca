@@ -5,12 +5,15 @@ import { writeManagedScript } from '../../agent-hooks/installation/scripts/manag
 import { writeHooksJsonAsync } from '../../agent-hooks/installation/configuration/hooks-json-write-async'
 import { CLAUDE_AGENT_VIEW_PLUGIN } from '../../../shared/claude-agent-view'
 import { CLAUDE_AGENT_VIEW_MOD_SOURCE } from './agent-view-mod-source'
+import { CLAUDE_ACTIVITY_MAP_MOD_SOURCE } from './agent-view-activity-source'
+
+export const CLAUDE_ACTIVITY_ONLY_MOD_SOURCE = `${CLAUDE_ACTIVITY_MAP_MOD_SOURCE}\nexport function register(on) { registerActivityMap(on) }\n`
 
 export const CLAUDE_AGENT_VIEW_PLUGIN_FILES: Record<string, string> = {
   '.claude-plugin/plugin.json': JSON.stringify({
     name: CLAUDE_AGENT_VIEW_PLUGIN,
-    version: '0.2.0',
-    description: 'Open Claude subagents from the Orca sidebar',
+    version: '0.3.0',
+    description: 'Observe Claude activity and open subagents from the Orca sidebar',
     author: { name: 'stablyai' },
     license: 'MIT'
   }),
@@ -35,13 +38,17 @@ export function ensureClaudeAgentViewPlugin(
   return root
 }
 
-export async function ensureClaudeAgentViewPluginAsync(userDataPath: string): Promise<string> {
-  const version = createHash('sha256')
-    .update(JSON.stringify(CLAUDE_AGENT_VIEW_PLUGIN_FILES))
-    .digest('hex')
-    .slice(0, 20)
+export async function ensureClaudeAgentViewPluginAsync(
+  userDataPath: string,
+  navigation = true
+): Promise<string> {
+  const files = {
+    ...CLAUDE_AGENT_VIEW_PLUGIN_FILES,
+    'hooks/register.js': navigation ? CLAUDE_AGENT_VIEW_MOD_SOURCE : CLAUDE_ACTIVITY_ONLY_MOD_SOURCE
+  }
+  const version = createHash('sha256').update(JSON.stringify(files)).digest('hex').slice(0, 20)
   const root = join(userDataPath, 'claude-agent-view', version, CLAUDE_AGENT_VIEW_PLUGIN)
-  for (const [path, content] of Object.entries(CLAUDE_AGENT_VIEW_PLUGIN_FILES)) {
+  for (const [path, content] of Object.entries(files)) {
     await writeHooksJsonAsync(join(root, path), {}, { serialized: content })
   }
   return root

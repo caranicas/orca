@@ -182,6 +182,7 @@ export async function openCodexStructuredSession(
     prompts: attempt.window.prompts,
     options: restoredCodexSessionOptions(input.options),
     reportedOptions: reportedCodexThreadOptions(opened),
+    ...(typeof opened.thread?.path === 'string' ? { transcriptPath: opened.thread.path } : {}),
     nativeDefaults: serviceTier ? { serviceTier } : {},
     appliedTurnOptions: {
       ...(opened.model ? { model: opened.model } : {}),

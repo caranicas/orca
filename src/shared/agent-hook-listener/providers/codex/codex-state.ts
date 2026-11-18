@@ -179,6 +179,8 @@ export function codexHookEventState(
       return isAskUserQuestionTool(toolName) ? 'waiting' : 'working'
     case 'UserPromptSubmit':
     case 'PostToolUse':
+    case 'PreModelRequest':
+    case 'PostModelRequest':
       return 'working'
     default:
       return undefined

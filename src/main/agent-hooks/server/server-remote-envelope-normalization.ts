@@ -1,4 +1,6 @@
+import type { ActivityMapEvent } from '../../../shared/agent-session/activity/agent-activity-map'
 import { normalizeAgentProviderSession } from '../../../shared/agent-session/lifecycle/agent-session-resume'
+import { readActivityMapEvent } from '../../../shared/agent-session/activity/terminal-activity-telemetry'
 import {
   normalizeClaudePromptId,
   normalizeGrokPromptId
@@ -13,6 +15,7 @@ import {
 } from '../../../shared/agent-hook-listener/claude-settled-permission-requests'
 
 export type RemoteAgentStatusEnvelope = {
+  activityMapEvent?: unknown
   paneKey: string
   tabId?: string
   worktreeId?: string
@@ -49,6 +52,7 @@ export type RemoteAgentStatusEnvelope = {
 }
 
 export type RemoteEnvelopeFields = {
+  activityMapEvent?: ActivityMapEvent
   hookEventName?: string
   source?: AgentHookSource
   providerPromptId?: string
@@ -65,6 +69,7 @@ export type RemoteEnvelopeFields = {
 }
 
 export function normalizeRemoteEnvelopeFields(envelope: {
+  activityMapEvent?: unknown
   hookEventName?: string
   source?: unknown
   providerPromptId?: unknown
@@ -82,6 +87,7 @@ export function normalizeRemoteEnvelopeFields(envelope: {
 }): RemoteEnvelopeFields {
   const source = isAgentHookSource(envelope.source) ? envelope.source : undefined
   return {
+    activityMapEvent: readActivityMapEvent(envelope.activityMapEvent),
     hookEventName:
       typeof envelope.hookEventName === 'string' && envelope.hookEventName.trim().length > 0
         ? envelope.hookEventName.trim()

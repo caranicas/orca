@@ -15,11 +15,13 @@ import { decodeCodexTranscriptLine } from './transcript-decoding/transcript-line
 import { decodeGrokTranscriptLine } from './transcript-decoding/transcript-line-decoders-grok'
 import { decodeOmpTranscriptLine } from './transcript-decoding/transcript-line-decoders-omp'
 import { decodeTranscriptStream } from './transcript-streaming/transcript-stream-lines'
+import type { TerminalActivityTelemetry } from '../../shared/agent-session/activity/terminal-activity-telemetry'
 
 export type ReadTranscriptResult =
   | {
       messages: NativeChatMessage[]
       lifecycle?: NativeChatTurnLifecycle
+      activityMap?: TerminalActivityTelemetry
       sourceEmpty?: boolean
       forkTipItemIds?: string[]
     }

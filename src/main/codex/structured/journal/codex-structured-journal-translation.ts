@@ -1,4 +1,5 @@
 import { createCodexProviderActivityReader } from '../../../native-chat/agent-session-wire/providers/provider-frame-activity'
+import { createCodexJournalActivity } from './codex-journal-activity'
 import { recordCodexContextUsage } from './codex-context-usage'
 import { CODEX_TOKEN_USAGE_METHOD } from '../background-work/codex-subagent-activity'
 import {
@@ -53,6 +54,7 @@ function createCodexTranslation(
     goals,
     prompts
   } = createCodexJournalTranslatorWriters(deps)
+  const hookActivity = createCodexJournalActivity(deps, attributionFor)
   const flushStreams = (threadId?: string): CodexJournalTranslationAdmission =>
     items.streams.flush(threadId)
       ? CODEX_JOURNAL_ADMITTED
@@ -208,6 +210,10 @@ function createCodexTranslation(
       }
       if (event.type !== 'notification') {
         return CODEX_JOURNAL_ADMITTED
+      }
+      const hookAdmission = hookActivity(event)
+      if (!hookAdmission.accepted) {
+        return hookAdmission
       }
       if (event.method === 'turn/started' || event.method === 'turn/completed') {
         if (event.method === 'turn/started') {

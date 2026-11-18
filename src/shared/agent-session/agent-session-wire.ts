@@ -1,5 +1,11 @@
 import type { AgentSessionUnavailable } from './agent-session-availability'
-import type { AgentSessionFrameFields } from './agent-session-frame-fields'
+import type { ActivityMapProviderOptions } from './activity/activity-map-provider-options'
+import type { ActivityMapJournalSummary } from './activity/activity-map-journal-summary'
+import type {
+  AgentSessionFrameFields,
+  AgentSessionTurnActivity,
+  AgentSessionLatestTurn
+} from './agent-session-frame-fields'
 import type { AgentSessionUsageLimitContinue } from './agent-session-usage-limit-continue-wire'
 import type { AgentSessionCurrentWorkFields } from './requests/agent-session-current-work-wire'
 import type {
@@ -21,8 +27,7 @@ import type {
   AgentJournalRenderItem,
   AgentJournalResetReason,
   AgentJournalResolution,
-  AgentJournalSubmission,
-  AgentJournalTurnLifecycle
+  AgentJournalSubmission
 } from './journal/agent-session-journal-types'
 import type { AgentTurnOutcome } from '../agent-status/lifecycle/agent-turn-outcome'
 import type { AgentSessionRecord } from './lifecycle/agent-session-record'
@@ -30,19 +35,7 @@ import type { AgentProviderSessionMetadata } from './lifecycle/agent-session-res
 import type { NativeChatSubagentEntry } from '../native-chat/native-chat-types'
 import type { StructuredAgentSessionProjectedStatus } from './view/structured-agent-session-projection'
 
-export type AgentSessionTurnActivity = {
-  turnId: string
-  text: string
-}
-
-/** Newest turn across the whole journal, including off-page long-running turns. null means no turn; older hosts omit it and clients derive from loaded rows. */
-export type AgentSessionLatestTurn = {
-  /** The record's journal key, which rows of the turn name as their scope. */
-  itemId: string
-  /** Host clock at the record's creation, as on its own row; a revision does not move it. */
-  observedAt: number
-  turn: AgentJournalTurnLifecycle
-}
+export type { AgentSessionTurnActivity, AgentSessionLatestTurn } from './agent-session-frame-fields'
 
 export const AGENT_SESSION_ID_MAX_LENGTH = 512
 
@@ -60,6 +53,7 @@ export type AgentSessionHistoryRequest = {
   /** Required for `before` and `after`; ignored for `tail`. */
   cursor?: AgentJournalCursor
   limit?: number
+  activityMapOptions?: ActivityMapProviderOptions
 }
 
 /** A subagent named by a roster row the page does not carry, while its own rows are on it. */
@@ -73,6 +67,7 @@ export type AgentSessionSubagentRosterEntry = {
 }
 
 export type AgentSessionHistoryPage = {
+  activityMap?: ActivityMapJournalSummary
   sessionId: string
   epoch: string
   /** Optional for mixed-version readers; write-capable clients use the

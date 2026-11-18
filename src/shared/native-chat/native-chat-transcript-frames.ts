@@ -1,3 +1,4 @@
+import type { TerminalActivityTelemetry } from '../agent-session/activity/terminal-activity-telemetry'
 import type { NativeChatMessage, NativeChatTurnLifecycle } from './native-chat-types'
 
 /** One page of a transcript, newest last; `beforeOffset` is where the next older page ends. */
@@ -17,8 +18,18 @@ export type NativeChatTranscriptFrame =
         // The page starts at the row named by the subscribe's resumeAfter.
         resumed?: true
         error?: string
+        activityMap?: TerminalActivityTelemetry
         lifecycle?: NativeChatTurnLifecycle
       })
-  | (NativeChatTranscriptPage & { type: 'replacement'; lifecycle?: NativeChatTurnLifecycle })
-  | { type: 'appended'; messages: NativeChatMessage[]; lifecycle?: NativeChatTurnLifecycle }
+  | (NativeChatTranscriptPage & {
+      type: 'replacement'
+      activityMap?: TerminalActivityTelemetry
+      lifecycle?: NativeChatTurnLifecycle
+    })
+  | {
+      type: 'appended'
+      messages: NativeChatMessage[]
+      activityMap?: TerminalActivityTelemetry
+      lifecycle?: NativeChatTurnLifecycle
+    }
   | { type: 'end' }

@@ -107,7 +107,9 @@ export const NATIVE_CHAT_METHODS = [
           ),
           limit,
           beforeOffset: params.beforeOffset,
-          sourceOrder: params.capabilities?.transcriptSourceOrder === 1
+          sourceOrder: params.capabilities?.transcriptSourceOrder === 1,
+          activityMapOptions: params.activityMapOptions,
+          activityMap: params.capabilities?.activityMap === 1
         },
         signal
       )
@@ -121,7 +123,8 @@ export const NATIVE_CHAT_METHODS = [
               limit,
               params.agent
             ),
-            ...(result.lifecycle ? { lifecycle: result.lifecycle } : {})
+            ...(result.lifecycle ? { lifecycle: result.lifecycle } : {}),
+            ...(result.activityMap ? { activityMap: result.activityMap } : {})
           }
         : result
     }
@@ -176,9 +179,14 @@ export const NATIVE_CHAT_METHODS = [
           params.sessionId,
           params.transcriptPath
         ),
+        paneKey: params.paneKey,
+        subscribeActivity:
+          params.capabilities?.activityMap === 1 ? runtime.subscribeAgentActivity : undefined,
         initialLimit: limit,
         sourceOrder: params.capabilities?.transcriptSourceOrder === 1,
-        onInitialSnapshot: (messages, hasMore, beforeOffset, error, lifecycle) => {
+        activityMapOptions: params.activityMapOptions,
+        activityMap: params.capabilities?.activityMap === 1,
+        onInitialSnapshot: (messages, hasMore, beforeOffset, error, lifecycle, activityMap) => {
           if (closed) {
             return
           }
@@ -197,7 +205,8 @@ export const NATIVE_CHAT_METHODS = [
             ),
             ...(resumed ? { resumed } : {}),
             ...(error ? { error } : {}),
-            ...(lifecycle ? { lifecycle } : {})
+            ...(lifecycle ? { lifecycle } : {}),
+            ...(activityMap ? { activityMap } : {})
           })
         },
         ...(params.capabilities?.transcriptPending === 1
@@ -209,17 +218,18 @@ export const NATIVE_CHAT_METHODS = [
               }
             }
           : {}),
-        onReplace: (messages, hasMore, beforeOffset, lifecycle) => {
+        onReplace: (messages, hasMore, beforeOffset, lifecycle, activityMap) => {
           if (closed) {
             return
           }
           emit({
             type: 'replacement',
             ...pageForClient(messages, hasMore, beforeOffset, clientKind, limit, params.agent),
-            ...(lifecycle ? { lifecycle } : {})
+            ...(lifecycle ? { lifecycle } : {}),
+            ...(activityMap ? { activityMap } : {})
           })
         },
-        onAppend: (messages, lifecycle) => {
+        onAppend: (messages, lifecycle, activityMap) => {
           if (closed) {
             return
           }
@@ -232,7 +242,8 @@ export const NATIVE_CHAT_METHODS = [
             emit({
               type: 'appended',
               messages: batch,
-              ...(lifecycle && batch === batches.at(-1) ? { lifecycle } : {})
+              ...(lifecycle && batch === batches.at(-1) ? { lifecycle } : {}),
+              ...(activityMap && batch === batches.at(-1) ? { activityMap } : {})
             })
           }
         }

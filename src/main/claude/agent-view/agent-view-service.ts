@@ -32,7 +32,7 @@ export class ClaudeAgentViewService {
   private tail: Promise<void> = Promise.resolve()
   private key?: string
   private generation = 0
-  private enabled = false
+  private navigation = false
   private pluginRoot?: string
   private readonly configs = new Set<string>()
   private defaultConfig = process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude')
@@ -48,16 +48,15 @@ export class ClaudeAgentViewService {
   ) {}
 
   reconcile(settings: NavigationSettings): Promise<void> {
-    const enabled =
-      settings.claudeSubagentNavigationEnabled !== false &&
-      isAgentStatusHooksEnabledForAgent(settings, 'claude')
+    const enabled = isAgentStatusHooksEnabledForAgent(settings, 'claude')
+    const navigation = enabled && settings.claudeSubagentNavigationEnabled !== false
     const customConfig = settings.agentDefaultEnv?.claude?.CLAUDE_CONFIG_DIR
-    const key = JSON.stringify([enabled, customConfig])
+    const key = JSON.stringify([enabled, navigation, customConfig])
     if (key === this.key) {
       return this.tail
     }
     this.key = key
-    this.enabled = enabled
+    this.navigation = navigation
     this.pluginRoot = undefined
     const generation = ++this.generation
     return this.enqueue(async () => {
@@ -76,9 +75,9 @@ export class ClaudeAgentViewService {
         }
       }
       for (const dir of this.configs) {
-        await this.deps.reconcileConfig(join(dir, 'settings.json'), enabled)
+        await this.deps.reconcileConfig(join(dir, 'settings.json'), navigation)
       }
-      const root = enabled ? await this.deps.ensurePlugin(this.userDataPath) : undefined
+      const root = enabled ? await this.deps.ensurePlugin(this.userDataPath, navigation) : undefined
       if (generation === this.generation) {
         this.pluginRoot = root
       }
@@ -91,7 +90,9 @@ export class ClaudeAgentViewService {
       return this.tail
     }
     this.configs.add(dir)
-    return this.enqueue(() => this.deps.reconcileConfig(join(dir, 'settings.json'), this.enabled))
+    return this.enqueue(() =>
+      this.deps.reconcileConfig(join(dir, 'settings.json'), this.navigation)
+    )
   }
 
   ready(): Promise<void> {
@@ -105,7 +106,6 @@ export class ClaudeAgentViewService {
     launchCommand?: string
   }): Promise<void> {
     if (
-      args.settings?.claudeSubagentNavigationEnabled === false ||
       !isAgentStatusHooksEnabledForAgent(args.settings, 'claude') ||
       args.isWsl ||
       (args.launchAgent

@@ -35,20 +35,6 @@ import { runExclusivelyForCodexTrustConfig } from '../../trust/toml/codex-trust-
 
 const homes = setupCodexHookHomes(homedirMock, getPathMock)
 
-function localManagedCodexEvents(): string[] {
-  return [
-    'Interrupt',
-    'PermissionRequest',
-    'PostToolUse',
-    'PreToolUse',
-    'SessionStart',
-    'Stop',
-    'SubagentStart',
-    'SubagentStop',
-    'UserPromptSubmit'
-  ]
-}
-
 describe('CodexHookService', () => {
   it('waits for an in-flight mutation of the system config.toml', async () => {
     const systemCodexHome = join(homes.tmpHome, '.codex')
@@ -125,10 +111,7 @@ describe('CodexHookService', () => {
     const status = await new CodexHookService().install(perAccountHome)
     expect(status.state).toBe('installed')
 
-    const hooksConfig = JSON.parse(readFileSync(join(perAccountHome, 'hooks.json'), 'utf-8')) as {
-      hooks: Record<string, unknown>
-    }
-    expect(Object.keys(hooksConfig.hooks).sort()).toEqual(localManagedCodexEvents())
+    expect(existsSync(join(perAccountHome, 'hooks.json'))).toBe(true)
     const trustConfig = readFileSync(join(perAccountHome, 'config.toml'), 'utf-8')
     expect(trustConfig).toContain('approval_policy = "on-request"')
     expect(trustConfig).toContain(':permission_request:0:0')

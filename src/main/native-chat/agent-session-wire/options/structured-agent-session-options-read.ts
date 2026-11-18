@@ -116,7 +116,7 @@ export async function readStructuredAgentSessionOptions(
   if (live) {
     const { catalogListing, effortFixed: _fixed, projectCurrent: _project, ...answer } = live
     options = answer
-    // Fill missing live listings from saved catalog state; absent records keep the child’s answer.
+    // Fill missing live listings from saved catalog state; absent records keep the childÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s answer.
     if (!catalogListing && !answer.listedModelIds && store.getConversation(sessionId)) {
       const { listedModelIds } = await atRest()
       options = listedModelIds ? { ...answer, listedModelIds } : answer
@@ -164,6 +164,12 @@ export async function readStructuredAgentSessionOptions(
   const model = saved.model ?? (options.current.model || selected.current.model || displayDefault)
   const projected = live?.projectCurrent?.({ ...saved, ...(model ? { model } : {}) })
   const reportedEffort = projected?.confirmed?.includes('effort') ? projected.effort : undefined
+  // After every await: a pick or a replaced child since the live read retires its report.
+  const currentChild =
+    live && started.kind === 'live' && started.session.child === started.child
+      ? started.child
+      : undefined
+  const transcriptSource = currentChild ? options : undefined
   const current = {
     ...selected.current,
     ...options.current,
@@ -238,6 +244,12 @@ export async function readStructuredAgentSessionOptions(
   return {
     ...options,
     ...recovery,
+    ...(options.transcriptSessionId !== undefined
+      ? {
+          transcriptPath: transcriptSource?.transcriptPath,
+          transcriptSessionId: transcriptSource?.transcriptSessionId
+        }
+      : {}),
     forkSupport:
       capabilities?.fork === 'checkpoint'
         ? 'supported'

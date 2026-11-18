@@ -1,3 +1,5 @@
+import type { ActivityMapProviderOptions } from '../../../../../../../shared/agent-session/activity/activity-map-provider-options'
+import type { TerminalActivityTelemetry } from '../../../../../../../shared/agent-session/activity/terminal-activity-telemetry'
 import type { AgentType } from '../../../../../../../shared/agent-status/contracts/agent-status-types'
 import type {
   NativeChatMessage,
@@ -19,6 +21,7 @@ export function isNativeChatTranscriptUnsettled(phase: ReadState['phase']): bool
 }
 
 export type NativeChatLiveSession = NativeChatSession & {
+  activityMap?: TerminalActivityTelemetry & { receivedAt: number }
   /** Latest provider turn boundary, used to settle orphaned running tool rows. */
   transcriptLifecycle?: NativeChatTurnLifecycle
   /** Hook-reported human wait not yet ended by the transcript; absent on hookless lanes. */
@@ -45,6 +48,8 @@ export type NativeChatLiveSession = NativeChatSession & {
 }
 
 export type UseNativeChatLiveSessionArgs = {
+  activityMapOptions?: ActivityMapProviderOptions
+  activityMap?: boolean
   /** Composite `${tabId}:${leafId}` hook-entry key. */
   paneKey: string
   agent: AgentType

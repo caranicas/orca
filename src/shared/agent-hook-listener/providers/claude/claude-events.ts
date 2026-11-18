@@ -1,3 +1,4 @@
+import { resetClaudeSessionStart } from './lifecycle/claude-session-start-sources'
 import type { ParsedAgentStatusPayload } from '../../../agent-status/contracts/agent-status-types'
 import { CLAUDE_NEW_SESSION_START_SOURCES } from './lifecycle/claude-session-start-sources'
 import {
@@ -48,6 +49,9 @@ export function normalizeClaudeEvent(
   paneKey: string,
   hookPayload: Record<string, unknown>
 ): ParsedAgentStatusPayload | null {
+  if (eventName === 'PreCompact') {
+    return buildClaudeCachedLeadStatusPayload(state, eventName, paneKey, hookPayload)
+  }
   const eventAgentId = readString(hookPayload, 'agent_id')
   if (
     eventName === 'SubagentStart' ||
@@ -65,17 +69,7 @@ export function normalizeClaudeEvent(
       // Only known idle sources qualify; compact restarts and child SessionStart cannot settle a live lead.
       return null
     }
-    // New sessions must not inherit old child/task/cron gates.
-    state.claudeSubagentRosterByPaneKey.delete(paneKey)
-    state.claudeRunningNonAgentTaskPaneKeys.delete(paneKey)
-    state.claudeActiveSessionCronPaneKeys.delete(paneKey)
-    state.claudeLaunchedBackgroundTasksByPaneKey.delete(paneKey)
-    // New sessions start a new main-agent clock.
-    setClaudeMainAgentTurnState(state, paneKey, {
-      state: 'done',
-      stateStartedAt: Date.now(),
-      model: leadModel
-    })
+    resetClaudeSessionStart(state, paneKey, leadModel)
     return buildClaudeStatusPayload(state, eventName, promptText, paneKey, hookPayload, {
       stateName: 'done',
       updateToolSnapshot: true,
@@ -139,6 +133,7 @@ export function normalizeClaudeEvent(
     eventName === 'UserPromptSubmit' ||
     eventName === 'PostToolUse' ||
     eventName === 'PostToolUseFailure' ||
+    eventName === 'PermissionDenied' ||
     (eventName === 'PreToolUse' && !isAskUserQuestion)
       ? 'working'
       : eventName === 'PermissionRequest' || eventName === 'Elicitation' || isAskUserQuestion

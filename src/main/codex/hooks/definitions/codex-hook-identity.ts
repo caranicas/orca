@@ -17,7 +17,9 @@ export const CODEX_HOOK_EVENT_LABEL: Record<string, CodexEventLabel> = {
   Stop: 'stop',
   Interrupt: 'interrupt',
   PreCompact: 'pre_compact',
-  PostCompact: 'post_compact'
+  PostCompact: 'post_compact',
+  PreModelRequest: 'pre_model_request',
+  PostModelRequest: 'post_model_request'
 }
 
 export const CODEX_EVENT_NAME_BY_LABEL: Record<CodexEventLabel, string> = {
@@ -31,7 +33,9 @@ export const CODEX_EVENT_NAME_BY_LABEL: Record<CodexEventLabel, string> = {
   stop: 'Stop',
   interrupt: 'Interrupt',
   pre_compact: 'PreCompact',
-  post_compact: 'PostCompact'
+  post_compact: 'PostCompact',
+  pre_model_request: 'PreModelRequest',
+  post_model_request: 'PostModelRequest'
 }
 
 export function getCodexManagedScriptFileName(): string {

@@ -1,13 +1,15 @@
+import { activityMapChildBlocks } from './activity-map-child-blocks'
+import { activityMapJournalFact } from './activity-map-journal-fact'
+import { activityMapToolDetails } from './activity-map-tool-details'
+export { activityMapToolDetails } from './activity-map-tool-details'
 import { agentJournalToolCallLifecycle } from '../../agent-journal-tool-call-lifecycle'
-import { nativeChatToolCategory } from '../../native-chat/tools/native-chat-tool-icon'
-import { mcpToolIdentity } from '../../native-chat/tools/native-chat-tool-identity'
-import { normalizeToolInput, toolFilePath } from '../../native-chat/tools/native-chat-tool-summary'
 import { compareAgentJournalItems } from '../journal/agent-session-journal-position'
 import { isRootAgentJournalItem } from '../journal/agent-session-journal-producer'
-import type {
-  AgentJournalRenderItem,
-  AgentJournalToolCallItem
-} from '../journal/agent-session-journal-types'
+import { clean, lastTwo } from './activity-map-labels'
+import { isKnownHarnessInjectedUserTurnText } from '../../harness-injected-user-turns'
+import type { ActivityMapClassificationOptions } from './activity-map-classification-options'
+import type { AgentJournalRenderItem } from '../journal/agent-session-journal-types'
+import type { StructuredAgentContextUsage } from '../structured-agent-session-context-usage'
 
 export type ActivityMapStation =
   | 'you'
@@ -19,12 +21,13 @@ export type ActivityMapStation =
   | 'browser'
   | 'agents'
   | 'skills'
-  | 'tools'
+  | 'hooks'
 
 export type ActivityMapState =
   | 'running'
   | 'completed'
   | 'failed'
+  | 'blocked'
   | 'interrupted'
   | 'unknown'
   | 'waiting'
@@ -38,101 +41,31 @@ export type ActivityMapEvent = {
   label: string
   startedAt: number
   durationMs?: number
+  durationEstimated?: boolean
+  endedAt?: number
+  callId?: string
+  agentId?: string
+  taskId?: string
+  requestKey?: string
+  transcriptIds?: string[]
+  inbound?: boolean
+  observationId?: string
+  context?: { model: string; usage: StructuredAgentContextUsage | null }
+  mark?: 'child' | 'prompt' | 'metadata' | 'step' | 'switch' | 'compact' | 'done' | 'interrupted'
 }
 
-function shortLabel(value: string): string {
-  return value
-    .replace(/[\p{Cc}\p{Cf}]/gu, '')
-    .trim()
-    .slice(0, 80)
-}
-
-function shortPath(path: string): string {
-  return shortLabel(path.replaceAll('\\', '/').split('/').slice(-2).join('/'))
-}
-
-type ActivityMapTool = Pick<AgentJournalToolCallItem, 'name' | 'input' | 'mcpIdentity'>
-
-function toolStation(call: ActivityMapTool): ActivityMapStation {
-  const name = call.name.trim().toLowerCase()
-  const path = toolFilePath(call.input)?.replaceAll('\\', '/')
-  if (name === 'skill' || name === 'toolsearch' || /(?:^|\/)SKILL\.md$/i.test(path ?? '')) {
-    return 'skills'
-  }
-  if (/(?:^|\/)(?:AGENTS|CLAUDE|MEMORY)\.md$|(?:^|\/)memory\//i.test(path ?? '')) {
-    return 'memory'
-  }
-  if (/^(?:spawn_agent|send_input|wait_agent|close_agent|resume_agent)$/.test(name)) {
-    return 'agents'
-  }
-  const mcp = mcpToolIdentity(call.name, call.mcpIdentity)
-  if (mcp) {
-    if (/\bmemory\b/i.test(mcp.server)) {
-      return 'memory'
-    }
-    if (/\b(?:browser|playwright|puppeteer)\b/i.test(mcp.server)) {
-      return 'browser'
-    }
-    return 'network'
-  }
-  switch (nativeChatToolCategory(call.name, call.mcpIdentity, call.input)) {
-    case 'read':
-    case 'search':
-    case 'listFiles':
-    case 'fileChange':
-      return 'files'
-    case 'unknown':
-      return 'shell'
-    case 'browser':
-      return 'browser'
-    case 'webSearch':
-      return 'network'
-    case 'subAgentActivity':
-      return 'agents'
-    case 'mcpToolCall':
-      return 'network'
-    case 'todoList':
-    case 'other':
-    case null:
-      return 'tools'
-  }
-}
-
-function toolLabel(call: ActivityMapTool, station: ActivityMapStation): string {
-  const path = toolFilePath(call.input)
-  if (path && (station === 'files' || station === 'memory' || station === 'skills')) {
-    return shortPath(path)
-  }
-  const mcp = mcpToolIdentity(call.name, call.mcpIdentity)
-  if (mcp) {
-    return shortLabel(`${mcp.server} / ${mcp.tool}`)
-  }
-  // Codex's classified shell rows sometimes name the entire command; keep only the tool word.
-  const name = shortLabel(call.name).split(/\s/)[0] || 'Tool'
-  const input = normalizeToolInput(call.input)
-  if (station === 'network' && input && typeof input === 'object' && 'url' in input) {
-    try {
-      const url = new URL(String(input.url))
-      if (url.protocol === 'http:' || url.protocol === 'https:') {
-        return shortLabel(url.hostname)
-      }
-    } catch {
-      return name
-    }
-  }
-  return name
-}
-
-export function activityMapToolDetails(call: ActivityMapTool) {
-  const station = toolStation(call)
-  return { station, label: toolLabel(call, station) }
-}
-
-function projectItem(item: AgentJournalRenderItem): ActivityMapEvent | null {
+function projectItem(
+  item: AgentJournalRenderItem,
+  options?: ActivityMapClassificationOptions
+): ActivityMapEvent | null {
   const body = item.body
+  const fact = activityMapJournalFact(item)
+  if (fact) {
+    return fact
+  }
   const event: ActivityMapEvent = {
     id: item.itemId,
-    station: 'tools',
+    station: 'you',
     origin: !isRootAgentJournalItem(item) && item.producerKind !== 'background' ? 'agents' : 'core',
     state: 'observed',
     label: '',
@@ -141,7 +74,9 @@ function projectItem(item: AgentJournalRenderItem): ActivityMapEvent | null {
   if (body.kind === 'tool-call') {
     return {
       ...event,
-      ...activityMapToolDetails(body),
+      ...activityMapToolDetails(body, options),
+      ...(body.callId ? { callId: body.callId } : {}),
+      ...(item.agentId ? { agentId: item.agentId } : {}),
       state:
         body.endedAs === 'unverifiable'
           ? 'unknown'
@@ -149,8 +84,30 @@ function projectItem(item: AgentJournalRenderItem): ActivityMapEvent | null {
       ...(body.durationMs !== undefined ? { durationMs: body.durationMs } : {})
     }
   }
+  if (body.kind === 'turn' && isRootAgentJournalItem(item) && body.state !== 'running') {
+    const successful = body.state === 'completed' && body.outcome === 'success'
+    return {
+      ...event,
+      station: 'you',
+      state: successful
+        ? 'completed'
+        : body.state === 'interrupted' || body.outcome === 'cancellation'
+          ? 'interrupted'
+          : body.outcome === 'failure'
+            ? 'failed'
+            : 'unknown',
+      label: successful
+        ? 'Answer ready'
+        : body.outcome === 'failure'
+          ? 'Turn failed'
+          : 'Turn ended',
+      startedAt: body.completedAt ?? item.observedAt,
+      ...(body.durationMs !== undefined ? { durationMs: body.durationMs } : {}),
+      ...(successful ? { mark: 'done' } : {})
+    }
+  }
   if (body.kind === 'diff') {
-    return { ...event, station: 'files', label: shortPath(body.path) }
+    return { ...event, station: 'files', label: clean(lastTwo(body.path)) }
   }
   if (body.kind === 'approval' || body.kind === 'question') {
     return {
@@ -172,20 +129,41 @@ function projectItem(item: AgentJournalRenderItem): ActivityMapEvent | null {
     return null
   }
   if (body.role === 'reasoning') {
-    return { ...event, station: 'model', label: 'Reasoning', state: body.state ?? 'observed' }
+    return null
   }
   if (body.role === 'user') {
-    return { ...event, station: body.from ? 'agents' : 'you', label: 'Message' }
+    const text = body.blocks
+      .flatMap((block) => (block.type === 'text' ? [block.text] : []))
+      .join('')
+      .trim()
+    if (!body.from && isKnownHarnessInjectedUserTurnText(text)) {
+      return null
+    }
+    return {
+      ...event,
+      station: body.from ? 'agents' : 'you',
+      label: 'Message',
+      ...(!body.from && event.origin === 'core' ? { mark: 'prompt' as const } : {})
+    }
   }
   return null
 }
 
 /** Project the loaded journal, including revised calls, without retaining arguments or output. */
 export function projectAgentActivityMap(
-  items: readonly AgentJournalRenderItem[]
+  items: readonly AgentJournalRenderItem[],
+  options?: ActivityMapClassificationOptions
 ): ActivityMapEvent[] {
   return [...items].sort(compareAgentJournalItems).flatMap((item) => {
-    const event = projectItem(item)
-    return event ? [event] : []
+    const event = projectItem(item, options)
+    const children =
+      item.body.kind === 'message'
+        ? activityMapChildBlocks(item.body.blocks, {
+            id: item.itemId,
+            origin: isRootAgentJournalItem(item) ? 'core' : 'agents',
+            startedAt: item.observedAt
+          })
+        : []
+    return [...(event ? [event] : []), ...children]
   })
 }

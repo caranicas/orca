@@ -87,6 +87,7 @@ export function useStructuredAgentSession(args: StructuredAgentSessionViewArgs) 
   const legacyLaunchStop = useStructuredLegacyLaunchStop(sessionId)
   const transportState = useStructuredAgentSessionTransportState(state, transportEnabled)
   const journalItems = transportState.journalItems
+  const contextClear = useNativeChatContextClearFloor(state.epoch, journalItems)
   const {
     conversationCommands,
     compactInstructions,
@@ -109,6 +110,7 @@ export function useStructuredAgentSession(args: StructuredAgentSessionViewArgs) 
     transportEnabled,
     isVisible: args.isVisible,
     providerVisible,
+    contextBoundary: contextClear.clears,
     providerStarting,
     ...(args.providerRunning ? { providerRunning: true } : {}),
     ...(args.hostOptionStamp ? { hostOptionStamp: args.hostOptionStamp } : {}),
@@ -198,11 +200,7 @@ export function useStructuredAgentSession(args: StructuredAgentSessionViewArgs) 
     mutate,
     send
   })
-  const transcriptPending = useMemo(
-    () => pendingSendsOutsideQueuedCards(pending, queuedMessageIds, isWorking),
-    [isWorking, pending, queuedMessageIds]
-  )
-  const contextClear = useNativeChatContextClearFloor(state.epoch, journalItems)
+  const transcriptPending = pendingSendsOutsideQueuedCards(pending, queuedMessageIds, isWorking)
   // Project since the latest /clear and add a notice only for cut turns without an explaining row.
   const transcriptItems = useMemo(
     () => withNativeChatCutTurnNotices(contextClear.rows, { agentName }),

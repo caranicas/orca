@@ -1,10 +1,9 @@
 import { DESKTOP_READ_WINDOW } from '../native-chat/transcript-watching/transcript-watch-contract'
+import type { ActivityMapProviderOptions } from '../../shared/agent-session/activity/activity-map-provider-options'
+import type { NativeChatTranscriptFrame } from '../../shared/native-chat/native-chat-transcript-frames'
+import { agentHookServer } from '../agent-hooks/server/agent-hook-server'
 import { ipcMain, type IpcMainEvent, type WebContents } from 'electron'
 import type { AgentType } from '../../shared/agent-status/contracts/agent-status-types'
-import type {
-  NativeChatMessage,
-  NativeChatTurnLifecycle
-} from '../../shared/native-chat/native-chat-types'
 import { clearNativeChatTranscriptCache } from '../native-chat/transcript-read-cache'
 import type { ReadTranscriptResult } from '../native-chat/transcript-reader'
 import { subscribeNativeChatTranscript } from '../native-chat/transcript-watch'
@@ -20,6 +19,8 @@ import { openNativeChatTranscript } from '../native-chat/transcript-discovery/na
 export { clearNativeChatTranscriptCache }
 
 export type NativeChatReadSessionArgs = {
+  activityMapOptions?: ActivityMapProviderOptions
+  activityMap?: boolean
   agent: AgentType
   sessionId: string
   /** Recent-turn window; increase it to page backward. */
@@ -43,11 +44,16 @@ async function readSession(args: NativeChatReadSessionArgs): Promise<ReadTranscr
     sessionId,
     transcriptPath,
     limit,
+    activityMap: args.activityMap,
+    activityMapOptions: args.activityMapOptions,
     sourceOrder: true
   })
 }
 
 export type NativeChatSubscribeArgs = {
+  paneKey?: string
+  activityMapOptions?: ActivityMapProviderOptions
+  activityMap?: boolean
   /** Renderer ID unique within WebContents, echoed on updates to route each viewer. */
   subscriptionId: string
   agent: AgentType
@@ -62,26 +68,8 @@ export type NativeChatSubscribeArgs = {
 export type NativeChatAppendedPayload = {
   subscriptionId: string
   frame:
-    | {
-        type: 'snapshot'
-        messages: NativeChatMessage[]
-        hasMore: boolean
-        error?: string
-        lifecycle?: NativeChatTurnLifecycle
-        /** The current window has no transcript yet; do not treat it as settled history. */
-        pending?: boolean
-      }
-    | {
-        type: 'replacement'
-        messages: NativeChatMessage[]
-        hasMore: boolean
-        lifecycle?: NativeChatTurnLifecycle
-      }
-    | {
-        type: 'appended'
-        messages: NativeChatMessage[]
-        lifecycle?: NativeChatTurnLifecycle
-      }
+    | Exclude<NativeChatTranscriptFrame, { type: 'replacement' | 'end' }>
+    | Omit<Extract<NativeChatTranscriptFrame, { type: 'replacement' }>, 'beforeOffset'>
 }
 
 type LiveSubscription = {
@@ -196,7 +184,13 @@ async function handleSubscribe(event: IpcMainEvent, args: NativeChatSubscribeArg
     agent,
     sessionId,
     transcriptPath: opened.transcriptPath,
+    paneKey: args.paneKey,
+    subscribeActivity: args.activityMap
+      ? (listener) => agentHookServer.subscribeEnrichedStatus(listener)
+      : undefined,
     initialLimit: limit,
+    activityMap: args.activityMap,
+    activityMapOptions: args.activityMapOptions,
     sourceOrder: true,
     onTranscriptPending: () => {
       if (!canPublish()) {
@@ -209,7 +203,7 @@ async function handleSubscribe(event: IpcMainEvent, args: NativeChatSubscribeArg
       }
       sender.send('nativeChat:appended', payload)
     },
-    onInitialSnapshot: (messages, hasMore, _beforeOffset, error, lifecycle) => {
+    onInitialSnapshot: (messages, hasMore, _beforeOffset, error, lifecycle, activityMap) => {
       if (!canPublish()) {
         return
       }
@@ -221,12 +215,13 @@ async function handleSubscribe(event: IpcMainEvent, args: NativeChatSubscribeArg
           messages,
           hasMore,
           ...(error ? { error } : {}),
-          ...(lifecycle ? { lifecycle } : {})
+          ...(lifecycle ? { lifecycle } : {}),
+          ...(activityMap ? { activityMap } : {})
         }
       }
       sender.send('nativeChat:appended', payload)
     },
-    onReplace: (messages, hasMore, _beforeOffset, lifecycle) => {
+    onReplace: (messages, hasMore, _beforeOffset, lifecycle, activityMap) => {
       if (!canPublish()) {
         return
       }
@@ -236,11 +231,12 @@ async function handleSubscribe(event: IpcMainEvent, args: NativeChatSubscribeArg
           type: 'replacement',
           messages,
           hasMore,
-          ...(lifecycle ? { lifecycle } : {})
+          ...(lifecycle ? { lifecycle } : {}),
+          ...(activityMap ? { activityMap } : {})
         }
       } satisfies NativeChatAppendedPayload)
     },
-    onAppend: (messages, lifecycle) => {
+    onAppend: (messages, lifecycle, activityMap) => {
       if (!canPublish()) {
         return
       }
@@ -249,7 +245,8 @@ async function handleSubscribe(event: IpcMainEvent, args: NativeChatSubscribeArg
         frame: {
           type: 'appended',
           messages,
-          ...(lifecycle ? { lifecycle } : {})
+          ...(lifecycle ? { lifecycle } : {}),
+          ...(activityMap ? { activityMap } : {})
         }
       }
       sender.send('nativeChat:appended', payload)

@@ -10,6 +10,7 @@ import { parseJsonObject } from '../../ai-vault/parsing/session-json-object'
 import { timestampMs } from '../../ai-vault/parsing/session-record-time'
 import { claudeContentBlocks, toolResultOutput } from './transcript-record-blocks'
 import { CODEX_EVENT_TURN_ABORTED } from './transcript-turn-markers'
+import { codexToolResultFacts } from '../../shared/native-chat/tools/codex-tool-result-facts'
 
 /** Paginated completed items own visible messages; response tools retain their legacy format. */
 export function isCodexVisibleHistoryRecord(
@@ -270,11 +271,15 @@ function codexCallInput(payload: Record<string, unknown>): unknown {
 
 function codexToolResult(output: unknown, callId: string | null): NativeChatBlock {
   const record = asRecord(output)
-  const isError = record?.success === false || record?.is_error === true
+  const { isError, isInterrupted, durationMs } = codexToolResultFacts(
+    typeof output === 'string' ? (parseJsonObject(output) ?? output) : output
+  )
   return {
     type: 'tool-result',
     output: toolResultOutput(record?.content ?? record?.output ?? output),
     ...(callId ? { callId } : {}),
+    ...(durationMs !== undefined ? { durationMs } : {}),
+    ...(isInterrupted ? { isInterrupted: true } : {}),
     ...(isError ? { isError: true } : {})
   }
 }

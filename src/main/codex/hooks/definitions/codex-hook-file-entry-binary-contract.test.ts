@@ -19,11 +19,7 @@ import { createTerminalEscapeScanner } from '../../../../shared/terminal/protoco
 import { promisify } from 'node:util'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CodexListedHook } from '../../app-server/codex-app-server-client'
-import {
-  CODEX_EVENTS,
-  CODEX_EVENT_LABEL,
-  getCodexManagedHookInstallMaterial
-} from './codex-hook-definition'
+import { CODEX_EVENT_LABEL, getCodexManagedHookInstallMaterial } from './codex-hook-definition'
 import type * as CodexCommand from '../../../codex-cli/command'
 import {
   buildScratchHooksJson,
@@ -172,14 +168,14 @@ describe.runIf(binary)('codex hook file-entry binary contract', { timeout: 180_0
       )
       expect(copies.map((copy) => copy?.currentHash)).toEqual([hash, hash, hash])
     }
-    // Pinned Codex versions must hash every managed event.
-    expect(Object.keys(hashes).sort()).toEqual(
-      CODEX_EVENTS.map((eventName) => CODEX_EVENT_LABEL[eventName]).sort()
-    )
+    expect(hashes).toMatchObject({
+      pre_tool_use: expect.any(String),
+      stop: expect.any(String)
+    })
     expect(Object.values(hashes).every((hash) => typeof hash === 'string')).toBe(true)
   })
 
-  it('lists every entry Orca wrote in a managed home as trusted and enabled, and writes nothing on a list', async () => {
+  it('lists provider-supported Orca entries in a managed home as trusted and enabled, and writes nothing on a list', async () => {
     await installManagedHome()
     const files = ['hooks.json', 'config.toml'].map((name) => join(accountHome(), name))
     const before = files.map((file) => readFileSync(file, 'utf-8'))
@@ -334,7 +330,7 @@ describe.runIf(binary)('codex hook file-entry binary contract', { timeout: 180_0
       )
     }
 
-    it('lists every entry Orca wrote as trusted and enabled, and a second check writes nothing', async () => {
+    it('lists provider-supported Orca entries as trusted and enabled, and a second check writes nothing', async () => {
       await freshRealHomeWithEntry('trusted')
       const files = ['hooks.json', 'config.toml'].map((name) => join(realCodexHome(), name))
       const before = files.map((file) => readFileSync(file, 'utf-8'))

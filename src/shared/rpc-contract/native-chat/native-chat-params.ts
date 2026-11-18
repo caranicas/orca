@@ -1,9 +1,12 @@
+import { ActivityMapProviderOptionsParam } from './activity-map-params'
 import { z } from 'zod'
 import type { AgentType } from '../../agent-status/contracts/agent-status-types'
 
 // Expose the same transcript readers over RPC for paired mobile/web native chat.
 
 export const NativeChatSession = z.object({
+  activityMapOptions: ActivityMapProviderOptionsParam,
+  paneKey: z.string().min(1).optional(),
   agent: z
     .unknown()
     .transform((v) => (typeof v === 'string' ? v : ''))
@@ -28,7 +31,8 @@ export const NativeChatSession = z.object({
   capabilities: z
     .object({
       transcriptPending: z.literal(1).optional(),
-      transcriptSourceOrder: z.literal(1).optional()
+      transcriptSourceOrder: z.literal(1).optional(),
+      activityMap: z.literal(1).optional()
     })
     .optional(),
   beforeOffset: z.number().int().nonnegative().optional(),

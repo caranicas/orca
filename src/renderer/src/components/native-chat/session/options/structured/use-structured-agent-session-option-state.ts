@@ -88,7 +88,7 @@ export function useStructuredAgentSessionOptionState(args: {
     () => [agent, sessionId, hostKey, identity, controller],
     [agent, sessionId, hostKey, identity, controller]
   )
-  const acceptedSupport = recomputeOn([readerSnapshot], () => reader.supportFor(owner))
+  const acceptedSupport = recomputeOn([readerSnapshot, owner], () => reader.supportFor(owner))
   // Projected once per accepted answer so consumers keep stable references between answers.
   const conversationSupport = useMemo(
     () =>
@@ -101,6 +101,8 @@ export function useStructuredAgentSessionOptionState(args: {
             threadGoal: acceptedSupport.result.threadGoal,
             reportedThreadGoal: acceptedSupport.result.reportedThreadGoal,
             contextUsage: acceptedSupport.result.contextUsage,
+            transcriptPath: acceptedSupport.result.transcriptPath,
+            transcriptSessionId: acceptedSupport.result.transcriptSessionId,
             acceptsImages: acceptedSupport.result.acceptsImages,
             canSwitchAccount: acceptedSupport.result.canSwitchAccount === true,
             rewind: acceptedSupport.result.rewind ?? {
@@ -248,6 +250,8 @@ export function useStructuredAgentSessionOptionState(args: {
     takesSendOptions,
     conversationSupport: support,
     sessionSupport: {
+      transcriptPath: support?.fence === fence ? support.transcriptPath : undefined,
+      transcriptSessionId: support?.fence === fence ? support.transcriptSessionId : undefined,
       acceptsImages: support?.acceptsImages,
       canSwitchAccount: support?.canSwitchAccount
     },

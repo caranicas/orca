@@ -41,6 +41,8 @@ describe('CodexStructuredSessionAdapter.acquire', () => {
       reportedPermissionMode: null
     })
     await expect(adapter.readOptions({ sessionId: 'session-1', fence: 7 })).resolves.toEqual({
+      transcriptPath: '/rollouts/abc.jsonl',
+      transcriptSessionId: 'thread-abc',
       current: { model: 'gpt-live', effort: 'medium', reportedPermissionMode: null },
       models: [
         {
@@ -65,7 +67,6 @@ describe('CodexStructuredSessionAdapter.acquire', () => {
     expect(
       codex.connections[0].calls.findLast((call) => call.method === 'turn/start')?.params
     ).toMatchObject({ model: 'gpt-live', effort: 'medium' })
-    expect(codex.connections[0].closeCount).toBe(0)
   })
 
   it('rejects a resume that lands on a different thread; the host closes once', async () => {

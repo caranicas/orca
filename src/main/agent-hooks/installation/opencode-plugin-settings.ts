@@ -1,6 +1,7 @@
 import type { PluginSources } from '../../../wsl-guest/plugins/installation/plugin-sources'
 import { isAgentStatusHooksEnabledForAgent } from '../../../shared/agent-hook-listener/configuration/agent-status-hooks-setting'
 import type { ManagedHookDetectionSettings } from './managed-hook-detection-commands'
+import { CLAUDE_ACTIVITY_ONLY_MOD_SOURCE } from '../../claude/agent-view/agent-view-plugin'
 
 function enabled(settings: ManagedHookDetectionSettings, agent: 'opencode' | 'opencode2'): boolean {
   return isAgentStatusHooksEnabledForAgent(settings, agent)
@@ -18,9 +19,10 @@ export function selectOpenCodePluginSources(
   return {
     ...sources,
     claudeAgentViewSource:
-      isAgentStatusHooksEnabledForAgent(settings, 'claude') &&
-      settings?.claudeSubagentNavigationEnabled !== false
-        ? sources.claudeAgentViewSource
+      isAgentStatusHooksEnabledForAgent(settings, 'claude') && sources.claudeAgentViewSource
+        ? settings?.claudeSubagentNavigationEnabled !== false
+          ? sources.claudeAgentViewSource
+          : CLAUDE_ACTIVITY_ONLY_MOD_SOURCE
         : '',
     opencodePluginSource: enabled(settings, 'opencode') ? sources.opencodePluginSource : '',
     opencode2PluginSource: enabled(settings, 'opencode2') ? sources.opencode2PluginSource : ''

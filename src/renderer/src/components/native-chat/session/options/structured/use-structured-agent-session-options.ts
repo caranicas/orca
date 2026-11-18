@@ -47,7 +47,7 @@ export function useStructuredAgentSessionOptions(args: StructuredAgentSessionOpt
   } = useStructuredAgentSessionOptionState({
     ...args,
     optionCatalog,
-    identity: `${agent}:${sessionId}`,
+    identity: `${agent}:${sessionId}:${args.contextBoundary ?? 0}`,
     fence,
     sessionId,
     target,

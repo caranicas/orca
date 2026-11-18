@@ -1,4 +1,5 @@
 import { readHookAgentProcess } from '../../agent-status/process/agent-process-presence'
+import { activityMapPaneHookEvent } from '../../agent-session/activity/activity-map-hook-event'
 import { isInheritedHookStatus } from '../presence/agent-hook-presence-transition'
 import { readHookProcessAdmission } from '../presence/agent-hook-owner-presence'
 import { normalizeAgentStatusPayload } from '../../agent-status/contracts/agent-status-types'
@@ -309,6 +310,7 @@ export function normalizeHookPayload(
     ...(providerSessionOnly ? { providerSessionOnly: true } : {}),
     ...dispatched.hostTurnSignals,
     ...(dispatched.replyCandidate ? { replyCandidate: dispatched.replyCandidate } : {}),
+    activityMapEvent: activityMapPaneHookEvent(eventName, providerHookPayload, paneKey),
     payload: transportPayload
   }
 }

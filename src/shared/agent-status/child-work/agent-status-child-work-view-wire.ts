@@ -91,6 +91,9 @@ function decodeView(value: unknown): AgentChildWorkView | null {
   const lastMessage = text(view.lastMessage)
   const parentChildWorkId = text(view.parentChildWorkId)
   const totalTokens = clock(view.totalTokens)
+  const timing = record(view.providerTiming)
+  const startedAt = clock(timing?.startedAt)
+  const completedAt = clock(timing?.completedAt)
   return {
     id,
     ...(providerId ? { providerId } : {}),
@@ -110,6 +113,14 @@ function decodeView(value: unknown): AgentChildWorkView | null {
     observedAt,
     ...(settledAt !== undefined ? { settledAt } : {}),
     ...(totalTokens !== undefined ? { totalTokens } : {}),
+    ...(startedAt !== undefined || completedAt !== undefined
+      ? {
+          providerTiming: {
+            ...(startedAt !== undefined ? { startedAt } : {}),
+            ...(completedAt !== undefined ? { completedAt } : {})
+          }
+        }
+      : {}),
     // Withholding a stop is a degrade; offering one the host cannot honour is not.
     stoppable: view.stoppable === true,
     invocation: { invocationId, generation }
