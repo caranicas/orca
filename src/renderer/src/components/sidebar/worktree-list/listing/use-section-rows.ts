@@ -8,6 +8,8 @@ import { useWorkspaceOrganization } from '@/store/workspace-organization'
 import { useUiLanguageRevision } from '@/i18n/use-ui-language-revision'
 import { selectSidebarLineageParentIdentities } from '@/store/slices/worktrees/metadata/cross-store-lineage-parents'
 import type { AppState } from '@/store/types'
+import type { RuntimeStatuses } from '@/store/slices/runtime-status/views/runtime-status-owner'
+import { useAppStoreWithHostStatuses } from '@/store/slices/runtime-status/views/use-runtime-status-view'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
 import {
   getLocalExecutionHostLabel,
@@ -51,6 +53,7 @@ function createSidebarHostOptionsSelector() {
   let result: SidebarHostOption[] = []
   return (
     state: AppState,
+    statuses: RuntimeStatuses,
     repos: readonly Repo[],
     settings: AppState['settings'],
     hostLabelOverrides: Parameters<typeof buildSidebarHostOptions>[0]['hostLabelOverrides']
@@ -60,7 +63,7 @@ function createSidebarHostOptionsSelector() {
       state.sshTargetLabels,
       state.sshConnectionStates,
       settings,
-      state.runtimeStatusByEnvironmentId,
+      statuses,
       state.runtimeEnvironments,
       hostLabelOverrides,
       state.wslHostStatuses,
@@ -78,7 +81,7 @@ function createSidebarHostOptionsSelector() {
       sshConnectionStates: state.sshConnectionStates,
       settings,
       runtimeEnvironments: state.runtimeEnvironments,
-      runtimeStatusByEnvironmentId: state.runtimeStatusByEnvironmentId,
+      runtimeStatusByEnvironmentId: statuses,
       hostLabelOverrides,
       wslHostStatuses: state.wslHostStatuses,
       wslHostsEnabled: selectWslHostsServing(state),
@@ -95,7 +98,7 @@ function createSidebarHostOptionsSelector() {
 export function useSidebarSectionRows(args: SectionRowsArgs) {
   const pinnedWorkspaceGrouping = useWorkspaceOrganization((state) => state.grouping)
   const { repos, worktrees, repoMap, defaultHostId } = args
-  const lineageParentIdentities = useAppStore(selectSidebarLineageParentIdentities)
+  const lineageParentIdentities = useAppStoreWithHostStatuses(selectSidebarLineageParentIdentities)
   const workspaceHostOrder = useAppStore((s) => s.workspaceHostOrder)
   const setWorkspaceHostOrder = useAppStore((s) => s.setWorkspaceHostOrder)
 
@@ -129,8 +132,8 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
   const selectHostOptions = useMemo(() => createSidebarHostOptionsSelector(), [])
   const selectHostLabels = useMemo(() => createSidebarHostLabelsSelector(), [])
   useUiLanguageRevision()
-  const hostOptions = useAppStore((state) =>
-    selectHostOptions(state, repos, args.settings, hostLabelOverrides)
+  const hostOptions = useAppStoreWithHostStatuses((state, statuses) =>
+    selectHostOptions(state, statuses, repos, args.settings, hostLabelOverrides)
   )
   const hostLabelById = selectHostLabels(hostOptions)
 

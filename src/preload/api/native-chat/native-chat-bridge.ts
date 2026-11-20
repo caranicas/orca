@@ -2,6 +2,7 @@ import type { ActivityMapProviderOptions } from '../../../shared/agent-session/a
 import { ipcRenderer } from 'electron'
 import type {
   NativeChatAppendedPayload,
+  NativeChatReadSessionOptions,
   NativeChatReadSessionResult,
   NativeChatSubscriptionFrame
 } from './native-chat-api'
@@ -22,11 +23,7 @@ export const nativeChatApi = {
     sessionId: string,
     limit?: number,
     transcriptPath?: string,
-    options?: {
-      wakeWslDistro?: boolean
-      activityMapOptions?: ActivityMapProviderOptions
-      activityMap?: boolean
-    }
+    options?: NativeChatReadSessionOptions
   ): Promise<NativeChatReadSessionResult> =>
     ipcRenderer.invoke('nativeChat:readSession', {
       agent,
@@ -34,8 +31,7 @@ export const nativeChatApi = {
       limit,
       transcriptPath,
       wakeWslDistro: options?.wakeWslDistro,
-      activityMapOptions: options?.activityMapOptions,
-      activityMap: options?.activityMap
+      beforeOffset: options?.beforeOffset
     }),
   subscribe: (
     args: {

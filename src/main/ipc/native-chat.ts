@@ -4,7 +4,6 @@ import type { NativeChatTranscriptFrame } from '../../shared/native-chat/transcr
 import { agentHookServer } from '../agent-hooks/server/agent-hook-server'
 import { ipcMain, type IpcMainEvent, type WebContents } from 'electron'
 import type { AgentType } from '../../shared/agent-status/contracts/agent-status-types'
-import type { ReadTranscriptResult } from '../native-chat/transcript-reader'
 import { subscribeNativeChatTranscript } from '../native-chat/transcript-watch'
 import { readNativeChatTranscriptTail } from '../native-chat/transcript-tail-reader'
 import type {
@@ -26,11 +25,14 @@ export type NativeChatReadSessionArgs = {
   transcriptPath?: string
   /** The user opened or paged this chat: may start its stopped WSL distro (E9). Absent never does. */
   wakeWslDistro?: boolean
+  /** Provider row cursor for an older page; absent reads the newest window. */
+  beforeOffset?: number
 }
 
-// Bound parsing and rendering to the recent window; pagination raises the limit.
+const isTranscriptCursor = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
 
-async function readSession(args: NativeChatReadSessionArgs): Promise<ReadTranscriptResult> {
+async function readSession(args: NativeChatReadSessionArgs) {
   const { agent, sessionId } = args
   const limit = args.limit && args.limit > 0 ? Math.floor(args.limit) : DESKTOP_READ_WINDOW
   const wake = args.wakeWslDistro === true
@@ -43,6 +45,7 @@ async function readSession(args: NativeChatReadSessionArgs): Promise<ReadTranscr
     limit,
     activityMap: args.activityMap,
     activityMapOptions: args.activityMapOptions,
+    beforeOffset: isTranscriptCursor(args.beforeOffset) ? args.beforeOffset : undefined,
     sourceOrder: true
   })
 }

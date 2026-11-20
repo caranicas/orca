@@ -1,11 +1,7 @@
 import { normalizeHostTurnRevision } from '../../../shared/agent-hook-listener/transport/agent-hook-interrupt-reconciliation'
 import { readAgentProcessPresence } from '../../../shared/agent-status/process/agent-process-presence'
 import { trackEmptyPaneKeyHook } from './server-transport-rules'
-import {
-  isTurnEndDisposition,
-  normalizeAgentStatusPayload
-} from '../../../shared/agent-status/contracts/agent-status-types'
-import { isTurnEndedAt } from '../../../shared/agent-hook-listener/state/agent-hook-turn-end-timing'
+import { normalizeAgentStatusPayload } from '../../../shared/agent-status/contracts/agent-status-types'
 import { restoreShedStatusFields } from '../../../shared/agent-hook-listener/transport/agent-hook-relay'
 import * as HookLimits from '../../../shared/agent-hook-listener/listener-limits'
 import {
@@ -107,6 +103,8 @@ export abstract class AgentHookServerIngestRemote extends AgentHookServerIngestS
       source,
       providerPromptId,
       grokPromptBoundary,
+      opensTurn,
+      hostTurnEnd,
       compactTrigger,
       worktreeId,
       promptInteractionKey,
@@ -170,6 +168,7 @@ export abstract class AgentHookServerIngestRemote extends AgentHookServerIngestS
       hookEventName,
       isReplay: envelope.isReplay === true,
       hasExplicitPrompt: envelope.hasExplicitPrompt === true,
+      opensTurn,
       launchToken: envelope.launchToken,
       retainedLaunchTokenHash: envelope.launchToken?.trim()
         ? undefined
@@ -269,6 +268,7 @@ export abstract class AgentHookServerIngestRemote extends AgentHookServerIngestS
       providerPromptId,
       activityMapEvent,
       grokPromptBoundary,
+      opensTurn,
       compactTrigger,
       toolUseId,
       ...(claudeSettledRequests ? { claudeSettledRequests } : {}),
@@ -278,10 +278,7 @@ export abstract class AgentHookServerIngestRemote extends AgentHookServerIngestS
       providerSession,
       providerSessionOnly: envelope.providerSessionOnly === true ? true : undefined,
       isReplay: envelope.isReplay === true ? true : undefined,
-      ...(isTurnEndedAt(envelope.turnEndedAt) ? { turnEndedAt: envelope.turnEndedAt } : {}),
-      ...(isTurnEndDisposition(envelope.turnEndDisposition)
-        ? { turnEndDisposition: envelope.turnEndDisposition }
-        : {}),
+      ...hostTurnEnd,
       claudeRunningNonAgentTask:
         typeof envelope.claudeRunningNonAgentTask === 'boolean'
           ? envelope.claudeRunningNonAgentTask
