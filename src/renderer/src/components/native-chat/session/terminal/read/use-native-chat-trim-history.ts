@@ -3,7 +3,7 @@ import {
   boundNativeChatWindow,
   replaceList,
   type createNativeChatMerger
-} from '../../../../../../../shared/native-chat/native-chat-merge'
+} from '../../../../../../../shared/native-chat/transcript/streaming/native-chat-merge'
 import type { NativeChatMessage } from '../../../../../../../shared/native-chat/native-chat-types'
 import { NATIVE_CHAT_INITIAL_LIMIT } from '../../../viewport/history/native-chat-pagination'
 import type { ReadState } from './native-chat-live-session-contract'

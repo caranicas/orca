@@ -8,20 +8,20 @@ import { mergeTerminalActivity } from '../../shared/agent-session/activity/merge
 import {
   readIncrementalTranscriptMessages,
   type IncrementalTranscriptState
-} from './transcript-incremental-reader'
+} from './transcript-watching/transcript-incremental-reader'
 import type { NativeChatTurnLifecycle } from '../../shared/native-chat/native-chat-types'
 import {
   readNativeChatTranscriptTailFile,
   type NativeChatLineDecoder
 } from './transcript-tail-reader'
-import { nativeChatTurnLifecycleDecoderForAgent } from './transcript-turn-lifecycle'
+import { nativeChatTurnLifecycleDecoderForAgent } from './transcript-decoding/transcript-turn-lifecycle'
 import { createTranscriptActivityReader } from './transcript-activity-reader'
 import { createTranscriptHookActivity } from './transcript-hook-activity'
 import {
   subscribeClaudeStatuslineContext,
   type ClaudeStatuslineContext
 } from '../claude/statusline-context'
-import type { SubscribeNativeChatTranscriptArgs } from './transcript-watch-contract'
+import type { SubscribeNativeChatTranscriptArgs } from './transcript-watching/transcript-watch-contract'
 
 export function createTranscriptActivityMonitor(
   args: SubscribeNativeChatTranscriptArgs,
@@ -120,6 +120,7 @@ export async function readTranscriptActivitySnapshot(input: {
     signal,
     onBoundary,
     args.sourceOrder,
+    undefined,
     args.activityMap
       ? (activity?.reader() ??
           createTranscriptActivityReader(args.agent, undefined, args.activityMapOptions))

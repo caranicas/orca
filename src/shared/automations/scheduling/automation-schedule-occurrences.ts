@@ -1,46 +1,43 @@
 import type { AutomationSchedulePreset } from '../automation-definition'
 import { parseSchedule, type ParsedRrule } from './automation-schedule-parsing'
-import {
-  addLocalDays,
-  cronMatches,
-  floorToMinute,
-  startOfLocalDay
-} from './automation-cron-occurrence'
+import { cronMatches, floorToMinute } from './automation-cron-occurrence'
+import { automationScheduleCalendar, type ScheduleCalendar } from './automation-schedule-calendar'
 
 const MINUTE_MS = 60 * 1000
 // Why: valid cron expressions like Feb 29 can have an 8-year gap across non-leap centuries.
 const CRON_SCAN_DAYS = 9 * 366
 const CRON_SCAN_MINUTES = CRON_SCAN_DAYS * 24 * 60
 const DAY_CODES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'] as const
-function atLocalTime(dayMs: number, hour: number, minute: number): number {
-  const date = new Date(dayMs)
-  date.setHours(hour, minute, 0, 0)
-  return date.getTime()
+
+function calendarDay(calendar: ScheduleCalendar, timestamp: number): number {
+  const { year, month, day } = calendar.fields(timestamp)
+  return Date.UTC(year, month - 1, day) / (24 * 60 * 60 * 1000)
 }
 
-function calendarDay(timestamp: number): number {
-  const date = new Date(timestamp)
-  return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / (24 * 60 * 60 * 1000)
-}
-
-function dayMatches(rule: ParsedRrule, timestamp: number, dtstart: number): boolean {
+function dayMatches(
+  rule: ParsedRrule,
+  calendar: ScheduleCalendar,
+  timestamp: number,
+  dtstart: number
+): boolean {
   if (rule.freq === 'DAILY') {
-    return (calendarDay(timestamp) - calendarDay(dtstart)) % rule.interval === 0
+    return (calendarDay(calendar, timestamp) - calendarDay(calendar, dtstart)) % rule.interval === 0
   }
-  const code = DAY_CODES[new Date(timestamp).getDay()]
+  const code = DAY_CODES[calendar.fields(timestamp).weekday]
   return rule.byDay.includes(code)
 }
 
 function scanDayCandidates(
   rule: ParsedRrule,
+  calendar: ScheduleCalendar,
   anchor: number,
   direction: 1 | -1,
   dtstart: number
 ): number | null {
-  let day = startOfLocalDay(anchor)
+  let day = calendar.startOfDay(anchor)
   for (let i = 0; i < 370; i += 1) {
-    const candidate = atLocalTime(day, rule.byHour, rule.byMinute)
-    if (dayMatches(rule, candidate, dtstart)) {
+    const candidate = calendar.atTime(day, rule.byHour, rule.byMinute)
+    if (dayMatches(rule, calendar, candidate, dtstart)) {
       if (direction === 1 && candidate > anchor) {
         return candidate
       }
@@ -48,13 +45,13 @@ function scanDayCandidates(
         return candidate
       }
     }
-    day = addLocalDays(day, direction)
+    day = calendar.addDays(day, direction)
   }
   return null
 }
 
-function hourlyMatches(rule: ParsedRrule, timestamp: number): boolean {
-  return new Date(timestamp).getMinutes() === rule.byMinute
+function hourlyMatches(rule: ParsedRrule, calendar: ScheduleCalendar, timestamp: number): boolean {
+  return calendar.fields(timestamp).minute === rule.byMinute
 }
 
 // Why: walk absolute minutes; recomposing local fields can't address the second pass of a fall-back hour.
@@ -133,19 +130,24 @@ export function buildAutomationCronSchedule(args: {
   return `${minute} ${hour} * * *`
 }
 
+/** `timezone` is the automation's; its hours and days are read on that wall clock. */
 export function nextAutomationOccurrenceAfter(
   rrule: string,
   dtstart: number,
-  after: number
+  after: number,
+  timezone?: string
 ): number {
   const rule = parseSchedule(rrule)
+  const calendar = automationScheduleCalendar(timezone)
   if (rule.kind === 'cron') {
-    return nextMatchingMinute(dtstart, after, (candidate) => cronMatches(rule, candidate))
+    return nextMatchingMinute(dtstart, after, (candidate) => cronMatches(rule, candidate, calendar))
   }
   if (rule.freq === 'HOURLY') {
-    return nextMatchingMinute(dtstart, after, (candidate) => hourlyMatches(rule, candidate))
+    return nextMatchingMinute(dtstart, after, (candidate) =>
+      hourlyMatches(rule, calendar, candidate)
+    )
   }
-  const candidate = scanDayCandidates(rule, Math.max(dtstart - 1, after), 1, dtstart)
+  const candidate = scanDayCandidates(rule, calendar, Math.max(dtstart - 1, after), 1, dtstart)
   if (candidate === null) {
     throw new Error('Unable to compute next automation run.')
   }
@@ -155,18 +157,22 @@ export function nextAutomationOccurrenceAfter(
 export function latestAutomationOccurrenceAtOrBefore(
   rrule: string,
   dtstart: number,
-  now: number
+  now: number,
+  timezone?: string
 ): number | null {
   if (now < dtstart) {
     return null
   }
   const rule = parseSchedule(rrule)
+  const calendar = automationScheduleCalendar(timezone)
   if (rule.kind === 'cron') {
-    return latestMatchingMinute(dtstart, now, (candidate) => cronMatches(rule, candidate))
+    return latestMatchingMinute(dtstart, now, (candidate) => cronMatches(rule, candidate, calendar))
   }
   if (rule.freq === 'HOURLY') {
-    return latestMatchingMinute(dtstart, now, (candidate) => hourlyMatches(rule, candidate))
+    return latestMatchingMinute(dtstart, now, (candidate) =>
+      hourlyMatches(rule, calendar, candidate)
+    )
   }
-  const candidate = scanDayCandidates(rule, now, -1, dtstart)
+  const candidate = scanDayCandidates(rule, calendar, now, -1, dtstart)
   return candidate !== null && candidate >= dtstart ? candidate : null
 }

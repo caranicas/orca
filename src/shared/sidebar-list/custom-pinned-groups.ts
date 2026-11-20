@@ -1,6 +1,6 @@
 import type { Worktree } from '../worktree/types'
 import { getWorktreeHostIdentity } from '../worktree/host-qualified-identity'
-import { PINNED_GROUP_KEY } from './group-keys'
+import { PINNED_GROUP_KEY } from './sections/group-keys'
 
 export type PinnedWorkspaceGroup = { id: string; name: string }
 export type PinnedWorkspaceGrouping = {

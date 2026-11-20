@@ -2,7 +2,7 @@ import {
   createTranscriptHookActivity,
   type TranscriptHookObservation
 } from './transcript-hook-activity'
-import { isLocalHookConnectionId } from '../../shared/wsl-hook-relay-contract'
+import { isLocalHookConnectionId } from '../../shared/agent-hook-listener/transport/wsl-hook-relay-contract'
 
 type Entry = {
   tracker: ReturnType<typeof createTranscriptHookActivity>
@@ -65,4 +65,12 @@ export function recordTranscriptActivityObservation(row: TranscriptHookObservati
 
 export function readTranscriptActivityObservations(paneKey: string | undefined, sessionId: string) {
   return sessions.get(JSON.stringify([paneKey, sessionId]))?.tracker.checkpoint()
+}
+
+export function safelyRecordTranscriptActivityObservation(row: TranscriptHookObservation): void {
+  try {
+    recordTranscriptActivityObservation(row)
+  } catch {
+    // Activity observers cannot interrupt status delivery.
+  }
 }

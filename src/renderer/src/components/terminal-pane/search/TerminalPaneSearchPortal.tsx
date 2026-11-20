@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import TerminalSearch from '@/components/TerminalSearch'
+import TerminalSearch from '@/components/terminal-pane/search/TerminalSearch'
 import type { TerminalPaneController } from '../controller/use-terminal-pane-controller'
 
 export function TerminalPaneSearchPortal({

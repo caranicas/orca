@@ -1,4 +1,5 @@
-import { asRecord, extractString } from '../ai-vault/session-scanner-values'
+import { asRecord } from '../ai-vault/parsing/session-record-fields'
+import { extractString } from '../../shared/text/trimmed-string'
 import type { ActivityMapEvent } from '../../shared/agent-session/activity/agent-activity-map'
 import { activityMapText } from '../../shared/agent-session/activity/activity-map-text'
 

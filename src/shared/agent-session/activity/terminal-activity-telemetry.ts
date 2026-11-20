@@ -1,6 +1,6 @@
 import type { ActivityMapStatistics } from './activity-map-statistics'
 import type { ActivityMapEvent } from './agent-activity-map'
-import type { StructuredAgentContextUsage } from '../structured-agent-session-context-usage'
+import type { StructuredAgentContextUsage } from '../conversation-context/structured-agent-session-context-usage'
 
 export type TerminalActivityTelemetry = {
   cwd?: string

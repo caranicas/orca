@@ -1,3 +1,4 @@
+import { acceptedAgentStatuses } from '@/store/slices/agent-status/status-ownership/accepted-agent-statuses'
 import { useEffect, useRef, useState } from 'react'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
@@ -136,18 +137,20 @@ function fixture(width: number) {
   return defineFixture({
     width,
     store: {
-      agentStatusByPaneKey: {
-        [PANE_KEY]: {
-          state: 'working',
-          prompt: '',
-          updatedAt: 1000,
-          stateStartedAt: 1000,
-          paneKey: PANE_KEY,
-          stateHistory: [],
-          agentType: 'codex',
-          providerSession: { key: 'session_id', id: 'terminal-map-fixture' }
-        }
-      }
+      agentStatusByPaneKey: acceptedAgentStatuses(
+        Object.entries({
+          [PANE_KEY]: {
+            state: 'working',
+            prompt: '',
+            updatedAt: 1000,
+            stateStartedAt: 1000,
+            paneKey: PANE_KEY,
+            stateHistory: [],
+            agentType: 'codex',
+            providerSession: { key: 'session_id', id: 'terminal-map-fixture' }
+          }
+        })
+      )
     },
     setup: () => {
       window.api.nativeChat.readSession = async () => ({ messages: MESSAGES })

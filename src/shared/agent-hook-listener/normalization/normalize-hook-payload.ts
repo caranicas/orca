@@ -1,6 +1,5 @@
-import { activityMapObserverOptions } from '../../agent-session/activity/activity-map-observer-options'
 import { readHookAgentProcess } from '../../agent-status/process/agent-process-presence'
-import { activityMapHookEvent } from '../../agent-session/activity/activity-map-hook-event'
+import { activityMapPaneHookEvent } from '../../agent-session/activity/activity-map-hook-event'
 import { isInheritedHookStatus } from '../presence/agent-hook-presence-transition'
 import { readHookProcessAdmission } from '../presence/agent-hook-owner-presence'
 import { normalizeAgentStatusPayload } from '../../agent-status/contracts/agent-status-types'
@@ -10,7 +9,7 @@ import {
   canAcceptClaudeCompactCompletion,
   isClaudeCompactCompletionConsumed,
   markClaudeCompactCompletionConsumed
-} from '../providers/claude-compact-completion'
+} from '../providers/claude/lifecycle/claude-compact-completion'
 import { isProcessExitSessionEnd, parseHookEnvelope } from '../hook-envelope'
 import { readFirstString } from '../interactive-tool'
 import type { AgentHookEventPayload } from '../listener-event'
@@ -19,18 +18,19 @@ import type { HookListenerState } from '../listener-state'
 import { extractPromptText } from '../prompt-fields'
 import { normalizeProviderEvent } from '../provider-dispatch'
 import { hasExplicitUserPrompt } from '../provider-event-routing'
-import { hasExplicitAmpPrompt } from '../providers/amp-events'
+import { hasExplicitAmpPrompt } from '../providers/amp/amp-events'
 import {
   isOpenCodeSharedServerPost,
   resolveOpenCodeSharedServerEnvelope,
   suppressOpenCodeSharedServerPost,
   trackOpenCodePaneLaunchToken
 } from '../opencode-session-registry'
-import { claudeRowHasUnlistedLiveWork } from '../providers/claude-pane-hold-evidence'
+import { claudeRowHasUnlistedLiveWork } from '../providers/claude/lifecycle/claude-pane-hold-evidence'
 import { readString } from '../tool-input-preview'
 import { readClaudeBatchSettledRequests } from '../claude-settled-permission-requests'
-import { withClaudeToolRequestId } from '../claude-tool-request-identity'
 import { hasSeparateHookSessionAdmission, readPaneSessionContext } from '../pane-provider-session'
+import { routeJcodeHelperHook } from '../providers/jcode/jcode-helper-permission-wait'
+import { orderClaudeHook } from '../providers/claude/lifecycle/claude-prompt-turn-order'
 /** Canonical transport-agnostic normalization entry shared by main and relay listeners. */
 
 export function normalizeHookPayload(
@@ -42,6 +42,8 @@ export function normalizeHookPayload(
     deferCompactOwnershipToClient?: boolean
     previousOpenCodeMainAgent?: AgentMainAgentStatus
     bindingStatusByPaneKey?: ReadonlyMap<string, AgentHookEventPayload>
+    /** Spool replay restates recorded evidence; it never advances turn identity. */
+    isReplay?: boolean
     admitOpenCodeTui?: (
       identity: Pick<
         AgentHookEventPayload,
@@ -68,6 +70,11 @@ export function normalizeHookPayload(
   }
   const sessions = readPaneSessionContext(state, source, envelope, eventName)
   const { providerSession, statusAdmissionSession } = sessions
+  // Before prompt and tool caches: a helper's turn must not reset the root turn's caches either.
+  const helper = routeJcodeHelperHook(state, source, envelope, options.bindingStatusByPaneKey)
+  if (helper !== undefined) {
+    return helper
+  }
   if (source === 'opencode' && record.opencodeTui === 1 && !providerSession) {
     return null
   }
@@ -221,19 +228,20 @@ export function normalizeHookPayload(
     }
   }
 
+  // Only admitted events may advance turn identity.
+  const turnOrder = orderClaudeHook(state, source, paneKey, eventName, hookPayloadRecord, options)
+  if (!turnOrder) {
+    return null
+  }
   const promptText = extractedPrompt.text
-  // Name a Claude PermissionRequest's request once, so the listener and every receiver settle the same one.
-  const providerHookPayload =
-    source === 'claude'
-      ? withClaudeToolRequestId(state, paneKey, eventName, hookPayloadRecord)
-      : hookPayloadRecord
   const dispatched = normalizeProviderEvent({
     state,
     source,
-    eventName,
+    eventName: turnOrder.eventName,
+    opensTurn: turnOrder.opensTurn,
     promptText,
     paneKey,
-    hookPayload: providerHookPayload,
+    hookPayload: turnOrder.hookPayload,
     envelope: record,
     extractedPrompt,
     previousOpenCodeMainAgent: options.previousOpenCodeMainAgent
@@ -287,29 +295,24 @@ export function normalizeHookPayload(
       source === 'grok' ? (grokActiveTurn?.promptId ?? providerPromptId) : providerPromptId,
     grokPromptBoundary: grokActiveTurn ? true : undefined,
     compactTrigger,
-    toolUseId: readFirstString(providerHookPayload, ['tool_use_id', 'toolUseId']),
+    toolUseId: readFirstString(turnOrder.hookPayload, ['tool_use_id', 'toolUseId']),
     toolAgentId: readFirstString(hookPayloadRecord, ['agent_id', 'agentId']),
     teammateName:
       source === 'claude' && eventName === 'TeammateIdle'
         ? readString(hookPayloadRecord, 'teammate_name')
         : undefined,
     toolAgentType: readString(hookPayloadRecord, 'agent_type'),
-    ...(source === 'claude'
-      ? {
-          claudeRunningNonAgentTask: claudeRowHasUnlistedLiveWork(state, paneKey)
-        }
-      : {}),
+    ...(source === 'claude' && {
+      claudeRunningNonAgentTask: claudeRowHasUnlistedLiveWork(state, paneKey)
+    }),
     ...(claudeBatchSettledRequests ? { claudeSettledRequests: claudeBatchSettledRequests } : {}),
     ...(providerSession ? { providerSession } : {}),
     ...(statusAdmissionSession ? { statusAdmissionSession } : {}),
     ...(providerSessionOnly ? { providerSessionOnly: true } : {}),
     ...dispatched.hostTurnSignals,
+    ...turnOrder.hostTurnSignals,
     ...(dispatched.replyCandidate ? { replyCandidate: dispatched.replyCandidate } : {}),
-    activityMapEvent: activityMapHookEvent(
-      eventName,
-      providerHookPayload,
-      activityMapObserverOptions(paneKey)
-    ),
+    activityMapEvent: activityMapPaneHookEvent(turnOrder.eventName, turnOrder.hookPayload, paneKey),
     payload: transportPayload
   }
 }

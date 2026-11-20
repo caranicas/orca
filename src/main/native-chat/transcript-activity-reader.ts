@@ -6,12 +6,10 @@ import { activityMapModelRequestKey } from '../../shared/agent-session/activity/
 import { codexTranscriptTurnActivity } from './transcript-codex-turn-activity'
 import { createTranscriptActivityEvents } from './transcript-activity-events'
 import { transcriptActivityMessage } from './transcript-activity-message'
-import {
-  asRecord,
-  extractString,
-  parseJsonObject,
-  timestampMs
-} from '../ai-vault/session-scanner-values'
+import { asRecord } from '../ai-vault/parsing/session-record-fields'
+import { extractString } from '../../shared/text/trimmed-string'
+import { parseJsonObject } from '../ai-vault/parsing/session-json-object'
+import { timestampMs } from '../ai-vault/parsing/session-record-time'
 import type { AgentType } from '../../shared/agent-status/contracts/agent-status-types'
 import { resolveNativeChatTranscriptAgent } from '../../shared/native-chat/native-chat-agent-support'
 import {
@@ -19,7 +17,7 @@ import {
   type TerminalActivityTelemetry
 } from '../../shared/agent-session/activity/terminal-activity-telemetry'
 import type { ActivityMapEvent } from '../../shared/agent-session/activity/agent-activity-map'
-import { claudeContextWindowFromResult } from '../claude/claude-context-usage'
+import { claudeContextWindowFromResult } from '../claude/context-usage/claude-context-usage'
 import { claudeTranscriptActivityFact } from './transcript-claude-activity-fact'
 import type { ClaudeStatuslineContext } from '../claude/statusline-context'
 import { codexCompletedActivityItem } from './transcript-codex-activity-items'

@@ -8,7 +8,7 @@ import {
   parseClaudeCliVersion,
   parseClaudeCliVersionOutput,
   probeClaudeCliVersion
-} from './claude-hook-event-versions'
+} from './cli-capabilities/claude-hook-event-versions'
 
 describe('parseClaudeCliVersion', () => {
   it('extracts Claude Code version output', () => {

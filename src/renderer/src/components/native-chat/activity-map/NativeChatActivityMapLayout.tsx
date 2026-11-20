@@ -1,8 +1,19 @@
-import { useId, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
+import {
+  NativeChatCrewFrame,
+  NativeChatCrewPanel
+} from '../../orchestration-crew/NativeChatCrewPanel'
+import {
+  useId,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+  type ComponentProps
+} from 'react'
 import { NativeChatActivityMap } from './NativeChatActivityMap'
 import { useActivityMapJournal } from './use-activity-map-journal'
 import { codexContextPercentage } from '../../../../../shared/agent-session/activity/terminal-activity-telemetry'
-import { toRuntimeExecutionHostId } from '../../../../../shared/execution-host'
+import { toRuntimeExecutionHostId } from '../../../../../shared/execution-host/execution-host'
 import { useActivityMapModelHistory } from './use-activity-map-model-history'
 import { useAppStore } from '@/store'
 import { resolveWorkspaceDirectory } from '@/lib/workspace/paths/workspace-directory'
@@ -63,6 +74,7 @@ export function NativeChatActivityMapLayout({
   controller,
   agentLabel,
   hostOnline,
+  crew,
   children
 }: {
   pane: Omit<NativeChatStructuredViewProps, 'mode'>
@@ -72,6 +84,7 @@ export function NativeChatActivityMapLayout({
   controller: ActivityController
   agentLabel: string
   hostOnline: boolean
+  crew?: ComponentProps<typeof NativeChatCrewPanel>
   children: ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -108,7 +121,13 @@ export function NativeChatActivityMapLayout({
           ) : null
         }
       >
-        {children}
+        {crew ? (
+          <NativeChatCrewFrame panel={<NativeChatCrewPanel {...crew} />}>
+            {children}
+          </NativeChatCrewFrame>
+        ) : (
+          children
+        )}
       </NativeChatActivityMapFrame>
     </>
   )
@@ -170,7 +189,6 @@ function NativeChatActivityMapSession({
   const reportedModel = controller.optionSnapshot?.find((option) => option.id === 'model')
   const model =
     telemetry?.model ??
-    reportedModel?.reportedModel ??
     (reportedModel?.valueSource === 'reported' && reportedModel.kind.type === 'select'
       ? reportedModel.kind.currentValue
       : undefined)

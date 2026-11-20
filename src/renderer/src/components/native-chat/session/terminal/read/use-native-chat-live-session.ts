@@ -10,7 +10,7 @@ import {
   boundNativeChatWindow,
   createNativeChatMerger,
   replaceList
-} from '../../../../../../../shared/native-chat/native-chat-merge'
+} from '../../../../../../../shared/native-chat/transcript/streaming/native-chat-merge'
 import { useNativeChatLiveReadResult } from './use-native-chat-live-read-result'
 import {
   hasMoreNativeChatHistory,
@@ -30,7 +30,6 @@ import {
   openNativeChatTranscriptStream,
   nextNativeChatTranscriptSubscriptionId
 } from './native-chat-stream-teardown'
-import type { TerminalActivityTelemetry } from '../../../../../../../shared/agent-session/activity/terminal-activity-telemetry'
 import { takeNativeChatOpenWake } from '../../../pane/routing/native-chat-open-wake'
 
 // Keep the base axis stable through non-ready reads.
@@ -58,9 +57,7 @@ export function useNativeChatLiveSession(
     [runtimeEnvironmentId]
   )
   const [read, setRead] = useState<ReadState>({ phase: 'loading' })
-  const [activityMap, setActivityMap] = useState<
-    (TerminalActivityTelemetry & { receivedAt: number }) | undefined
-  >()
+  const [activityMap, setActivityMap] = useState<NativeChatLiveSession['activityMap']>()
   const [hasMore, setHasMore] = useState(false)
   const [loadingEarlier, setLoadingEarlier] = useState(false)
   const [olderHistoryGeneration, setOlderHistoryGeneration] = useState(0)
@@ -277,6 +274,8 @@ export function useNativeChatLiveSession(
     transport,
     hasMore,
     read,
+    liveTailRef: appendMergerRef,
+    olderHistoryGeneration,
     transcriptLifecycleControl,
     limitRef,
     latestEnabled,

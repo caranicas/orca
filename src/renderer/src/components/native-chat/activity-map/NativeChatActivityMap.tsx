@@ -14,7 +14,7 @@ import { X, Minus, Plus, Eye, EyeOff } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useTranslate } from '@/i18n/use-translate'
-import { useNow } from '@/hooks/use-now'
+import { useNow } from '@/lib/window-activity/use-now'
 import { ActivityMapFeed } from './ActivityMapFeed'
 import { NativeChatActivityMapDiagram } from './NativeChatActivityMapDiagram'
 import {
@@ -22,9 +22,9 @@ import {
   type ActivityMapEvent
 } from '../../../../../shared/agent-session/activity/agent-activity-map'
 import type { AgentJournalRenderItem } from '../../../../../shared/agent-session/journal/agent-session-journal-types'
-import type { StructuredAgentContextUsage } from '../../../../../shared/agent-session/structured-agent-session-context-usage'
+import type { StructuredAgentContextUsage } from '../../../../../shared/agent-session/conversation-context/structured-agent-session-context-usage'
 import type { StructuredAgentSubagentRoster } from '../../../../../shared/agent-session/view/structured-agent-session-subagent-roster'
-import type { StructuredAgentHostClock } from '../../../../../shared/agent-session/structured-agent-session-reducer'
+import type { StructuredAgentHostClock } from '../../../../../shared/agent-session/view/live-read/structured-agent-session-reducer'
 
 export function NativeChatActivityMap({
   items,

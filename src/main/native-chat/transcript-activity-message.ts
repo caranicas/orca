@@ -1,9 +1,11 @@
 import type { ActivityMapClassificationOptions } from '../../shared/agent-session/activity/activity-map-classification-options'
-import { decodeClaudeTranscriptLine, decodeCodexTranscriptLine } from './transcript-line-decoders'
+import { decodeClaudeTranscriptLine } from './transcript-decoding/transcript-line-decoders-claude'
+import { decodeCodexTranscriptLine } from './transcript-decoding/transcript-line-decoders-codex'
 import { projectTerminalAgentActivityMap } from '../../shared/agent-session/activity/terminal-agent-activity-map'
 import type { ActivityMapEvent } from '../../shared/agent-session/activity/agent-activity-map'
-import { readClaudeTaskNotification } from '../../shared/claude-task-notification-text'
-import { asRecord, parseJsonObject } from '../ai-vault/session-scanner-values'
+import { readClaudeTaskNotification } from '../../shared/agent-hook-listener/providers/claude/background-tasks/claude-task-notification-text'
+import { asRecord } from '../ai-vault/parsing/session-record-fields'
+import { parseJsonObject } from '../ai-vault/parsing/session-json-object'
 import { activityMapTask } from '../../shared/agent-session/activity/activity-map-task'
 
 export function transcriptActivityMessage(

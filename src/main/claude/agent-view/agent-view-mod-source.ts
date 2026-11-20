@@ -1,4 +1,4 @@
-import { CLAUDE_AGENT_VIEW_PATH } from '../../../shared/claude-agent-view'
+import { CLAUDE_AGENT_VIEW_PATH } from '../../../shared/agent-hook-listener/providers/claude/view/claude-agent-view'
 import { parseAgentHookEndpointFile } from '../../../shared/agent-hook-listener/transport/agent-hook-endpoint-file'
 import { CLAUDE_ACTIVITY_MAP_MOD_SOURCE } from './agent-view-activity-source'
 

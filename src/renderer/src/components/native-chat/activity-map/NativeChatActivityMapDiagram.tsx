@@ -2,7 +2,7 @@ import { useActivityMapPreferences, useActivityMapText } from './use-activity-ma
 import type { ActivityMapStatistics } from '../../../../../shared/agent-session/activity/activity-map-statistics'
 import { useTranslate } from '@/i18n/use-translate'
 import { cn } from '@/lib/class-names'
-import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import { usePrefersReducedMotion } from '@/hooks/theme/usePrefersReducedMotion'
 import { activityMapFaults } from '../../../../../shared/agent-session/activity/activity-map-feed'
 import { ActivityMapStation } from './ActivityMapStation'
 import { ActivityMapRoutes } from './ActivityMapRoutes'

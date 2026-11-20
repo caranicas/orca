@@ -1,6 +1,6 @@
-import type { ClaudeJournalTranslatorDeps } from './claude-journal-translator-contract'
+import type { ClaudeJournalTranslatorDeps } from './structured/journal/claude-journal-translator-contract'
 import type { AgentJournalTurnScope } from '../../shared/agent-session/journal/agent-session-journal-turn-scope'
-import { createClaudeStreamedTextCheckpoints } from './claude-streamed-text-checkpoints'
+import { createClaudeStreamedTextCheckpoints } from './structured/journal/claude-streamed-text-checkpoints'
 import { claudeStreamingMessageBody } from './structured/journal/claude-structured-item-translation'
 
 export function createClaudeJournalStreamedText(

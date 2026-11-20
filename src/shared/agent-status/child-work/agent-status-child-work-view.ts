@@ -16,7 +16,7 @@ import {
   type AgentChildWorkState
 } from './agent-status-child-work'
 import { agentStatusSubjectsEqual } from '../contracts/agent-status-subject'
-import { groupedBy } from '../../grouped-by'
+import { groupedBy } from '../../collections/grouped-by'
 
 /** Publish read-only child views without host bookkeeping. Decode foreign versions permissively or gate by capability, never with the strict record codec. */
 export type AgentChildWorkView = {
@@ -28,6 +28,7 @@ export type AgentChildWorkView = {
   description?: string
   agentType?: string
   model?: string
+  effort?: string
   state: AgentChildWorkState
   membership: AgentChildWorkMembership
   outcome?: AgentChildWorkOutcome
@@ -128,6 +129,7 @@ export function projectAgentChildWorkViews(
       ...(record.description !== undefined ? { description: record.description } : {}),
       ...(record.agentType !== undefined ? { agentType: record.agentType } : {}),
       ...(record.model !== undefined ? { model: record.model } : {}),
+      ...(record.effort !== undefined ? { effort: record.effort } : {}),
       state: record.state,
       membership: record.membership,
       ...(record.outcome !== undefined ? { outcome: record.outcome } : {}),

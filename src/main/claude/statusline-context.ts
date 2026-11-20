@@ -1,8 +1,9 @@
-import { parseClaudeStatusLineBody } from '../../shared/claude-statusline-rate-limits'
-import { asRecord, extractString } from '../ai-vault/session-scanner-values'
-import { claudeTokenUsage } from './claude-context-usage'
-import { contextTokensFromUsage } from '../../shared/agent-session/agent-session-context-usage'
-import type { StructuredAgentContextUsage } from '../../shared/agent-session/structured-agent-session-context-usage'
+import { parseClaudeStatusLineBody } from '../../shared/agent-usage/rate-limits/claude-statusline-rate-limits'
+import { asRecord } from '../ai-vault/parsing/session-record-fields'
+import { extractString } from '../../shared/text/trimmed-string'
+import { claudeTokenUsage } from './context-usage/claude-context-usage'
+import { contextTokensFromUsage } from '../../shared/agent-session/conversation-context/agent-session-context-usage'
+import type { StructuredAgentContextUsage } from '../../shared/agent-session/conversation-context/structured-agent-session-context-usage'
 
 export type ClaudeStatuslineContext = {
   paneKey: string

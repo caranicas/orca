@@ -1,5 +1,5 @@
 import { parseAgentHookEndpointFile } from '../../../shared/agent-hook-listener/transport/agent-hook-endpoint-file'
-import { CLAUDE_AGENT_VIEW_PATH } from '../../../shared/claude-agent-view'
+import { CLAUDE_AGENT_VIEW_PATH } from '../../../shared/agent-hook-listener/providers/claude/view/claude-agent-view'
 
 // Lifecycle observation follows lot-map 09f6b93; see shared/agent-session/activity/lot-map-LICENSE.txt.
 export const CLAUDE_ACTIVITY_MAP_MOD_SOURCE = String.raw`

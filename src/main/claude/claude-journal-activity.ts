@@ -1,6 +1,6 @@
 import type { ActivityMapEvent } from '../../shared/agent-session/activity/agent-activity-map'
 import type { StructuredAgentSessionEventSink } from '../native-chat/agent-session-wire/journal-ingress/structured-agent-session-event-sink'
-import type { ClaudeProvisionalRowCorrections } from './claude-provisional-row-corrections'
+import type { ClaudeProvisionalRowCorrections } from './subagents/claude-provisional-row-corrections'
 import { createClaudeModelActivity } from './claude-model-activity'
 import { createProviderHookActivity } from '../native-chat/provider-hook-activity'
 import { journalProviderActivity } from '../native-chat/journal-provider-activity'

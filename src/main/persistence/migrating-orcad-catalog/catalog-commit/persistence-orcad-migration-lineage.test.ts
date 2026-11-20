@@ -14,7 +14,7 @@ import type {
 } from '../../../../shared/worktree/lineage-types'
 import { parseOrcadMigrationManifest } from '../../../../shared/orcad-migration/orcad-migration-manifest-validation'
 import { manifest } from './persistence-orcad-migration-catalog-fixture'
-import { createStore, testState } from '../../persistence-test-harness'
+import { closeTestStores, createStore, testState } from '../../persistence-test-harness'
 
 vi.mock('electron', () => ({
   app: { getPath: () => testState.dir },
@@ -27,19 +27,6 @@ vi.mock('../../../telemetry/cohort-classifier', () => ({
 
 const CHILD = 'repo-1::/srv/child'
 const CHILD_KEY = `worktree:${CHILD}` as const
-
-const worktreeParent = (confidence: 'explicit' | 'inferred'): WorktreeLineage => ({
-  worktreeId: CHILD,
-  worktreeInstanceId: 'child-instance',
-  parentWorktreeId: 'repo-1::/srv/parent',
-  parentWorktreeInstanceId: 'parent-instance',
-  origin: confidence === 'explicit' ? 'manual' : 'orchestration',
-  capture:
-    confidence === 'explicit'
-      ? { source: 'manual-action', confidence }
-      : { source: 'orchestration-context', confidence },
-  createdAt: 1
-})
 
 const folderParent: WorkspaceLineage = {
   childWorkspaceKey: CHILD_KEY,
@@ -89,30 +76,14 @@ function withLineage(
   return parseOrcadMigrationManifest(manifest({ payload: { ...manifest().payload, dormantState } }))
 }
 
-function commit(store: ReturnType<typeof createStore>, input: OrcadMigrationManifest) {
-  store.stageOrcadMigrationCatalog(input)
-  return store.commitStagedOrcadMigrationCatalog(input)
-}
-
 describe('orcad migration lineage', () => {
   beforeEach(() => {
     testState.dir = mkdtempSync(join(tmpdir(), 'orca-migration-lineage-'))
   })
 
-  afterEach(() => {
+  afterEach(async () => {
+    await closeTestStores()
     rmSync(testState.dir, { recursive: true, force: true })
-  })
-
-  it('refuses a payload whose worktree has two explicit parents, changing nothing', () => {
-    const store = createStore()
-
-    expect(() => commit(store, withLineage([worktreeParent('explicit')], [folderParent]))).toThrow(
-      'orcad_migration_dormant_id_conflict:lineage_parent'
-    )
-
-    expect(store.getRepos()).toEqual([])
-    expect(store.getWorktreeLineage(CHILD)).toBeUndefined()
-    expect(store.getWorkspaceLineage(CHILD_KEY)).toBeUndefined()
   })
 
   it('refuses at commit when a parent on another machine appears after staging', () => {

@@ -2,7 +2,7 @@ import { isPinnedSectionKey } from '../../../../../../shared/sidebar-list/custom
 import { useCallback, useMemo } from 'react'
 import type React from 'react'
 import type { WorkspaceStatus } from '../../../../../../shared/worktree/types'
-import type { HostSectionRow } from '../../../../../../shared/sidebar-list/host-section-rows'
+import type { HostSectionRow } from '../../../../../../shared/sidebar-list/hosts/host-section-rows'
 import type { WorktreeGroupBy } from '../../../../../../shared/sidebar-list/row-types'
 import '../../workspace-status/presentation/workspace-status'
 import {

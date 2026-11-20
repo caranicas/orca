@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { ColorPicker } from '@/components/ui/color-picker'
 import { Label } from '@/components/ui/label'
-import { DEFAULT_REPO_BADGE_COLOR } from '../../../../shared/repo-badge-color'
+import { DEFAULT_REPO_BADGE_COLOR } from '../../../../shared/repository/appearance/repo-badge-color'
 import { WORKSPACE_COLORS, WORKSPACE_COLOR_NAMES } from '../../../../shared/workspace-colors'
 import { useTranslate } from '@/i18n/use-translate'
 

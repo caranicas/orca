@@ -3,7 +3,7 @@ import type { AgentHookEventPayload } from '../../shared/agent-hook-listener/lis
 import { agentMainAgentVerdict } from '../../shared/agent-status/lifecycle/agent-main-agent-verdict'
 import type { AgentStatusObservation } from '../../shared/agent-status/contracts/agent-status-observation'
 import { activityMapEventKey } from '../../shared/agent-session/activity/activity-map-statistics'
-import { isLocalHookConnectionId } from '../../shared/wsl-hook-relay-contract'
+import { isLocalHookConnectionId } from '../../shared/agent-hook-listener/transport/wsl-hook-relay-contract'
 
 export type TranscriptHookObservation = AgentHookEventPayload & {
   receivedAt: number

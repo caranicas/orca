@@ -24,6 +24,22 @@ it('finds the last scheduled day for missed-run catchup', () => {
   ).toBe(Date.parse('2026-02-02T09:00:00'))
 })
 
+it('keeps interval days on the automation clock across daylight saving time', () => {
+  const rule = 'FREQ=DAILY;INTERVAL=3;BYHOUR=9;BYMINUTE=0'
+  const start = Date.parse('2026-03-06T14:00:00Z')
+  expect(nextAutomationOccurrenceAfter(rule, start, start, 'America/New_York')).toBe(
+    Date.parse('2026-03-09T13:00:00Z')
+  )
+  expect(
+    latestAutomationOccurrenceAtOrBefore(
+      rule,
+      start,
+      Date.parse('2026-03-11T20:00:00Z'),
+      'America/New_York'
+    )
+  ).toBe(Date.parse('2026-03-09T13:00:00Z'))
+})
+
 it('preserves interval recurrences as custom input when editing', () => {
   expect(tryParseAutomationRrule('FREQ=DAILY;INTERVAL=3;BYHOUR=9;BYMINUTE=0')).toBeNull()
 })

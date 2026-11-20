@@ -1,6 +1,10 @@
-import { asRecord, extractString } from '../ai-vault/session-scanner-values'
-import { contextTokensFromUsage } from '../../shared/agent-session/agent-session-context-usage'
-import { claudeTokenUsage, claudeContextWindowHint } from '../claude/claude-context-usage'
+import { asRecord } from '../ai-vault/parsing/session-record-fields'
+import { extractString } from '../../shared/text/trimmed-string'
+import { contextTokensFromUsage } from '../../shared/agent-session/conversation-context/agent-session-context-usage'
+import {
+  claudeTokenUsage,
+  claudeContextWindowHint
+} from '../claude/context-usage/claude-context-usage'
 import type { ActivityMapEvent } from '../../shared/agent-session/activity/agent-activity-map'
 import {
   activityMeasurement as count,

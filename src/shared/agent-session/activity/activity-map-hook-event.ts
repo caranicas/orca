@@ -1,3 +1,4 @@
+import { activityMapObserverOptions } from './activity-map-observer-options'
 import {
   activityMapProviderClassification,
   type ActivityMapProviderOptions
@@ -5,7 +6,7 @@ import {
 import { activityMapModelRequestKey } from './activity-map-model-request'
 import type { ActivityMapEvent } from './agent-activity-map'
 import { activityMapToolDetails } from './agent-activity-map'
-import { createNonSecureContextUuid } from '../../non-secure-context-uuid'
+import { createNonSecureContextUuid } from '../../identifiers/non-secure-context-uuid'
 import { readActivityMapEvent } from './terminal-activity-telemetry'
 import { activityMapText } from './activity-map-text'
 import { activityMapTask } from './activity-map-task'
@@ -48,7 +49,7 @@ export function activityMapHookEvent(
               records
                 .slice(0, 6)
                 .map((id) => `#${id}`)
-                .join(' ') + (records.length > 6 ? ' …' : '')
+                .join(' ') + (records.length > 6 ? ' â€¦' : '')
             )
           }
         : {}),
@@ -162,4 +163,12 @@ export function activityMapHookEvent(
     }
   }
   return undefined
+}
+
+export function activityMapPaneHookEvent(
+  name: unknown,
+  payload: Record<string, unknown>,
+  paneKey: string
+) {
+  return activityMapHookEvent(name, payload, activityMapObserverOptions(paneKey))
 }

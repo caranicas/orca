@@ -1,5 +1,6 @@
 import type { ActivityMapClassificationOptions } from '../../shared/agent-session/activity/activity-map-classification-options'
-import { asRecord, extractString } from '../ai-vault/session-scanner-values'
+import { asRecord } from '../ai-vault/parsing/session-record-fields'
+import { extractString } from '../../shared/text/trimmed-string'
 import {
   activityMapToolDetails,
   type ActivityMapEvent,

@@ -1,9 +1,9 @@
-import type { Repo } from './repo-types'
-import { getRepoExecutionHostId, LOCAL_EXECUTION_HOST_ID } from './execution-host'
+import type { Repo } from './repository/repo-types'
+import { getRepoExecutionHostId, LOCAL_EXECUTION_HOST_ID } from './execution-host/execution-host'
 import {
   isCaseInsensitiveRuntimeRoot,
   normalizeRuntimePathForComparison
-} from './cross-platform-path'
+} from './file-access/cross-platform-path'
 
 export const GENERAL_WORKSPACE_PARENT = '.orca-general'
 export const GENERAL_WORKSPACE_NAME = 'General'

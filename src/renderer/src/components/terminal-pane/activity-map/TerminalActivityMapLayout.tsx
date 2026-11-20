@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { ResizeHandle } from '@/components/tab-group/TabGroupSplitNodeTree'
+import { ResizeHandle } from '@/components/pane-resize/PaneSplitResizeHandle'
 import { useTranslate } from '@/i18n/use-translate'
 
 export function TerminalActivityMapLayout({

@@ -1,5 +1,5 @@
 import type { Worktree } from '../worktree/types'
-import { getWorktreeExecutionHostId, type ExecutionHostId } from '../execution-host'
+import { getWorktreeExecutionHostId, type ExecutionHostId } from '../execution-host/execution-host'
 import type { GroupHeaderRow, RepoOfWorktree, SidebarHeaderIcon } from './row-types'
 
 export type PinnedSectionHeader = {
