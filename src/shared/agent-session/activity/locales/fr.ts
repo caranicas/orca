@@ -16,6 +16,7 @@ export const fr: Strings = {
     files: 'Fichiers',
     shell: 'Terminal',
     network: 'Réseau',
+    apps: 'Applications',
     browser: 'Navigateur',
     agents: 'Agents',
     skills: 'Skills',

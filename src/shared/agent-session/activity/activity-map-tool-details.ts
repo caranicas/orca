@@ -40,7 +40,7 @@ function toolStation(call: ActivityMapTool): ActivityMapStation {
     if (/\b(?:browser|playwright|puppeteer)\b/i.test(mcp.server)) {
       return 'browser'
     }
-    return 'network'
+    return 'apps'
   }
   switch (nativeChatToolCategory(call.name, call.mcpIdentity, call.input)) {
     case 'read':
@@ -145,7 +145,7 @@ export function activityMapToolDetails(
   const mcp =
     call.mcpIdentity ??
     (() => {
-      const match = /^mcp__([^\s]+?)__(\S+)$/.exec(call.name)
+      const match = /^mcp__([^\s]+?)__(\S+)$/.exec(name)
       return match ? { server: match[1], tool: match[2] } : null
     })()
   const argumentsRecord =

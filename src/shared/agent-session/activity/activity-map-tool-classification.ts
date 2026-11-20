@@ -1,5 +1,6 @@
 // Adapted from lot-map 09f6b93, Copyright (c) 2026 Aleksei Volodin; MIT, see lot-map-LICENSE.txt.
 import { classifyShell } from './activity-map-shell-classification'
+import { activityMapAppLabel } from './activity-map-app-label'
 import { str, isMemoryPath, lastTwo, hostOf } from './activity-map-labels'
 import type {
   ActivityMapClassificationOptions as Setup,
@@ -120,5 +121,5 @@ export function classify(
   if (server === 'plugin-authoring') {
     return { station: 'skills', label: name.replace(/_+/g, ' ') }
   }
-  return { station: 'network', label: `${server}: ${name.replace(/_+/g, ' ')}` }
+  return { station: 'apps', label: activityMapAppLabel(server, name, input) }
 }

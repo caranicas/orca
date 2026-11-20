@@ -1,4 +1,5 @@
 import {
+  AppWindow,
   Bot,
   Cpu,
   FileText,
@@ -19,6 +20,7 @@ export const ACTIVITY_MAP_STATIONS = [
   { id: 'files', icon: FileText },
   { id: 'shell', icon: SquareTerminal },
   { id: 'network', icon: Globe },
+  { id: 'apps', icon: AppWindow },
   { id: 'browser', icon: Monitor },
   { id: 'agents', icon: Bot },
   { id: 'skills', icon: Zap },
@@ -71,9 +73,10 @@ export function activityMapRoute(from: ActivityMapStation, to: ActivityMapStatio
   const index = (id: ActivityMapStation) =>
     ACTIVITY_MAP_STATIONS.findIndex((station) => station.id === id)
   const start = index(from)
-  let steps = (index(to) - start + 10) % 10
-  if (steps > 5) {
-    steps -= 10
+  const count = ACTIVITY_MAP_STATIONS.length
+  let steps = (index(to) - start + count) % count
+  if (steps > count / 2) {
+    steps -= count
   }
   const bend = activityMapPosition(
     start + steps / 2,

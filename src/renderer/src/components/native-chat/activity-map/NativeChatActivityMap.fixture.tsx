@@ -102,6 +102,37 @@ export const working = defineFixture({
   )
 })
 
+export const blender = defineFixture({
+  width: 360,
+  render: () => (
+    <div className="native-chat-appearance h-160">
+      <NativeChatActivityMap
+        items={[
+          row(1, {
+            kind: 'tool-call',
+            name: 'mcp__blender__get_scene_info',
+            input: {},
+            state: 'completed',
+            durationMs: 240
+          }),
+          row(2, {
+            kind: 'tool-call',
+            name: 'mcp__blender__execute_blender_code',
+            input: {},
+            state: 'running'
+          })
+        ]}
+        agentLabel="Codex"
+        working
+        live
+        contextUsage={CONTEXT}
+        subagentRoster={new Map()}
+        onClose={() => {}}
+      />
+    </div>
+  )
+})
+
 export const empty = defineFixture({
   width: 320,
   render: () => (

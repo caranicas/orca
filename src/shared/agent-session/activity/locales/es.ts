@@ -16,6 +16,7 @@ export const es: Strings = {
     files: 'Archivos',
     shell: 'Terminal',
     network: 'Red',
+    apps: 'Aplicaciones',
     browser: 'Navegador',
     agents: 'Agentes',
     skills: 'Skills',
