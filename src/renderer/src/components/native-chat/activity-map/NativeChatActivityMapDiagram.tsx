@@ -71,7 +71,7 @@ function ActivityMapDiagram({
     ...events.filter((event) => event.mark === 'switch').map((event) => event.startedAt)
   )
   const options = useActivityMapPreferences((state) => state.options)
-  const rotation = options.layout === 'you-bottom' ? 5 : 0
+  const rotation = options.layout === 'you-bottom' ? ACTIVITY_MAP_STATIONS.length / 2 : 0
   const motion = useActivityMapMotion(events, live && !reducedMotion)
   const labels = useActivityMapText().stations
   const agentsAt = activityMapStationPosition('agents', rotation)

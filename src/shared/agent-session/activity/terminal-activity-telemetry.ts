@@ -68,6 +68,7 @@ export function readTerminalActivityTelemetry(
     'files',
     'shell',
     'network',
+    'apps',
     'browser',
     'agents',
     'skills',

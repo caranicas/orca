@@ -16,6 +16,7 @@ export const ru: Strings = {
     files: 'Файлы',
     shell: 'Терминал',
     network: 'Сеть',
+    apps: 'Приложения',
     browser: 'Браузер',
     agents: 'Агенты',
     skills: 'Скиллы',

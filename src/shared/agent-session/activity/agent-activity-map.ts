@@ -18,6 +18,7 @@ export type ActivityMapStation =
   | 'files'
   | 'shell'
   | 'network'
+  | 'apps'
   | 'browser'
   | 'agents'
   | 'skills'

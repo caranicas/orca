@@ -17,6 +17,7 @@ export function foldActivityMapFeed(
       last.event.state === 'completed' &&
       !last.event.mark &&
       event.station === last.event.station &&
+      (event.station !== 'apps' || event.label === last.event.label) &&
       event.origin === last.event.origin
     ) {
       last.count++
