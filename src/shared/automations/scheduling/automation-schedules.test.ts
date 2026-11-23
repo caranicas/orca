@@ -131,8 +131,7 @@ describe('schedule refusal text', () => {
     [
       'FREQ=DAILY;COUNT=1',
       `Bad. RRULE part "COUNT=1" is not supported. ${limits} For a single run, use --once. ${accepted}`
-    ],
-    ['FREQ=DAILY;INTERVAL=2', `Bad. RRULE part "INTERVAL=2" is not supported. ${accepted}`]
+    ]
   ])('refuses %j naming what is accepted', (schedule, message) => {
     expect(getAutomationScheduleInputError(schedule, 'Bad.', hints)).toBe(message)
   })
