@@ -1,16 +1,23 @@
 import type { AutomationSchedulePreset } from '../automation-definition'
 import { cronHasPossibleOccurrence } from './automation-cron-occurrence'
+import {
+  formatScheduleRefusal,
+  type AutomationScheduleRefusalHints
+} from './automation-schedule-refusal'
 
-import { isClipboardTextByteLengthOverLimit } from '../../clipboard/clipboard-text'
 import {
   DAY_NAMES,
   MONTH_NAMES,
+  getAutomationCronExpressionFields,
   isCronDayFieldRestricted,
   parseCronField,
   type CronParseOptions
 } from './automation-cron-field-parsing'
 
-export const AUTOMATION_CRON_EXPRESSION_MAX_BYTES = 2 * 1024
+export {
+  AUTOMATION_CRON_EXPRESSION_MAX_BYTES,
+  getAutomationCronExpressionFields
+} from './automation-cron-field-parsing'
 export type ParsedRrule = {
   kind: 'rrule'
   freq: 'HOURLY' | 'DAILY' | 'WEEKLY'
@@ -157,47 +164,6 @@ export function parseCronExpression(
   }
 }
 
-export function getAutomationCronExpressionFields(expression: string, maxFields = 5): string[] {
-  if (isClipboardTextByteLengthOverLimit(expression, AUTOMATION_CRON_EXPRESSION_MAX_BYTES)) {
-    return []
-  }
-  const fields: string[] = []
-  let tokenStart = -1
-  for (let index = 0; index <= expression.length; index += 1) {
-    const isEnd = index === expression.length
-    if (!isEnd && !isAutomationCronFieldWhitespace(expression.charCodeAt(index))) {
-      if (tokenStart === -1) {
-        tokenStart = index
-      }
-      continue
-    }
-    if (tokenStart !== -1) {
-      fields.push(expression.slice(tokenStart, index))
-      tokenStart = -1
-      if (fields.length >= maxFields) {
-        break
-      }
-    }
-  }
-  return fields
-}
-
-function isAutomationCronFieldWhitespace(code: number): boolean {
-  return (
-    code === 32 ||
-    (code >= 9 && code <= 13) ||
-    code === 160 ||
-    code === 5760 ||
-    (code >= 8192 && code <= 8202) ||
-    code === 8232 ||
-    code === 8233 ||
-    code === 8239 ||
-    code === 8287 ||
-    code === 12288 ||
-    code === 65279
-  )
-}
-
 export function parseSchedule(schedule: string, options: CronParseOptions = {}): ParsedSchedule {
   const trimmed = schedule.trim()
   if (trimmed.includes('=')) {
@@ -223,22 +189,27 @@ function cronScheduleRuns(schedule: string, options: CronParseOptions): boolean 
   }
 }
 
-/** Why new input is refused, naming a part the scheduler would drop; null when accepted. */
+/** Why new input is refused, naming what is accepted; null when accepted. */
 export function getAutomationScheduleInputError(
   schedule: string,
-  label = 'Invalid automation trigger'
+  label = 'Invalid automation trigger.',
+  hints: AutomationScheduleRefusalHints = {}
 ): string | null {
+  let ignoredPart: string | null = null
   try {
     const parsed = parseSchedule(schedule, { rejectOversizedStep: true })
-    if (parsed.kind === 'cron') {
-      return cronHasPossibleOccurrence(parsed, Date.now()) ? null : label
+    if (
+      parsed.kind === 'cron'
+        ? cronHasPossibleOccurrence(parsed, Date.now())
+        : parsed.ignoredPart === null
+    ) {
+      return null
     }
-    return parsed.ignoredPart === null
-      ? null
-      : `${label}. RRULE part ${JSON.stringify(parsed.ignoredPart)} is not supported. Use FREQ=HOURLY with BYMINUTE, FREQ=DAILY with BYHOUR and BYMINUTE, or FREQ=WEEKLY with BYDAY, BYHOUR and BYMINUTE.`
+    ignoredPart = parsed.kind === 'rrule' ? parsed.ignoredPart : null
   } catch {
-    return label
+    // Unparseable input gets the same refusal, without a named part.
   }
+  return formatScheduleRefusal(schedule, label, ignoredPart, hints)
 }
 
 /** Accepts a schedule as new input, oversized-step (#15895) and ignored-part (#45519) refusals included. */

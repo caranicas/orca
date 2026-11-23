@@ -1,6 +1,10 @@
 import type { AgentSessionForkNaming } from './conversation-naming/agent-session-fork-name'
 import type { AgentSessionUnavailable } from './failures/agent-session-availability'
-import type { AgentSessionFrameFields } from './view/live-read/agent-session-frame-fields'
+import type {
+  AgentSessionFrameFields,
+  AgentSessionLatestTurn,
+  AgentSessionPromptSuggestion
+} from './view/live-read/agent-session-frame-fields'
 import type { AgentSessionUsageLimitContinue } from './lifecycle/stopping/agent-session-usage-limit-continue-wire'
 import type { ActivityMapProviderOptions } from './activity/activity-map-provider-options'
 import type { ActivityMapJournalSummary } from './activity/activity-map-journal-summary'
@@ -22,7 +26,6 @@ import type {
 import type { AgentJournalCursor } from './journal/agent-session-journal-identity'
 import type {
   AgentJournalRenderItem,
-  AgentJournalTurnLifecycle,
   AgentJournalResetReason,
   AgentJournalResolution,
   AgentJournalSubmission
@@ -36,20 +39,10 @@ import type { StructuredAgentSessionProjectedStatus } from './view/structured-ag
 
 export type AgentSessionTurnActivity = { turnId: string; text: string }
 
-/** The agent's guess at the user's next prompt; never journaled, replaced when a turn opens. */
-export type AgentSessionPromptSuggestion = {
-  id: string
-  text: string
-}
-
-/** Newest turn across the whole journal, including off-page long-running turns. null means no turn; older hosts omit it and clients derive from loaded rows. */
-export type AgentSessionLatestTurn = {
-  /** The record's journal key, which rows of the turn name as their scope. */
-  itemId: string
-  /** Host clock at the record's creation, as on its own row; a revision does not move it. */
-  observedAt: number
-  turn: AgentJournalTurnLifecycle
-}
+export type {
+  AgentSessionLatestTurn,
+  AgentSessionPromptSuggestion
+} from './view/live-read/agent-session-frame-fields'
 
 export const AGENT_SESSION_ID_MAX_LENGTH = 512
 
@@ -203,6 +196,9 @@ export type AgentSessionSubscribeEvent =
 /** An open async question: its row, which Skip names, and its text bounded like a status preview. */
 export type AgentSessionAwaitedQuestion = { itemId: string; text: string }
 
+/** An open approval: the tool it asks to run and its command's first line, bounded like a status preview. */
+export type AgentSessionAwaitedApproval = { tool: string; input?: string }
+
 /** Host-projected list status avoids client transcript replay; older hosts lack this additive method. */
 export type AgentSessionStatusSummary = {
   usageLimitContinue?: AgentSessionUsageLimitContinue
@@ -227,6 +223,8 @@ export type AgentSessionStatusSummary = {
   model?: string
   /** Legacy host execution report; clients use the saved model for option invalidation. */
   reportedModel?: string
+  /** The current child's provider fallback model; moving it makes clients re-read options. */
+  fallbackModel?: string
   /** The chat's saved effort, Fast and speed picks, encoded; another device's pick moves them so a
    *  client re-reads options. Absent from older hosts. */
   effort?: string
@@ -253,6 +251,15 @@ export type AgentSessionStatusSummary = {
   /** The newest async question row the person skipped: clients hide it and every earlier question.
    *  Older hosts omit it, and their clients hide a skipped card on that screen only. */
   asyncQuestionsSkippedThrough?: string
+  /** The first prompt waiting on the person, when it is an approval; set only while `status` is
+   *  'attention'. Older hosts omit it. */
+  awaitsApproval?: AgentSessionAwaitedApproval
+  /** The first prompt waiting on the person, when it is a question its turn stops for (Claude's
+   *  AskUserQuestion): its text on one line. Set only while `status` is 'attention'. Older hosts omit it. */
+  awaitsBlockingQuestion?: { text: string }
+  /** Every prompt waiting on the person is a question, none an approval; set only while `status`
+   *  is 'attention'. Older hosts omit it, and their questions read as blocked. */
+  attentionAsksOnlyQuestions?: true
   /** Optional live provider tasks let lists show children without journal subscriptions; derive from children when published. */
   backgroundTasks?: AgentSessionBackgroundTask[]
   /** Running/monitoring child views (decodeAgentChildWorkViews); finished children use background tasks only. Omit usage and per-tick freshness here; the background-task channel carries those ticks. Older hosts omit this. */

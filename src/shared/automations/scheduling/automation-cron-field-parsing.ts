@@ -1,3 +1,4 @@
+import { isClipboardTextByteLengthOverLimit } from '../../clipboard/clipboard-text'
 // Orca's cron dialect (vixie/POSIX):
 // - `N/step` is the open-ended sequence `N-max/step`; a bare `N` is only itself (#15723).
 // - A day field is restricted iff no term of it ranges over a star, so `1-31` restricts but
@@ -137,4 +138,47 @@ export function parseCronField(args: {
 // Follow vixie/robfig star restriction, including */2, over ambiguous crontab prose; treating it as restricted flips AND to OR and fires ~8x more.
 export function isCronDayFieldRestricted(field: string): boolean {
   return !field.split(',').some((term) => term.split('/')[0].trim() === '*')
+}
+
+export const AUTOMATION_CRON_EXPRESSION_MAX_BYTES = 2 * 1024
+
+export function getAutomationCronExpressionFields(expression: string, maxFields = 5): string[] {
+  if (isClipboardTextByteLengthOverLimit(expression, AUTOMATION_CRON_EXPRESSION_MAX_BYTES)) {
+    return []
+  }
+  const fields: string[] = []
+  let tokenStart = -1
+  for (let index = 0; index <= expression.length; index += 1) {
+    const isEnd = index === expression.length
+    if (!isEnd && !isAutomationCronFieldWhitespace(expression.charCodeAt(index))) {
+      if (tokenStart === -1) {
+        tokenStart = index
+      }
+      continue
+    }
+    if (tokenStart !== -1) {
+      fields.push(expression.slice(tokenStart, index))
+      tokenStart = -1
+      if (fields.length >= maxFields) {
+        break
+      }
+    }
+  }
+  return fields
+}
+
+function isAutomationCronFieldWhitespace(code: number): boolean {
+  return (
+    code === 32 ||
+    (code >= 9 && code <= 13) ||
+    code === 160 ||
+    code === 5760 ||
+    (code >= 8192 && code <= 8202) ||
+    code === 8232 ||
+    code === 8233 ||
+    code === 8239 ||
+    code === 8287 ||
+    code === 12288 ||
+    code === 65279
+  )
 }

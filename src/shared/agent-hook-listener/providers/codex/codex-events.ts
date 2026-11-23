@@ -41,7 +41,11 @@ import {
   resolveCodexPaneStatus,
   setCodexMainAgentTurnState
 } from './codex-state'
-import { pendingCodexAsyncQuestion, trackCodexAsyncQuestions } from './codex-async-questions'
+import {
+  codexWaitBesideQuestion,
+  pendingCodexAsyncQuestion,
+  trackCodexAsyncQuestions
+} from './codex-async-questions'
 import { reviewerEvidenceDeferred } from './codex-rollout-prefetch-scope'
 
 export function buildCodexStatusPayload(
@@ -50,15 +54,21 @@ export function buildCodexStatusPayload(
   promptText: string,
   paneKey: string,
   hookPayload: Record<string, unknown>,
-  options: AgentLeadStatusResolution & { updateLead: boolean; sessionBoundary?: true }
+  options: AgentLeadStatusResolution & {
+    updateLead: boolean
+    sessionBoundary?: true
+    reviewerOwnsApproval?: boolean
+  }
 ): ParsedAgentStatusPayload | null {
+  const reviewed = options.reviewerOwnsApproval === true
   const snapshot = options.updateLead
-    ? resolveToolState(state, paneKey, extractToolFields('codex', eventName, hookPayload), {
+    ? (codexWaitBesideQuestion(state, paneKey, eventName, hookPayload, reviewed) ??
+      resolveToolState(state, paneKey, extractToolFields('codex', eventName, hookPayload), {
         resetOnNewTurn: isNewTurnEvent('codex', eventName)
-      })
+      }))
     : (state.lastToolByPaneKey.get(paneKey) ?? {})
   const lead = state.codexLeadStateByPaneKey.get(paneKey)
-  // An approval or blocking question on screen wins; otherwise a waiting row shows the open async question.
+  // A human's approval or blocking question on screen wins; otherwise a waiting row shows the open async question.
   const asyncQuestion =
     options.stateName === 'waiting' && !snapshot.interactivePrompt
       ? pendingCodexAsyncQuestion(state, paneKey)
@@ -74,7 +84,8 @@ export function buildCodexStatusPayload(
     agentType: 'codex',
     model: lead?.model,
     toolName: asyncQuestion?.toolName ?? snapshot.toolName,
-    toolInput: snapshot.toolInput,
+    // The snapshot's input belongs to whatever tool runs now, not the question.
+    toolInput: asyncQuestion ? asyncQuestion.title : snapshot.toolInput,
     interactivePrompt: asyncQuestion?.prompt ?? snapshot.interactivePrompt,
     lastAssistantMessage: snapshot.lastAssistantMessage,
     lastAssistantMessageIsToolOutput: snapshot.lastAssistantMessageIsToolOutput,
@@ -84,7 +95,7 @@ export function buildCodexStatusPayload(
   })
 }
 
-export function buildCodexChildDrivenStatusPayload(
+export function buildCodexCachedStatusPayload(
   state: HookListenerState,
   eventName: unknown,
   paneKey: string,
@@ -139,7 +150,7 @@ export function normalizeCodexSubagentLifecycleEvent(
     finishCodexSubagent(roster, agentId)
     state.codexSubagentTranscriptByPaneKey.get(paneKey)?.subagents.delete(agentId)
   }
-  return buildCodexChildDrivenStatusPayload(state, eventName, paneKey, hookPayload)
+  return buildCodexCachedStatusPayload(state, eventName, paneKey, hookPayload)
 }
 
 /** Codex PermissionRequest precedes reviewer/user decisions; suppress reviewer-owned waiting (STA-7698). request_user_input still blocks a human on PreToolUse (#9861). */
@@ -171,12 +182,8 @@ export function normalizeCodexEvent(
   originalEventName: unknown = eventName
 ): ParsedAgentStatusPayload | null {
   if (eventName === 'PreCompact' || eventName === 'PostCompact') {
-    const lead = state.codexLeadStateByPaneKey.get(paneKey)
-    return lead
-      ? buildCodexStatusPayload(state, eventName, '', paneKey, hookPayload, {
-          ...resolveCodexPaneStatus(state, paneKey, lead),
-          updateLead: false
-        })
+    return state.codexLeadStateByPaneKey.has(paneKey)
+      ? buildCodexCachedStatusPayload(state, eventName, paneKey, hookPayload)
       : null
   }
   if (eventName === 'SubagentStart' || eventName === 'SubagentStop') {
@@ -261,7 +268,7 @@ export function normalizeCodexEvent(
       agentId,
       transcriptPath
     )
-    return buildCodexChildDrivenStatusPayload(state, eventName, paneKey, hookPayload)
+    return buildCodexCachedStatusPayload(state, eventName, paneKey, hookPayload)
   }
 
   if (eventName === 'Stop' && !hasCodexTranscriptSubagents(state, paneKey)) {
@@ -282,7 +289,6 @@ export function normalizeCodexEvent(
       ? 'waiting'
       : ownedState
   const previousLead = state.codexLeadStateByPaneKey.get(paneKey)
-  const transcript = state.codexSubagentTranscriptByPaneKey.get(paneKey)
   const turnId = readString(hookPayload, 'turn_id')
   const sessionId = readString(hookPayload, 'session_id')
   // Why: Codex fires no Stop for a failed turn, so a Stop for one is the rollout's end replayed.
@@ -290,7 +296,7 @@ export function normalizeCodexEvent(
     eventName === 'Stop' &&
     previousLead?.state !== 'done' &&
     turnId !== undefined &&
-    codexTranscriptTurnEnd(transcript, turnId) === 'failed'
+    codexTranscriptTurnEnd(state.codexSubagentTranscriptByPaneKey.get(paneKey), turnId) === 'failed'
   const startsTurn = activityEventName === 'UserPromptSubmit'
   const record = setCodexMainAgentTurnState(state, paneKey, {
     state: leadState,
@@ -310,6 +316,7 @@ export function normalizeCodexEvent(
   })
   return buildCodexStatusPayload(state, eventName, promptText, paneKey, hookPayload, {
     ...resolveCodexPaneStatus(state, paneKey, record),
-    updateLead: true
+    updateLead: true,
+    reviewerOwnsApproval: stateName === 'waiting' && ownedState === 'working'
   })
 }

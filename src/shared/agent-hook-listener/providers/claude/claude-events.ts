@@ -86,6 +86,9 @@ export function normalizeClaudeEvent(
       : eventName === 'StopFailure'
         ? ('failure' as const)
         : undefined
+  // StopFailure names why the turn failed (`rate_limit`, `authentication_failed`, ...) and says it.
+  const failureError = outcome === 'failure' ? readString(hookPayload, 'error') : undefined
+  const failureMessage = failureError && readString(hookPayload, 'last_assistant_message')
   const backgroundTasks = readClaudeBackgroundAgentTasks(hookPayload)
   const isTaskWakeup =
     eventAgentId === undefined &&
@@ -95,7 +98,6 @@ export function normalizeClaudeEvent(
   }
   const sessionCrons = hookPayload['session_crons']
   const sessionCronInventoryPresent = Array.isArray(sessionCrons)
-  const hasActiveSessionCron = sessionCronInventoryPresent && sessionCrons.length > 0
 
   if (shouldIgnoreCompactContinuationUserPromptSubmit(eventName, promptText)) {
     return null
@@ -149,10 +151,10 @@ export function normalizeClaudeEvent(
     return null
   }
   if (backgroundTasks.present && eventAgentId === undefined) {
-    updateClaudeRunningNonAgentTask(state, paneKey, backgroundTasks.hasRunningNonAgentTask)
+    updateClaudeRunningNonAgentTask(state, paneKey, backgroundTasks)
   }
   if (sessionCronInventoryPresent && eventAgentId === undefined) {
-    if (hasActiveSessionCron) {
+    if (sessionCrons.length > 0) {
       state.claudeActiveSessionCronPaneKeys.add(paneKey)
     } else {
       state.claudeActiveSessionCronPaneKeys.delete(paneKey)
@@ -250,6 +252,7 @@ export function normalizeClaudeEvent(
               state: previousLead.state,
               // Child waits must retain the lead's verdict and clock.
               ...(previousLead.outcome ? { outcome: previousLead.outcome } : {}),
+              ...(previousLead.failure ? { failure: previousLead.failure } : {}),
               stateStartedAt: previousLead.stateStartedAt,
               ...(previousLead.taskWakeupTurn ? { taskWakeupTurn: true as const } : {}),
               // Keep the displaced lead end time so later child drain belongs to the same turn.
@@ -282,8 +285,6 @@ export function normalizeClaudeEvent(
     state: reportedStateName,
     ...(taskWakeupTurn ? { taskWakeupTurn: true as const } : {})
   })
-  // Reuse resolved state for compact ownership instead of folding twice (#15202).
-  const effectiveState = resolvedStatus.stateName
   const ownPreviousLead = previousLead?.waitingAgentId ? previousLead.stateBeforeWait : previousLead
   const heldEnd =
     eventAgentId === undefined && isTurnBoundary
@@ -298,6 +299,9 @@ export function normalizeClaudeEvent(
     state: reportedStateName,
     ...(taskWakeupTurn ? { taskWakeupTurn: true as const } : {}),
     ...(outcome ? { outcome } : {}),
+    ...(failureError
+      ? { failure: { error: failureError, ...(failureMessage ? { message: failureMessage } : {}) } }
+      : {}),
     ...(isWaitingInducing && eventAgentId ? { waitingAgentId: eventAgentId } : {}),
     ...claudeWaitRequest(eventName, isAskUserQuestionWait, eventToolUseId, previousLead),
     ...(stateBeforeWait ? { stateBeforeWait } : {}),
@@ -318,7 +322,7 @@ export function normalizeClaudeEvent(
     state.claudeUnconfirmedRestoredStatusPaneKeys.add(paneKey)
   }
 
-  if (isManualCompactCompletion && effectiveState !== 'done') {
+  if (isManualCompactCompletion && resolvedStatus.stateName !== 'done') {
     // Compact clears or stays silent; live work must not gain a fresh clock or lose restoredUnconfirmed from an unrelated compact.
     return null
   }

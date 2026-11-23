@@ -22,7 +22,7 @@ import {
 import { normalizeHookPayload } from '../../normalization/normalize-hook-payload'
 import type { AgentHookEventPayload } from '../../listener-event'
 import type { HookListenerState } from '../../listener-state'
-import { buildCodexChildDrivenStatusPayload } from './codex-events'
+import { buildCodexCachedStatusPayload } from './codex-events'
 import { getOrCreateCodexSubagentRoster, markCodexLeadTurnInterrupted } from './codex-state'
 
 export type CodexTranscriptPollReads = {
@@ -81,7 +81,7 @@ export function pollCodexTranscriptStatus(
     const named = applyIdentities()
     // Without a parent rollout, keep polling only while a child's own rollout still owes its name.
     const payload = named
-      ? buildCodexChildDrivenStatusPayload(state, undefined, original.paneKey, {})
+      ? buildCodexCachedStatusPayload(state, undefined, original.paneKey, {})
       : undefined
     if (payload) {
       return { ...original, hookEventName: undefined, payload }
@@ -127,7 +127,7 @@ export function pollCodexTranscriptStatus(
   if (interrupted) {
     markCodexLeadTurnInterrupted(state, original.paneKey)
   }
-  const payload = buildCodexChildDrivenStatusPayload(state, undefined, original.paneKey, {})
+  const payload = buildCodexCachedStatusPayload(state, undefined, original.paneKey, {})
   // Why: only a replayed Stop may carry an event name; this row restates the last hook's.
   return payload ? { ...original, hookEventName: undefined, payload } : undefined
 }
