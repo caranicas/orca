@@ -1,4 +1,7 @@
-import { parseClaudeStatusLineBody } from '../../shared/agent-usage/rate-limits/claude-statusline-rate-limits'
+import {
+  readClaudeStatusLineForm,
+  type ClaudeStatusLineForm
+} from '../../shared/agent-usage/rate-limits/claude-statusline-rate-limits'
 import { asRecord } from '../ai-vault/parsing/session-record-fields'
 import { extractString } from '../../shared/text/trimmed-string'
 import { claudeTokenUsage } from './context-usage/claude-context-usage'
@@ -17,15 +20,14 @@ const latest = new Map<string, ClaudeStatuslineContext>()
 const listeners = new Set<(report: ClaudeStatuslineContext) => void>()
 
 export function readClaudeStatuslineContext(body: unknown): ClaudeStatuslineContext | null {
-  const fields = asRecord(body)
-  const paneKey = extractString(fields?.paneKey)
-  if (!paneKey || typeof fields?.payload !== 'string') {
-    return null
-  }
-  let payload: Record<string, unknown> | null
-  try {
-    payload = asRecord(JSON.parse(fields.payload))
-  } catch {
+  const form = readClaudeStatusLineForm(body)
+  return form ? statuslineContextFromForm(form) : null
+}
+
+function statuslineContextFromForm(form: ClaudeStatusLineForm): ClaudeStatuslineContext | null {
+  const paneKey = extractString(asRecord(form.fields)?.paneKey)
+  const payload = asRecord(form.payload)
+  if (!paneKey) {
     return null
   }
   const sessionId = extractString(payload?.session_id)
@@ -57,8 +59,8 @@ export function readClaudeStatuslineContext(body: unknown): ClaudeStatuslineCont
   }
 }
 
-export function receiveClaudeStatuslineContext(body: unknown): void {
-  const report = readClaudeStatuslineContext(body)
+export function receiveClaudeStatuslineContext(form: ClaudeStatusLineForm): void {
+  const report = statuslineContextFromForm(form)
   if (!report) {
     return
   }
@@ -94,9 +96,4 @@ export function subscribeClaudeStatuslineContext(
   return () => {
     listeners.delete(scoped)
   }
-}
-
-export function receiveClaudeStatusline(body: unknown) {
-  receiveClaudeStatuslineContext(body)
-  return parseClaudeStatusLineBody(body)
 }

@@ -36,6 +36,7 @@ function matcherPatternForEvent(
     case 'pre_model_request':
     case 'post_model_request':
     case 'session_start':
+    case 'session_end':
     case 'subagent_start':
     case 'subagent_stop':
       return matcher
@@ -47,7 +48,7 @@ export function normalizeCodexHookTimeoutSec(
   eventLabel: CodexEventLabel,
   timeoutSec: number | undefined
 ): number {
-  if (eventLabel === 'interrupt') {
+  if (eventLabel === 'interrupt' || eventLabel === 'session_end') {
     return Math.min(3, Math.max(1, timeoutSec ?? 1))
   }
   return Math.max(1, timeoutSec ?? 600)
@@ -241,6 +242,7 @@ function isCodexEventLabel(value: string): value is CodexEventLabel {
     value === 'post_model_request' ||
     value === 'post_compact' ||
     value === 'session_start' ||
+    value === 'session_end' ||
     value === 'user_prompt_submit' ||
     value === 'subagent_start' ||
     value === 'subagent_stop' ||

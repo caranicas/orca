@@ -6,6 +6,7 @@ import {
   ManagedRuntimeCancelParams
 } from '../../../../../shared/rpc-contract/host-management/managed-runtime-install-params'
 import { ACP_LAUNCH_SPECS, acpLaunchSpecFor } from '../../../../acp/launch/acp-launch-registry'
+import type { ManagedCopySettings } from '../../../../acp/launch/acp-launch-contract'
 import {
   acpHostBackendInput,
   findHostProgram,
@@ -13,6 +14,7 @@ import {
 } from '../../../../acp/launch/acp-launch-command'
 import type { ManagedRuntimeProgram } from '../../../../../shared/agent-launch/installation/managed-runtime-install'
 import { ManagedRuntimeInstallation } from '../../../../node-runtime/managed-runtime-installation'
+import { onManagedServerUse } from '../../../../node-runtime/managed-runtime-release'
 import '../../../../native-chat/agent-session-wire/providers/structured-agent-session-adapter'
 import { isAgentSessionPreSpawnError } from '../../../../native-chat/agent-session-wire/providers/structured-agent-session-adapter-errors'
 import { getProfileUserDataPath } from '../../../../orca-profiles/profile-storage-paths'
@@ -29,16 +31,17 @@ import {
   MANAGED_AGENT_CLI_IDS,
   managedAgentCli,
   onManagedAgentUse,
-  installedManagedAgentCommand,
-  managedAgentStandsInFor,
   rememberManagedAgentRelease,
   type ManagedAgentCliId
 } from '../../../../managed-agent-cli/managed-agent-cli-registry'
 import { createRevisionClock, type RevisionClock } from '../../../events/revisioned-state'
 import { streamManagedRuntimeInstall } from './managed-runtime-install-stream'
-import { provideInstalledManagedAgents } from '../../../../preflight/managed-agent-detection'
-import type { ManagedCopySettings } from '../../../../acp/launch/acp-launch-contract'
-import { runtimeReleaseMayBePublished } from '../../../../node-runtime/managed-runtime-release'
+import {
+  managedCopyMayRun,
+  noteManagedReleasesRead,
+  provideManagedAgentDetection,
+  standInSpec
+} from './managed-copy-detection'
 import { hasExplicitTuiLaunchCommand } from '../../../../../shared/agent-launch/startup/tui-agent-launch-command-override'
 
 const installations = new Map<string, ManagedRuntimeInstallation>()
@@ -147,30 +150,26 @@ function acpInstallation(
     launchGate
       ? launchGate.run(() => stopStructuredAgentChats(agent, managedRuntime.label), work)
       : Promise.reject(new Error(`${managedRuntime.label} cannot be removed on this host.`))
-  // The chat host's own state root, where its launches look.
+  // The chat host's own state root, where its launches look. Its kill switch is this host's own
+  // setting, read when used: the store may not exist yet when this installation is created.
+  const updatesAllowed = (settings: ManagedCopySettings) =>
+    spec.managedRuntimeUpdatesAllowed?.(settings) !== false
   return new ManagedRuntimeInstallation(agent, managedRuntime, {
     dataDirectory,
     program: 'server',
     findExternal,
+    updatesEnabled: () => updatesAllowed(runtime.requireStore().getSettings()),
+    // Turned off while an automatic update downloads, it stops instead of finishing. Only changes the
+    // store publishes reach this; a hand edit of the settings file applies at the next check.
+    watchUpdatesEnabled: (onDisabled) =>
+      runtime.requireStore().onSettingsChanged?.((_updates, settings) => {
+        if (!updatesAllowed(settings)) {
+          onDisabled()
+        }
+      }) ?? (() => undefined),
     fence,
     revisions
   })
-}
-
-/** ACP agents name their own program and search their installers' folders after PATH, as launches
- *  do; an agent with a host program is looked for as that program. */
-function standInSpec(agent: ManagedAgentCliId) {
-  const outer = acpLaunchSpecFor(agent)
-  return [outer, outer?.hostBackend?.spec].find(
-    (each) => each && managedAgentStandsInFor(agent, each.command)
-  )
-}
-
-/** The settings whether Orca's copies may run comes from. */
-type ManagedCopySettingsSource = { requireStore(): { getSettings(): ManagedCopySettings } }
-
-function managedCopyMayRun(agent: ManagedAgentCliId, runtime: ManagedCopySettingsSource): boolean {
-  return standInSpec(agent)?.managedCopyAllowed?.(runtime.requireStore().getSettings()) !== false
 }
 
 /** These chats run the user's own install when the host has one, so Orca's copy is the fallback. */
@@ -205,29 +204,6 @@ function agentCliInstallation(
   })
 }
 
-// Set once launch reclaim has read every release, which installs and removals then keep current.
-let releasesRead = false
-
-/** An installed copy that may run is an installed agent to menus and Settings. Until launch reclaim
- *  has read Orca's releases, detection looks for them itself, so no reader waits for that read. */
-export function provideManagedAgentDetection(runtime: ManagedCopySettingsSource): void {
-  provideInstalledManagedAgents(async () => {
-    const dataDirectory = getProfileUserDataPath()
-    const present = await Promise.all(
-      MANAGED_AGENT_CLI_IDS.map(
-        async (agent) =>
-          managedCopyMayRun(agent, runtime) &&
-          (releasesRead
-            ? installedManagedAgentCommand(agent) !== null
-            : await runtimeReleaseMayBePublished(
-                managedAgentCli(agent).runtime.root(dataDirectory)
-              ))
-      )
-    )
-    return MANAGED_AGENT_CLI_IDS.filter((_, index) => present[index])
-  })
-}
-
 /** Each installation reclaims stale releases when created, so create them every launch, not only when a client asks. */
 export function reclaimManagedRuntimeReleasesAtLaunch(runtime: OrcaRuntimeService): void {
   provideManagedAgentDetection(runtime)
@@ -244,13 +220,22 @@ export function reclaimManagedRuntimeReleasesAtLaunch(runtime: OrcaRuntimeServic
       }
     }
   }
-  releasesRead = true
+  noteManagedReleasesRead()
 }
 
 const AUTO_UPDATE_FIRST_CHECK_MS = 2 * 60_000
 const AUTO_UPDATE_USE_THROTTLE_MS = 10 * 60_000
 let autoUpdatesStarted = false
 const lastUseCheck = new Map<string, number>()
+
+/** Use is the signal a copy matters; the installation's own backoff decides whether it downloads. */
+function checkForUpdateOnUse(key: string): void {
+  const now = Date.now()
+  if (now - (lastUseCheck.get(key) ?? 0) >= AUTO_UPDATE_USE_THROTTLE_MS) {
+    lastUseCheck.set(key, now)
+    checkForUpdate(key)
+  }
+}
 
 function checkForUpdate(key: string): void {
   installations
@@ -261,7 +246,8 @@ function checkForUpdate(key: string): void {
     })
 }
 
-/** Keep Orca's own copies current without a client ever prompting: once after launch, then as they're used. */
+/** Keep Orca's own copies current without a client ever prompting: once after launch, then as they're used.
+ *  Installs only add a release folder, so chats on the older one keep running it. */
 export function startManagedRuntimeAutoUpdates(): void {
   if (autoUpdatesStarted) {
     return
@@ -272,15 +258,11 @@ export function startManagedRuntimeAutoUpdates(): void {
     for (const key of installations.keys()) {
       checkForUpdate(key)
     }
+    // A server's download is large, so a chat started during startup never begins it early.
+    onManagedServerUse((agent) => checkForUpdateOnUse(`server:${agent}`))
   }, AUTO_UPDATE_FIRST_CHECK_MS).unref()
-  // Use is the signal a copy matters; the release lookup itself is cached for an hour.
-  onManagedAgentUse((agent) => {
-    const now = Date.now()
-    if (now - (lastUseCheck.get(agent) ?? 0) >= AUTO_UPDATE_USE_THROTTLE_MS) {
-      lastUseCheck.set(agent, now)
-      checkForUpdate(`cli:${agent}`)
-    }
-  })
+  // The release lookup itself is cached for an hour.
+  onManagedAgentUse((agent) => checkForUpdateOnUse(`cli:${agent}`))
 }
 
 export const MANAGED_RUNTIME_INSTALL_METHODS = [
